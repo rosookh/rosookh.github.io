@@ -1,7 +1,7 @@
 {
   "name": "رسوخ: تعلّم التجويد",
   "short_name": "رسوخ",
-  "description": "تعلّم أحكام التجويد واستعد لامتحانات المستويات باختبارات تفاعلية وسور ملوّنة بالأحكام، مع قسم إضافي للحفظ المطلوب. يعمل بلا إنترنت.",
+  "description": "تعلّم أحكام التجويد واستعد لامتحانات المستويات باختبارات تفاعلية، مع دفتر للأخطاء وتحدٍّ يومي، وقسم إضافي للحفظ المطلوب. يعمل بلا إنترنت.",
   "lang": "ar",
   "dir": "rtl",
   "id": "./",
@@ -9,12 +9,30 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F3F1EA",
-  "theme_color": "#2F5D50",
-  "categories": ["education", "books"],
+  "background_color": "#F6F5F1",
+  "theme_color": "#0B4F5C",
+  "categories": [
+    "education",
+    "books"
+  ],
   "icons": [
-    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

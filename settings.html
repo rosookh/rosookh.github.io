@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B4F5C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="assets/rz.css">
+<script src="assets/rz.js"></script>
+<title>الإعدادات · رسوخ</title>
+<style>
+.preview{font-size:16px;background:var(--bg);border-radius:12px;padding:12px 14px;line-height:1.8}
+.preview .qx{font-family:var(--f-q);font-size:24px}
+.rz-list-btn .ic{display:flex;width:22px;height:22px}
+</style>
+</head><body data-nav="settings">
+<main class="rz-main">
+  <h1 class="rz-title">الإعدادات</h1>
+
+  <section class="rz-card">
+    <b>حجم الخط</b>
+    <div class="rz-seg" id="fs" role="group" aria-label="حجم الخط">
+      <button type="button" class="rz-chip" data-v="s">صغير</button>
+      <button type="button" class="rz-chip" data-v="m">متوسط</button>
+      <button type="button" class="rz-chip" data-v="l">كبير</button>
+    </div>
+    <div class="preview">ما حكم النون الساكنة في قوله تعالى: <span class="qx">﴿مِن شَرِّ مَا خَلَقَ﴾</span></div>
+  </section>
+
+  <section class="rz-card">
+    <b>المظهر</b>
+    <div class="rz-seg" id="theme" role="group" aria-label="المظهر">
+      <button type="button" class="rz-chip" data-v="auto">تلقائي</button>
+      <button type="button" class="rz-chip" data-v="light">فاتح</button>
+      <button type="button" class="rz-chip" data-v="dark">ليلي</button>
+    </div>
+    <span class="rz-meta">«تلقائي» يتبع إعداد جوالك.</span>
+  </section>
+
+  <section class="rz-card">
+    <b>تقدّمك المحفوظ</b>
+    <span class="rz-meta" id="stats"></span>
+    <button type="button" class="rz-btn" id="wipe">مسح كل التقدّم من هذا الجهاز</button>
+    <span class="rz-meta" id="wipeMsg" aria-live="polite"></span>
+  </section>
+
+  <section class="rz-card">
+    <b>عن التطبيق</b>
+    <a class="rz-list-btn" id="mail" href="#"><span class="rz-ic" data-icon="mail"></span><span class="grow"><b>أرسل ملاحظة أو اقتراحاً</b><span class="rz-meta">يفتح بريداً جاهزاً</span></span></a>
+    <a class="rz-list-btn" href="privacy.html"><span class="rz-ic" data-icon="book"></span><span class="grow"><b>سياسة الخصوصية وعن التطبيق</b><span class="rz-meta">التطبيق لا يجمع أي بيانات</span></span></a>
+    <span class="rz-meta">صور المخارج في الأسئلة من كتاب «منهاج الدارسين لترتيل الكتاب المبين» – وزارة الأوقاف والشؤون والمقدسات الإسلامية، بإذن الناشر. نص المصحف برواية حفص عن عاصم بالرسم العثماني.</span>
+    <span class="rz-meta" id="ver"></span>
+  </section>
+</main>
+<script>
+(function(){
+  const st = RZ.settings();
+  function seg(id, key){
+    const box = document.getElementById(id);
+    const paint = v => box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    box.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; RZ.setSettings({ [key]: b.dataset.v }); paint(b.dataset.v); });
+    paint(st[key]);
+  }
+  seg('fs', 'fs'); seg('theme', 'theme');
+  const m = Object.keys(RZ.mistakes()).length, s = RZ.streak();
+  const mas = Object.keys(RZ.ls.get('rz-mastery', {})).length;
+  document.getElementById('stats').textContent = 'في دفتر الأخطاء: ' + (m ? RZ.count(m, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً']) : 'لا شيء') + ' · دروس بدأتها: ' + RZ.AR(mas) + ' · سلسلة تحدّي اليوم: ' + RZ.AR(s.count);
+  const wipe = document.getElementById('wipe'); let armed = false;
+  wipe.addEventListener('click', () => {
+    if(!armed){ armed = true; wipe.textContent = 'اضغط مرة أخرى للتأكيد'; wipe.style.borderColor = 'var(--bad)'; wipe.style.color = 'var(--bad)'; return; }
+    ['rz-mistakes', 'rz-mastery', 'rz-streak', 'tajweed-library-v1', 'tajweed-library-custom-v1', 'rz-lib-pref', 'rz-share', 'hifz-best', 'hifz-ui'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+    wipe.hidden = true; document.getElementById('wipeMsg').textContent = 'تم مسح التقدّم. الإعدادات بقيت كما هي.';
+  });
+  document.getElementById('mail').href = 'mailto:' + RZ.EMAIL + '?subject=' + encodeURIComponent('رسوخ: ملاحظة');
+  fetch('sw.js').then(r => r.text()).then(t => { const v = (t.match(/const V='([^']+)'/) || [])[1]; if(v) document.getElementById('ver').textContent = 'الإصدار: ' + v.replace('rosookh-', ''); }).catch(() => {});
+})();
+</script>
+</body></html>
