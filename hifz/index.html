@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0B4F5C">
+<meta name="theme-color" content="#2F5D50">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="stylesheet" href="../fonts/fonts.css">
@@ -91,6 +91,9 @@ select{font:inherit;color:var(--ink);background:var(--page);border:1px solid var
 .fb{font-size:14px;padding:8px 12px;border-radius:10px;background:var(--soft)}
 .score{font-family:var(--f-d);font-size:40px;color:var(--acc)}
 .muted{color:var(--muted)}
+.rv-item{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--page)}
+.rv-item.ok{border-color:var(--good);background:var(--good-soft)}
+.rv-done{color:var(--good-ink);font-weight:700}
 .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
 .scope{border:1px solid var(--line);background:var(--page);border-radius:12px;padding:10px 12px;text-align:right;display:flex;flex-direction:column;gap:2px;min-height:56px}
 .scope small{color:var(--muted)}
@@ -101,13 +104,14 @@ select{font:inherit;color:var(--ink);background:var(--page);border:1px solid var
 <main class="rz-main">
   <header style="display:flex;flex-direction:column;gap:4px">
     <h1 class="rz-title">مساعد الحفظ</h1>
-    <p class="rz-meta" style="margin:0">قسم إضافي لتجهيز السور المطلوبة في امتحانات مستويات منهاج الدارسين: المتشابهات، وما قبل الآية وما بعدها، واختبارات حفظ.</p>
+    <p class="rz-meta" style="margin:0">قسم إضافي لتجهيز السور المطلوبة في امتحانات المستويات: المتشابهات، وما قبل الآية وما بعدها، واختبارات حفظ، ومراجعة يومية لمحفوظك.</p>
   </header>
   <div class="levels" id="levels" role="group" aria-label="المستوى"></div>
   <div class="tabs" role="tablist" aria-label="الأدوات">
     <button class="tab" role="tab" data-t="mt" aria-selected="true">المتشابهات</button>
     <button class="tab" role="tab" data-t="ba" aria-selected="false">ما قبلها وما بعدها</button>
     <button class="tab" role="tab" data-t="quiz" aria-selected="false">اختبارات الحفظ</button>
+    <button class="tab" role="tab" data-t="rv" aria-selected="false">مراجعة محفوظي</button>
   </div>
   <main id="view"><p class="muted">جاري التحميل…</p></main>
   <footer class="muted" style="font-size:13px;text-align:center">نص المصحف برواية حفص بالرسم العثماني. القسم للمساعدة على الحفظ، والمرجع التلقّي من المعلم المتقن.</footer>
@@ -119,7 +123,8 @@ const $=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,y]of Objec
 const rnd=n=>Math.floor(Math.random()*n), shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}, pick=a=>a[rnd(a.length)];
 let D=null; const ST={lv:'2',tab:'mt',surah:{},mtS:{},hide:false,baD:'1'};
 try{Object.assign(ST,JSON.parse(localStorage.getItem('hifz-ui')||'{}'))}catch(e){}
-if(!['mt','ba','quiz'].includes(ST.tab)) ST.tab='mt';
+if(location.hash==='#review') ST.tab='rv';
+if(!['mt','ba','quiz','rv'].includes(ST.tab)) ST.tab='mt';
 const save=()=>{try{localStorage.setItem('hifz-ui',JSON.stringify({lv:ST.lv,tab:ST.tab,surah:ST.surah,mtS:ST.mtS,baD:ST.baD}))}catch(e){}};
 let BEST={};try{BEST=JSON.parse(localStorage.getItem('hifz-best')||'{}')}catch(e){}
 const LVC={1:'--l1',2:'--l2',3:'--l3'};
@@ -301,7 +306,7 @@ function renderQuiz(v){
   q.opts.forEach(o=>{
     const b=$('button',{class:'opt'+(q.ui?' ui':''),disabled:QZ.ans!=null},o);
     if(QZ.ans!=null){if(o===q.a)b.classList.add('ok');else if(o===QZ.ans)b.classList.add('no')}
-    b.addEventListener('click',()=>{if(QZ.ans!=null)return;QZ.ans=o;if(o===q.a)QZ.score++;render()});
+    b.addEventListener('click',()=>{if(QZ.ans!=null)return;QZ.ans=o;const ok=o===q.a;if(ok)QZ.score++;hz(ok,QZ.sc.s.length===1?QZ.sc.s[0]:null);render()});
     opts.append(b);
   });
   box.append(opts);
@@ -381,14 +386,14 @@ function renderBA(v){
     if(!BA.shown){ box.append($('div',{class:'muted',style:'font-size:14px'},'سمّع الآية من حفظك، ثم اكشفها.'),$('div',{class:'tools'},$('button',{class:'btn pri',on:{click:()=>{BA.shown=true;render()}}},'اكشف الإجابة'))); }
     else{
       box.append(reveal());
-      if(!answered) box.append($('div',{class:'tools'},$('button',{class:'btn',on:{click:()=>{BA.ans='ok';BA.score++;render()}}},'✓ سمّعتها صحيحة'),$('button',{class:'btn',on:{click:()=>{BA.ans='no';render()}}},'✗ أخطأت فيها')));
+      if(!answered) box.append($('div',{class:'tools'},$('button',{class:'btn',on:{click:()=>{BA.ans='ok';BA.score++;hz(true,q.n);render()}}},'✓ سمّعتها صحيحة'),$('button',{class:'btn',on:{click:()=>{BA.ans='no';hz(false,q.n);render()}}},'✗ أخطأت فيها')));
     }
   } else {
     const opts=$('div',{class:'opts'});
     q.opts.forEach(o=>{
       const b=$('button',{class:'opt',disabled:answered},o);
       if(answered){if(o===q.ans)b.classList.add('ok');else if(o===BA.ans)b.classList.add('no')}
-      b.addEventListener('click',()=>{if(BA.ans!=null)return;BA.ans=o;if(o===q.ans)BA.score++;render()});
+      b.addEventListener('click',()=>{if(BA.ans!=null)return;BA.ans=o;const ok=o===q.ans;if(ok)BA.score++;hz(ok,q.n);render()});
       opts.append(b);
     });
     box.append(opts);
@@ -402,11 +407,47 @@ function renderBA(v){
   v.append(box);
 }
 
+/* ---------- مراجعة محفوظي ---------- */
+function hz(ok,n){ // points for hifz answers; mistakes push a memorised surah up the review list
+  if(window.RZ) RZ.answer({ok,xp:ok?10:0});
+  if(!ok&&n&&window.RZ){const h=RZ.hifzData();if(h.sel.includes(n)){h.miss[n]=(h.miss[n]||0)+1;RZ.ls.set('hifz-review',h)}}
+}
+function levelOf(n){return Object.keys(D.levels).find(k=>D.levels[k].surahs.includes(n))||ST.lv}
+function renderRv(v){
+  const {list,h}=RZ.hifzToday();
+  if(h.sel.length){
+    const done=(h.today&&h.today.done)||[];
+    const card=$('div',{class:'card',style:'display:flex;flex-direction:column;gap:12px'},$('b',{style:'font-size:20px'},'مراجعة اليوم'),
+      $('span',{class:'muted',style:'font-size:14px'},'نقترح كل يوم سورة أو سورتين من محفوظك: الأقدم مراجعةً أولاً، والتي أخطأت فيها أكثر تتقدّم.'));
+    list.forEach(n=>{
+      const ok=done.includes(n);
+      card.append($('div',{class:'rv-item'+(ok?' ok':'')},$('div',{style:'display:flex;flex-direction:column'},$('b',{},'سورة '+S(n).name),$('small',{class:'muted'},(h.last[n]?'آخر مراجعة: '+RZ.dateAR(h.last[n]):'لم تراجعها هنا بعد')+(h.miss[n]?' · أخطاء حديثة: '+AR(h.miss[n]):''))),
+        $('div',{class:'tools'},
+          $('button',{class:'btn',on:{click:()=>{ST.lv=levelOf(n);ST.tab='ba';save();startBA({id:'s'+n,t:'سورة '+S(n).name,s:[n],one:true})}}},'اختبرني فيها'),
+          ok?$('span',{class:'rv-done'},'✓ تمّت'):$('button',{class:'btn pri',on:{click:()=>{const r=RZ.hifzDone(n);RZ.toast('بارك الله فيك · +٢٠ نقطة'+(r.goalReached?' · حقّقت هدفك اليومي':''));render()}}},'تمّت المراجعة'))));
+    });
+    v.append(card);
+  } else v.append($('p',{class:'muted',style:'margin:0'},'اختر السور التي تحفظها، ونقترح عليك كل يوم سورة أو سورتين لمراجعتها، فلا تُنسى. المراجعة تعطيك نقاطاً وتُحسب في سلسلتك.'));
+  const pick=$('details',{class:'card',open:h.sel.length?null:true},$('summary',{style:'cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center'},'السور التي أحفظها ('+AR(h.sel.length)+')'));
+  const all=[...new Set(Object.values(D.levels).flatMap(L=>L.surahs))].sort((x,y)=>x-y), by={};
+  all.forEach(n=>{const g=n===2?'سورة البقرة':'جزء '+AR(S(n).juz);(by[g]||(by[g]=[])).push(n)});
+  Object.entries(by).forEach(([g,list])=>{
+    const c=$('div',{class:'chips'});
+    list.forEach(n=>c.append($('button',{class:'chip','aria-pressed':String(h.sel.includes(n)),on:{click:e=>{
+      const H=RZ.hifzData(); const i=H.sel.indexOf(n); if(i>=0) H.sel.splice(i,1); else {H.sel.push(n);H.names[n]=S(n).name}
+      H.today=null; RZ.ls.set('hifz-review',H); e.currentTarget.setAttribute('aria-pressed',String(i<0)); }}},S(n).name)));
+    pick.append($('div',{class:'jz'},g),c);
+  });
+  pick.append($('button',{class:'btn pri',style:'margin-top:10px',on:{click:()=>{render();scrollTo(0,0)}}},'حفظ الاختيار'));
+  v.append(pick);
+}
+
 function render(){
   renderLevels();
   const v=document.getElementById('view');v.innerHTML='';
   if(QZ&&QZ.lv&&QZ.lv!==ST.lv)QZ=null;
-  ({mt:renderMt,ba:renderBA,quiz:renderQuiz})[ST.tab](v);
+  document.getElementById('levels').hidden=ST.tab==='rv';
+  ({mt:renderMt,ba:renderBA,quiz:renderQuiz,rv:renderRv})[ST.tab](v);
 }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{ST.tab=t.dataset.t;save();render()}));
 fetch('data.json').then(r=>r.json()).then(d=>{D=d;render()}).catch(()=>{document.getElementById('view').innerHTML='<p class="muted">تعذّر تحميل البيانات. حدّث الصفحة.</p>'});

@@ -1,21 +1,44 @@
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0B4F5C">
+<meta name="theme-color" content="#2F5D50">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="assets/rz.css">
 <script src="assets/rz.js"></script>
+<script src="assets/lessons.js"></script>
+<script src="assets/changelog.js"></script>
+<script src="assets/tour.js"></script>
 <title>الإعدادات · رسوخ</title>
 <style>
 .preview{font-size:16px;background:var(--bg);border-radius:12px;padding:12px 14px;line-height:1.8}
 .preview .qx{font-family:var(--f-q);font-size:24px}
-.rz-list-btn .ic{display:flex;width:22px;height:22px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px}
+.sw input{width:48px;height:28px;accent-color:var(--primary)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 </style>
 </head><body data-nav="settings">
 <main class="rz-main">
   <h1 class="rz-title">الإعدادات</h1>
+
+  <section class="rz-card" id="name">
+    <b>بماذا نناديك؟</b>
+    <input class="rz-input" id="nm" type="text" maxlength="30" placeholder="اكتب اسمك (اختياري)" aria-label="الاسم">
+    <span class="rz-meta">يظهر في تحية الصفحة الرئيسية فقط، ويبقى على جوالك.</span>
+  </section>
+
+  <section class="rz-card">
+    <b>وصلت مع أستاذي إلى</b>
+    <div id="lesBox"></div>
+    <span class="rz-meta">منه تأتي أسئلة تحدّي اليوم، ويُستعمل في «صمّم اختبارك» ومسار الدروس.</span>
+  </section>
+
+  <section class="rz-card">
+    <b>الهدف اليومي</b>
+    <div class="rz-seg" id="goal" role="group" aria-label="الهدف اليومي"></div>
+    <span class="rz-meta" id="goalS"></span>
+  </section>
 
   <section class="rz-card">
     <b>حجم الخط</b>
@@ -30,11 +53,36 @@
   <section class="rz-card">
     <b>المظهر</b>
     <div class="rz-seg" id="theme" role="group" aria-label="المظهر">
-      <button type="button" class="rz-chip" data-v="auto">تلقائي</button>
       <button type="button" class="rz-chip" data-v="light">فاتح</button>
       <button type="button" class="rz-chip" data-v="dark">ليلي</button>
+      <button type="button" class="rz-chip" data-v="auto">تلقائي</button>
     </div>
     <span class="rz-meta">«تلقائي» يتبع إعداد جوالك.</span>
+  </section>
+
+  <section class="rz-card">
+    <b>التذكير والأدعية والأصوات</b>
+    <label class="sw"><span>تذكير يومي بتحدّي اليوم</span><input type="checkbox" id="notif"></label>
+    <span class="rz-meta" id="notifMsg" aria-live="polite">يصل التذكير مرة في اليوم تقريباً إذا لم تُتمّ هدفك. الجوال يحدّد وقته، وقد لا يعمل على كل الأجهزة.</span>
+    <label class="sw"><span>دعاء عند فتح التطبيق والخروج منه</span><input type="checkbox" id="dua"></label>
+    <label class="sw"><span>أصوات خفيفة عند الإجابة</span><input type="checkbox" id="snd"></label>
+  </section>
+
+  <section class="rz-card">
+    <b>وضع الإجازة</b>
+    <span class="rz-meta">يوقف حساب السلسلة أياماً تختارها، لسفر أو مرض أو أي عذر، فلا تنقطع سلسلتك.</span>
+    <div id="vac"></div>
+  </section>
+
+  <section class="rz-card">
+    <b>نسخة احتياطية</b>
+    <span class="rz-meta">تقدّمك محفوظ على هذا الجوال فقط. احفظ نسخة منه لتسترجعها إذا غيّرت جوالك أو مسحت بيانات التطبيق.</span>
+    <div class="two">
+      <button type="button" class="rz-btn" id="bkSave"><span data-icon="download" style="display:flex;width:20px;height:20px"></span>احفظ نسخة</button>
+      <button type="button" class="rz-btn" id="bkLoad"><span data-icon="upload" style="display:flex;width:20px;height:20px"></span>استرجع نسخة</button>
+    </div>
+    <input type="file" id="bkFile" accept="application/json,.json" hidden>
+    <span class="rz-meta" id="bkMsg" aria-live="polite"></span>
   </section>
 
   <section class="rz-card">
@@ -46,33 +94,100 @@
 
   <section class="rz-card">
     <b>عن التطبيق</b>
+    <a class="rz-list-btn" href="index.html#tour"><span class="rz-ic" data-icon="path"></span><span class="grow"><b>عرض الجولة التعريفية</b><span class="rz-meta">الشاشات التي تظهر أول مرة</span></span></a>
+    <button type="button" class="rz-list-btn" id="news"><span class="rz-ic" data-icon="bell"></span><span class="grow"><b>ما الجديد</b><span class="rz-meta" id="newsS"></span></span></button>
     <a class="rz-list-btn" id="mail" href="#"><span class="rz-ic" data-icon="mail"></span><span class="grow"><b>أرسل ملاحظة أو اقتراحاً</b><span class="rz-meta">يفتح بريداً جاهزاً</span></span></a>
     <a class="rz-list-btn" href="privacy.html"><span class="rz-ic" data-icon="book"></span><span class="grow"><b>سياسة الخصوصية وعن التطبيق</b><span class="rz-meta">التطبيق لا يجمع أي بيانات</span></span></a>
-    <span class="rz-meta">صور المخارج في الأسئلة من كتاب «منهاج الدارسين لترتيل الكتاب المبين» – وزارة الأوقاف والشؤون والمقدسات الإسلامية، بإذن الناشر. نص المصحف برواية حفص عن عاصم بالرسم العثماني.</span>
+    <span class="rz-meta">نص المصحف برواية حفص عن عاصم بالرسم العثماني.</span>
     <span class="rz-meta" id="ver"></span>
   </section>
 </main>
 <script>
 (function(){
-  const st = RZ.settings();
-  function seg(id, key){
-    const box = document.getElementById(id);
+  const AR = RZ.AR, $ = id => document.getElementById(id); const st = RZ.settings();
+  // name
+  $('nm').value = st.name || ''; $('nm').addEventListener('input', () => RZ.setSettings({ name: $('nm').value.trim() }));
+  // lesson reached
+  const sel = RZ_TOUR.lessonSelect(RZ_TOUR.lastKey()); $('lesBox').append(sel);
+  sel.addEventListener('change', () => { RZ_TOUR.setUpTo(sel.value); RZ.toast(sel.value ? 'تم: حتى ' + RZ_TOUR.lessonName(sel.value) : 'تم'); });
+  // goal
+  const gbox = $('goal');
+  const paintGoal = k => { gbox.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === k))); $('goalS').textContent = RZ.GOALS[k].s + ' · ' + AR(RZ.GOALS[k].x) + ' نقطة'; };
+  Object.entries(RZ.GOALS).forEach(([k, G]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-chip'; b.dataset.v = k; b.textContent = G.t;
+    b.addEventListener('click', () => { RZ.setSettings({ goal:k }); paintGoal(k); }); gbox.append(b); });
+  paintGoal(st.goal || 'm');
+  // segments
+  function seg(id, key, extra){
+    const box = $(id);
     const paint = v => box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
-    box.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; RZ.setSettings({ [key]: b.dataset.v }); paint(b.dataset.v); });
+    box.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; RZ.setSettings(Object.assign({ [key]: b.dataset.v }, extra || {})); paint(b.dataset.v); });
     paint(st[key]);
   }
-  seg('fs', 'fs'); seg('theme', 'theme');
+  seg('fs', 'fs'); seg('theme', 'theme', { themeSet:true });
+  // notifications + du'a
+  const nt = $('notif'); nt.checked = !!st.notif;
+  nt.addEventListener('change', async () => { if(nt.checked){ const m = await RZ.enableNotif(); $('notifMsg').textContent = m; nt.checked = !!RZ.settings().notif; } else { await RZ.disableNotif(); $('notifMsg').textContent = 'أُوقف التذكير.'; } });
+  const sn = $('snd'); sn.checked = st.sound !== false; sn.addEventListener('change', () => RZ.setSettings({ sound: sn.checked }));
+  const du = $('dua'); du.checked = st.dua !== false; du.addEventListener('change', () => RZ.setSettings({ dua: du.checked }));
+  // vacation
+  function paintVac(){
+    const v = RZ.streak().vac, box = $('vac'); box.innerHTML = '';
+    if(v){
+      const p = document.createElement('div'); p.className = 'rz-between';
+      p.innerHTML = `<span class="rz-badge plain">مفعّل حتى ${RZ.dateAR(v.to)}</span>`;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-link'; b.textContent = 'إنهاء الإجازة'; b.addEventListener('click', () => { RZ.setVacation(0); paintVac(); });
+      p.append(b); box.append(p); return;
+    }
+    const s = document.createElement('select'); s.className = 'rz-select'; s.setAttribute('aria-label', 'مدة الإجازة');
+    s.innerHTML = '<option value="">اختر المدة…</option>' + [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${RZ.count(n, RZ.DAY_FORMS)}</option>`).join('');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn'; b.textContent = 'فعّل وضع الإجازة'; b.style.marginTop = '8px'; b.style.width = '100%';
+    b.addEventListener('click', () => { if(!s.value) return; RZ.setVacation(+s.value); RZ.toast('فُعّل وضع الإجازة'); paintVac(); });
+    box.append(s, b);
+  }
+  paintVac();
+  // backup
+  $('bkSave').addEventListener('click', async () => {
+    const data = JSON.stringify(RZ.backupData()); const name = 'rosookh-backup-' + RZ.today() + '.json';
+    const file = new File([data], name, { type:'application/json' });
+    try{ if(navigator.canShare && navigator.canShare({ files:[file] })){ await navigator.share({ files:[file], title:'نسخة رسوخ الاحتياطية' }); RZ.ls.set('rz-backup-last', RZ.today()); $('bkMsg').textContent = 'تم. احتفظ بالملف في مكان آمن.'; return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; document.body.append(a); a.click(); a.remove();
+    RZ.ls.set('rz-backup-last', RZ.today()); $('bkMsg').textContent = 'نُزّل الملف ' + name + '.';
+  });
+  $('bkLoad').addEventListener('click', () => $('bkFile').click());
+  $('bkFile').addEventListener('change', async () => {
+    const f = $('bkFile').files[0]; if(!f) return;
+    try{
+      const obj = JSON.parse(await f.text());
+      if(!obj || obj.app !== 'rosookh') throw 0;
+      const g = JSON.parse(obj.data['rz-game'] || '{}'), sk = JSON.parse(obj.data['rz-streak'] || '{}'), mk = Object.keys(JSON.parse(obj.data['rz-mistakes'] || '{}')).length;
+      RZ.sheet((box, close) => {
+        box.innerHTML = `<b>استرجاع نسخة ${obj.date ? 'من ' + RZ.dateAR(obj.date) : ''}</b><span>فيها: ${AR(g.xp || 0)} نقطة · سلسلة ${RZ.count(sk.count || 0, RZ.DAY_FORMS)} · ${RZ.count(mk, RZ.Q_FORMS)} في الدفتر.</span><span class="rz-meta">سيحلّ محلّ التقدّم الحالي على هذا الجوال.</span>`;
+        const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'rz-btn pri block'; ok.textContent = 'استرجع';
+        ok.addEventListener('click', () => { RZ.restoreData(obj); close(); location.reload(); });
+        const no = document.createElement('button'); no.type = 'button'; no.className = 'rz-btn block'; no.textContent = 'إلغاء'; no.addEventListener('click', close);
+        box.append(ok, no);
+      });
+    }catch(e){ $('bkMsg').textContent = 'هذا الملف ليس نسخة احتياطية من رسوخ.'; }
+    $('bkFile').value = '';
+  });
+  const lastBk = RZ.ls.get('rz-backup-last', ''); if(lastBk) $('bkMsg').textContent = 'آخر نسخة: ' + RZ.dateAR(lastBk);
+  // stats + wipe
   const m = Object.keys(RZ.mistakes()).length, s = RZ.streak();
   const mas = Object.keys(RZ.ls.get('rz-mastery', {})).length;
-  document.getElementById('stats').textContent = 'في دفتر الأخطاء: ' + (m ? RZ.count(m, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً']) : 'لا شيء') + ' · دروس بدأتها: ' + RZ.AR(mas) + ' · سلسلة تحدّي اليوم: ' + RZ.AR(s.count);
-  const wipe = document.getElementById('wipe'); let armed = false;
+  $('stats').textContent = 'المستوى: ' + RZ.level().name + ' · في دفتر الأخطاء: ' + (m ? RZ.count(m, RZ.Q_FORMS) : 'لا شيء') + ' · دروس بدأتها: ' + AR(mas) + ' · السلسلة: ' + AR(s.count);
+  const wipe = $('wipe'); let armed = false;
   wipe.addEventListener('click', () => {
     if(!armed){ armed = true; wipe.textContent = 'اضغط مرة أخرى للتأكيد'; wipe.style.borderColor = 'var(--bad)'; wipe.style.color = 'var(--bad)'; return; }
-    ['rz-mistakes', 'rz-mastery', 'rz-streak', 'tajweed-library-v1', 'tajweed-library-custom-v1', 'rz-lib-pref', 'rz-share', 'hifz-best', 'hifz-ui'].forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
-    wipe.hidden = true; document.getElementById('wipeMsg').textContent = 'تم مسح التقدّم. الإعدادات بقيت كما هي.';
+    Object.keys(localStorage).filter(k => /^(rz-|tajweed-library|hifz-)/.test(k) && !['rz-settings', 'rz-onboarded', 'rz-seen-ver'].includes(k)).forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+    wipe.hidden = true; $('wipeMsg').textContent = 'تم مسح التقدّم. الإعدادات بقيت كما هي.';
   });
-  document.getElementById('mail').href = 'mailto:' + RZ.EMAIL + '?subject=' + encodeURIComponent('رسوخ: ملاحظة');
-  fetch('sw.js').then(r => r.text()).then(t => { const v = (t.match(/const V='([^']+)'/) || [])[1]; if(v) document.getElementById('ver').textContent = 'الإصدار: ' + v.replace('rosookh-', ''); }).catch(() => {});
+  // about
+  $('mail').href = 'mailto:' + RZ.EMAIL + '?subject=' + encodeURIComponent('رسوخ: ملاحظة');
+  const C = window.RZ_CHANGES && RZ_CHANGES[0];
+  if(C){ $('newsS').textContent = 'الإصدار ' + C.v; $('news').addEventListener('click', () => RZ.sheet((box, close) => {
+    box.innerHTML = `<b style="font-size:22px">ما الجديد في رسوخ</b><span class="rz-meta">الإصدار ${C.v} · ${AR(C.d)}</span><ul style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px">${C.items.map(t => '<li>' + t + '</li>').join('')}</ul>`;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn pri block'; b.textContent = 'تمام'; b.addEventListener('click', close); box.append(b); })); }
+  fetch('sw.js').then(r => r.text()).then(t => { const v = (t.match(/const V='([^']+)'/) || [])[1]; $('ver').textContent = 'الإصدار ' + (C ? C.v : '') + (v ? ' · رقم البناء ' + v.replace('rosookh-', '') : '') + (C ? ' · ' + AR(C.d) : ''); }).catch(() => {});
 })();
 </script>
 </body></html>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0B4F5C">
+<meta name="theme-color" content="#2F5D50">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="stylesheet" href="../fonts/fonts.css">
@@ -107,6 +107,36 @@ button.vw{border-bottom:2px dotted var(--line-strong);border-radius:6px;margin:2
 .mas.review{background:var(--accent-soft);color:var(--accent-ink);border-color:var(--accent)}
 .mas small{font-size:12px;opacity:.85}
 
+/* riddles, listen, hearts, combo, share */
+.riddle-h{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:3px 12px;font-size:13px;font-weight:700}
+.riddle-h .ic{width:16px;height:16px}
+.listen{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;font-family:var(--f-ui);font-size:13px;font-weight:600;border:1px solid var(--line-strong);background:var(--bg);color:var(--primary);border-radius:999px;padding:2px 10px;min-height:32px}
+.listen svg{width:18px;height:18px}
+.listen.on{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.hearts{display:inline-flex;gap:2px;color:var(--bad)}
+.hearts .ic{width:18px;height:18px} .hearts .ic.off{color:var(--line-strong)}
+.combo{display:inline-flex;align-items:center;gap:4px;background:var(--accent);color:var(--on-accent);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700}
+.combo .ic{width:14px;height:14px}
+.qshare{width:36px;height:36px;border-radius:10px;border:none;background:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center}
+.qshare svg{width:20px;height:20px} .qshare:hover{background:var(--primary-soft);color:var(--primary)}
+.rz-tile.gold{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+
+/* lesson path */
+.pathsec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.pathsec.gold{border-color:var(--accent);background:linear-gradient(var(--surface),var(--accent-soft))}
+.path{display:flex;flex-direction:column;gap:4px;padding:4px 0}
+.pnode{display:grid;grid-template-columns:56px minmax(0,1fr);column-gap:12px;align-items:center;border:none;background:none;text-align:start;padding:6px 0;margin-inline-start:calc(var(--x) * 18%);min-height:64px;color:var(--ink)}
+.pnode .disc{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;background:var(--primary);color:var(--primary-ink);box-shadow:0 4px 0 var(--primary-dark)}
+.pnode .disc svg{width:22px;height:22px}
+.pnode .pl{display:block;font-weight:600;line-height:1.5}
+.pnode .stars{font-size:13px;margin:0}
+.pnode .disc{grid-row:span 2}
+.pnode.locked .disc{background:var(--line);color:var(--muted);box-shadow:0 4px 0 var(--line-strong)}
+.pnode.locked .pl{color:var(--muted)}
+.pnode.crown .disc{background:var(--accent);color:var(--on-accent);box-shadow:0 4px 0 #A88B68}
+.pnode.cur .disc{outline:4px solid var(--accent-soft);outline-offset:3px}
+.pnode.final .disc{background:var(--surface);border:2px dashed var(--accent);box-shadow:none;font-size:24px}
+
 @media (prefers-reduced-motion:no-preference){
   .pop{animation:pop .25s ease-out}
   .shake{animation:shake .35s}
@@ -117,5 +147,6 @@ button.vw{border-bottom:2px dotted var(--line-strong);border-radius:6px;margin:2
 </head><body data-nav="tests">
 <main class="rz-main" id="app"><p class="rz-empty">جاري التحميل…</p></main>
 <script src="data.js"></script>
+<script src="riddles.js"></script>
 <script src="engine.js"></script>
 </body></html>

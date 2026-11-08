@@ -1,35 +1,84 @@
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0B4F5C">
-<meta name="description" content="تعلّم أحكام التجويد واستعد لامتحانات مستويات منهاج الدارسين باختبارات تفاعلية، مع قسم إضافي للحفظ المطلوب. يعمل بلا إنترنت.">
+<meta name="theme-color" content="#2F5D50">
+<meta name="description" content="تعلّم أحكام التجويد واستعد لامتحانات المستويات باختبارات تفاعلية، مع تحدٍّ يومي ودفتر للأخطاء وقسم إضافي للحفظ. يعمل بلا إنترنت.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="assets/rz.css">
 <script src="assets/rz.js"></script>
+<script src="assets/lessons.js"></script>
+<script src="assets/changelog.js"></script>
+<script src="assets/tour.js"></script>
 <title>رسوخ · تعلّم التجويد</title>
 <style>
-.logo{width:44px;height:44px;color:var(--primary);flex-shrink:0}
-.logo svg{width:44px;height:44px;display:block}
 .hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .foot{font-size:13px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:4px}
+.goal{display:flex;align-items:center;gap:14px}
+.goal .grow{flex-grow:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mini{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);min-height:96px}
+.mini .ic{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
+.mini .ic svg{width:20px;height:20px}
+.mini.done{background:var(--good-soft);border-color:var(--good)}
+.resume{border:2px solid var(--ocean)}
+.resume .rz-ic{background:var(--ocean-soft)!important;color:var(--ocean)!important}
 </style>
 </head><body data-nav="home">
 <main class="rz-main">
-  <header class="rz-row">
-    <span class="logo" data-icon="logo"></span>
-    <div style="display:flex;flex-direction:column">
-      <h1 class="rz-title" style="line-height:1.2">رسوخ</h1>
-      <span class="rz-meta">تعلّم التجويد واستعد لامتحانات المستويات</span>
+  <header class="rz-between">
+    <div class="rz-greet">
+      <span class="logo"><img src="icons/icon-192.png" alt="شعار رسوخ"></span>
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <h1 class="rz-title" style="line-height:1.35;font-size:19px" id="hello">السلام عليكم</h1>
+        <span class="rz-meta">رسوخ · تعلّم التجويد</span>
+      </div>
     </div>
+    <a class="rz-lvl" href="progress.html" id="lvl" aria-label="مستواك"></a>
   </header>
 
-  <a class="rz-hero" href="library/#/daily" id="daily">
-    <div class="hero-top"><span class="rz-meta">تحدّي اليوم</span><span class="rz-badge" id="streak" hidden><span data-icon="flame" style="display:flex;width:14px;height:14px"></span><span></span></span></div>
+  <a class="rz-hero" href="library/#/daily" id="daily" data-pattern="11">
+    <div class="hero-top"><span class="rz-meta">تحدّي اليوم</span><span class="rz-badge" id="streak" hidden style="background:#C9AE8E;color:#2E2214"><span data-icon="flame" style="display:flex;width:14px;height:14px"></span><span></span></span></div>
     <b style="font-size:22px" id="dailyT">٥ أسئلة من دروسك</b>
     <div class="hero-top"><span class="rz-meta" id="dailyS">دقيقتان تقريباً</span><span class="rz-cta" id="dailyB">ابدأ</span></div>
+  </a>
+
+  <a class="rz-list-btn resume" id="resume" hidden href="library/#/resume">
+    <span class="rz-ic" data-icon="resume"></span>
+    <span class="grow"><b>أكمل اختبارك</b><span class="rz-meta" id="resumeS"></span></span>
+    <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
+  </a>
+
+  <section class="rz-card">
+    <div class="goal">
+      <div class="rz-ring" id="ring"></div>
+      <div class="grow">
+        <b id="goalT">هدف اليوم</b>
+        <span class="rz-meta" id="goalS"></span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="rz-between"><span class="rz-meta" id="lvlT"></span><span class="rz-meta" id="lvlN"></span></div>
+      <div class="rz-bar"><i id="lvlBar"></i></div>
+    </div>
+  </section>
+
+  <section class="rz-card">
+    <div class="rz-between"><b>مهام اليوم</b><span class="rz-meta" id="taskN"></span></div>
+    <div id="tasks"></div>
+  </section>
+
+  <div class="pair">
+    <a class="mini" href="library/#/riddle" id="riddle"><span class="ic" data-icon="puzzle"></span><b>حزورة اليوم</b><span class="rz-meta" id="riddleS">سؤال واحد للجميع</span></a>
+    <a class="mini" href="library/#/speed"><span class="ic" data-icon="bolt"></span><b>جولة سريعة</b><span class="rz-meta" id="speedS">أكبر عدد في ٦٠ ثانية</span></a>
+  </div>
+
+  <a class="rz-list-btn" id="hifzR" hidden href="hifz/#review">
+    <span class="rz-ic" data-icon="hifz"></span>
+    <span class="grow"><b id="hifzT">مراجعة اليوم</b><span class="rz-meta" id="hifzS"></span></span>
+    <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
   </a>
 
   <a class="rz-list-btn" href="library/#/mistakes">
@@ -40,12 +89,14 @@
 
   <h2 class="rz-h">الأبواب</h2>
   <nav class="rz-grid" aria-label="أقسام التطبيق">
-    <a class="rz-tile" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب من أبواب المنهاج</span></a>
+    <a class="rz-tile" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب من أبواب التجويد</span></a>
+    <a class="rz-tile" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درساً بعد درس، بالنجوم</span></a>
     <a class="rz-tile" href="library/#/builder"><span data-icon="sliders"></span><b>صمّم اختبارك</b><span class="rz-meta">اختر دروسك ومستوى الصعوبة</span></a>
     <a class="rz-tile" href="library/#/share"><span data-icon="share"></span><b>شارك اختباراً</b><span class="rz-meta">رابط واحد بالأسئلة نفسها للجميع</span></a>
     <a class="rz-tile" href="library/#/mastery"><span data-icon="grid"></span><b>خريطة إتقاني</b><span class="rz-meta">أين وصلت في كل درس</span></a>
     <a class="rz-tile" href="hifz/"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات وما قبل الآية وما بعدها</span></a>
     <a class="rz-tile" href="imara/"><span data-icon="wave"></span><b>عمارة المخارج</b><span class="rz-meta">المخارج في رسمة واحدة</span></a>
+    <a class="rz-tile" href="progress.html"><span data-icon="progress"></span><b>تقدّمي</b><span class="rz-meta">أسبوعك، ومستواك، وأوسمتك</span></a>
   </nav>
 
   <footer class="foot">
@@ -55,12 +106,82 @@
 </main>
 <script>
 (function(){
-  const AR = RZ.AR, s = RZ.streak(), due = RZ.mistakesDue(), all = Object.keys(RZ.mistakes()).length;
-  if(s.count){ const b = document.getElementById('streak'); b.hidden = false; b.lastElementChild.textContent = RZ.count(s.count, ['يوم واحد', 'يومان متتاليان', 'أيام متتالية', 'يوماً متتالياً']); }
-  if(s.doneToday){ document.getElementById('dailyT').textContent = 'أتممت تحدّي اليوم'; document.getElementById('dailyS').textContent = 'عُد غداً لتحافظ على سلسلتك'; document.getElementById('dailyB').textContent = 'مرة أخرى'; }
-  const m = document.getElementById('mist');
-  if(due) m.textContent = RZ.count(due, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً']) + ' حان موعد مراجعته اليوم'.replace('مراجعته', due === 1 ? 'مراجعته' : due === 2 ? 'مراجعتهما' : 'مراجعتها');
-  else if(all) m.textContent = 'لا مراجعة اليوم · في الدفتر ' + RZ.count(all, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً']);
+  const AR = RZ.AR, st = RZ.settings(), $ = id => document.getElementById(id);
+  function paint(){
+    const s = RZ.settings();
+    $('hello').textContent = s.name ? 'السلام عليكم يا ' + s.name : 'السلام عليكم';
+    const L = RZ.level();
+    $('lvl').innerHTML = `<span class="rz-medal m-${L.cls}">${AR(L.step)}</span>${L.name}`;
+    $('lvlT').textContent = 'مستواك: ' + L.name;
+    $('lvlN').textContent = L.next != null ? 'باقي ' + RZ.count(L.left, RZ.PT_FORMS) + ' على ' + L.nextName : 'أعلى مستوى، ما شاء الله';
+    if(L.left === 1 || L.left === 2) $('lvlN').textContent = 'باقي ' + RZ.count(L.left, RZ.PT_FORMS) + ' على ' + L.nextName;
+    $('lvlBar').style.width = Math.round(L.pct * 100) + '%';
+    // daily goal ring
+    const G = RZ.goal(), x = RZ.dayLog().x, f = Math.min(1, x / G.x), C = 2 * Math.PI * 24;
+    $('ring').innerHTML = `<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="28" cy="28" r="24" fill="none" stroke="${f >= 1 ? 'var(--good)' : 'var(--primary)'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - f)}"/></svg><b>${f >= 1 ? '✓' : AR(Math.round(f * 100)) + '٪'}</b>`;
+    $('goalT').textContent = f >= 1 ? 'حقّقت هدف اليوم!' : 'هدف اليوم (' + G.t + ')';
+    $('goalS').textContent = AR(Math.min(x, 9999)) + ' من ' + AR(G.x) + ' نقطة اليوم';
+    // streak + daily challenge
+    const k = RZ.streak();
+    if(k.count){ const b = $('streak'); b.hidden = false; b.lastElementChild.textContent = RZ.count(k.count, ['يوم واحد', 'يومان متتاليان', 'أيام متتالية', 'يوماً متتالياً']); }
+    const sel = (RZ.ls.get('tajweed-library-custom-v1', {}).sel || []);
+    const last = RZ_TOUR.lastKey();
+    $('dailyS').textContent = last ? 'حتى: ' + RZ_TOUR.lessonName(last) : 'من دروس المستوى الأول';
+    const dd = RZ.ls.get('rz-daily-done', '');
+    if(dd === RZ.today()){ $('dailyT').textContent = 'أتممت تحدّي اليوم'; $('dailyS').textContent = 'عُد غداً لتحافظ على سلسلتك'; $('dailyB').textContent = 'مرة أخرى'; }
+    // resume
+    const R = RZ.ls.get('rz-resume', null);
+    if(R && R.qs && R.i < R.qs.length && Date.now() - R.at < 7 * 864e5){ $('resume').hidden = false; $('resumeS').textContent = (R.title || 'اختبار') + ' · ' + AR(R.i) + ' من ' + AR(R.qs.length); }
+    // tasks
+    const T = RZ.tasks(), box = $('tasks'); box.innerHTML = '';
+    T.forEach(t => { const r = document.createElement('div'); r.className = 'rz-task' + (t.done ? ' done' : '');
+      r.innerHTML = `<span class="box">${t.done ? RZ.icon('check') : ''}</span><span>${t.t}</span><small>${t.n > 1 ? AR(t.p) + '/' + AR(t.n) : ''}</small>`; box.append(r); });
+    $('taskN').textContent = AR(T.filter(t => t.done).length) + ' من ٣';
+    // riddle + speed
+    const rd = RZ.ls.get('rz-riddle', {});
+    if(rd.day === RZ.today()){ $('riddle').classList.add('done'); $('riddleS').textContent = rd.ok ? 'حللتها ✓' : 'غداً حزورة جديدة'; }
+    if(RZ.game.best60) $('speedS').textContent = 'رقمك القياسي: ' + AR(RZ.game.best60);
+    // hifz review
+    const hz = RZ.hifzToday();
+    if(hz.list.length){ $('hifzR').hidden = false; const left = hz.list.filter(n => !(hz.h.today.done || []).includes(n));
+      $('hifzT').textContent = left.length ? 'مراجعة اليوم: ' + hz.list.map(n => 'سورة ' + (hz.h.names[n] || n)).join(' و') : 'أتممت مراجعة اليوم ✓';
+      $('hifzS').textContent = left.length ? 'من محفوظك، بحسب آخر مراجعة وأخطائك' : 'بارك الله فيك'; }
+    // mistakes
+    const due = RZ.mistakesDue(), all = Object.keys(RZ.mistakes()).length, m = $('mist');
+    if(due) m.textContent = RZ.count(due, RZ.Q_FORMS) + (due === 1 ? ' حان موعد مراجعته اليوم' : due === 2 ? ' حان موعد مراجعتهما اليوم' : ' حان موعد مراجعتها اليوم');
+    else if(all) m.textContent = 'لا مراجعة اليوم · في الدفتر ' + RZ.count(all, RZ.Q_FORMS);
+  }
+  paint();
+  // first run tour, or "what's new" after an update
+  const ver = (window.RZ_CHANGES && RZ_CHANGES[0].v) || '';
+  if(!RZ.ls.get('rz-onboarded', 0) || location.hash === '#tour'){
+    // users who already used the app before the tour existed skip straight to "what's new"
+    const veteran = !RZ.ls.get('rz-onboarded', 0) && (RZ.ls.get('rz-streak', null) || RZ.ls.get('tajweed-library-v1', null)) && location.hash !== '#tour';
+    if(veteran){ RZ.ls.set('rz-onboarded', 1); }
+    else { history.replaceState(null, '', location.pathname); RZ_TOUR.open(paint); }
+  }
+  if(RZ.ls.get('rz-onboarded', 0) && RZ.ls.get('rz-seen-ver', '') !== ver && window.RZ_CHANGES){
+    RZ.ls.set('rz-seen-ver', ver);
+    RZ.sheet((box, close) => {
+      box.innerHTML = `<b style="font-size:22px">ما الجديد في رسوخ</b><span class="rz-meta">الإصدار ${RZ_CHANGES[0].v} · ${RZ_CHANGES[0].d.replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])}</span><ul style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px">${RZ_CHANGES[0].items.map(t => '<li>' + t + '</li>').join('')}</ul>`;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn pri block'; b.textContent = 'تمام'; b.addEventListener('click', close); box.append(b);
+      if(!st.name){ const t = document.createElement('a'); t.href = 'settings.html#name'; t.className = 'rz-link'; t.style.textAlign = 'center'; t.textContent = 'أضف اسمك ليظهر في التحية'; box.append(t); }
+    });
+  }
+  // closing du'a: the first "back" on the home screen shows it; a second "back" leaves the app
+  if(st.dua && history.pushState){
+    history.replaceState({ rzRoot:1 }, ''); history.pushState({ rzTrap:1 }, '');
+    addEventListener('popstate', e => {
+      if(!(e.state && e.state.rzRoot)) return;
+      let stay = false;
+      const close = RZ.sheet((box, cl) => {
+        box.innerHTML = `<b>دعاء كفارة المجلس</b><div style="font-family:var(--f-q);font-size:24px;line-height:2;text-align:center">${RZ.DUA_CLOSE}</div><span class="rz-meta" style="text-align:center">اضغط «رجوع» مرة أخرى للخروج</span>`;
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn block'; b.textContent = 'البقاء في التطبيق';
+        b.addEventListener('click', () => { stay = true; cl(); history.pushState({ rzTrap:1 }, ''); }); box.append(b);
+      });
+    });
+  }
+  addEventListener('pageshow', e => { if(e.persisted) location.reload(); });
 })();
 </script>
 </body></html>
