@@ -63,14 +63,14 @@
   <section class="rz-card">
     <b>التذكير والأدعية والأصوات</b>
     <label class="sw"><span>تذكير يومي بتحدّي اليوم</span><input type="checkbox" id="notif"></label>
-    <span class="rz-meta" id="notifMsg" aria-live="polite">يصل التذكير مرة في اليوم تقريباً إذا لم تُتمّ هدفك. الجوال يحدّد وقته، وقد لا يعمل على كل الأجهزة.</span>
+    <span class="rz-meta" id="notifMsg" aria-live="polite">يصل التذكير مرة في اليوم تقريبًا إذا لم تُتمّ هدفك. الجوال يحدّد وقته، وقد لا يعمل على كل الأجهزة.</span>
     <label class="sw"><span>دعاء عند فتح التطبيق والخروج منه</span><input type="checkbox" id="dua"></label>
     <label class="sw"><span>أصوات خفيفة عند الإجابة</span><input type="checkbox" id="snd"></label>
   </section>
 
   <section class="rz-card">
-    <b>وضع الإجازة</b>
-    <span class="rz-meta">يوقف حساب السلسلة أياماً تختارها، لسفر أو مرض أو أي عذر، فلا تنقطع سلسلتك.</span>
+    <b>وضع التجميد</b>
+    <span class="rz-meta">يجمّد سلسلتك أيامًا تختارها، لسفر أو مرض أو أي عذر، فلا تنقطع.</span>
     <div id="vac"></div>
   </section>
 
@@ -96,7 +96,7 @@
     <b>عن التطبيق</b>
     <a class="rz-list-btn" href="index.html#tour"><span class="rz-ic" data-icon="path"></span><span class="grow"><b>عرض الجولة التعريفية</b><span class="rz-meta">الشاشات التي تظهر أول مرة</span></span></a>
     <button type="button" class="rz-list-btn" id="news"><span class="rz-ic" data-icon="bell"></span><span class="grow"><b>ما الجديد</b><span class="rz-meta" id="newsS"></span></span></button>
-    <a class="rz-list-btn" id="mail" href="#"><span class="rz-ic" data-icon="mail"></span><span class="grow"><b>أرسل ملاحظة أو اقتراحاً</b><span class="rz-meta">يفتح بريداً جاهزاً</span></span></a>
+    <a class="rz-list-btn" id="mail" href="#"><span class="rz-ic" data-icon="mail"></span><span class="grow"><b>أرسل ملاحظة أو اقتراحًا</b><span class="rz-meta">يفتح بريدًا جاهزًا</span></span></a>
     <a class="rz-list-btn" href="privacy.html"><span class="rz-ic" data-icon="book"></span><span class="grow"><b>سياسة الخصوصية وعن التطبيق</b><span class="rz-meta">التطبيق لا يجمع أي بيانات</span></span></a>
     <span class="rz-meta">نص المصحف برواية حفص عن عاصم بالرسم العثماني.</span>
     <span class="rz-meta" id="ver"></span>
@@ -135,13 +135,13 @@
     if(v){
       const p = document.createElement('div'); p.className = 'rz-between';
       p.innerHTML = `<span class="rz-badge plain">مفعّل حتى ${RZ.dateAR(v.to)}</span>`;
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-link'; b.textContent = 'إنهاء الإجازة'; b.addEventListener('click', () => { RZ.setVacation(0); paintVac(); });
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-link'; b.textContent = 'إنهاء التجميد'; b.addEventListener('click', () => { RZ.setVacation(0); paintVac(); });
       p.append(b); box.append(p); return;
     }
-    const s = document.createElement('select'); s.className = 'rz-select'; s.setAttribute('aria-label', 'مدة الإجازة');
+    const s = document.createElement('select'); s.className = 'rz-select'; s.setAttribute('aria-label', 'مدة التجميد');
     s.innerHTML = '<option value="">اختر المدة…</option>' + [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${RZ.count(n, RZ.DAY_FORMS)}</option>`).join('');
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn'; b.textContent = 'فعّل وضع الإجازة'; b.style.marginTop = '8px'; b.style.width = '100%';
-    b.addEventListener('click', () => { if(!s.value) return; RZ.setVacation(+s.value); RZ.toast('فُعّل وضع الإجازة'); paintVac(); });
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn'; b.textContent = 'فعّل وضع التجميد'; b.style.marginTop = '8px'; b.style.width = '100%';
+    b.addEventListener('click', () => { if(!s.value) return; RZ.setVacation(+s.value); RZ.toast('فُعّل وضع التجميد'); paintVac(); });
     box.append(s, b);
   }
   paintVac();

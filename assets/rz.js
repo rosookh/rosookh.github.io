@@ -23,8 +23,8 @@
   const dateAR = s => { const [y, m, dd] = s.split('-').map(Number); return AR(dd) + '/' + AR(m); };
   // Arabic counted noun: forms = [one, two, few (3-10), many (11+)]
   const count = (n, f) => n === 1 ? f[0] : n === 2 ? f[1] : (n % 100 >= 3 && n % 100 <= 10) ? AR(n) + ' ' + f[2] : AR(n) + ' ' + f[3];
-  const Q_FORMS = ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً'];
-  const DAY_FORMS = ['يوم واحد', 'يومان', 'أيام', 'يوماً'];
+  const Q_FORMS = ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالًا'];
+  const DAY_FORMS = ['يوم واحد', 'يومان', 'أيام', 'يومًا'];
   const PT_FORMS = ['نقطة واحدة', 'نقطتان', 'نقاط', 'نقطة'];
   // tiny seeded random, used for the pattern and for "same for everyone today" picks
   function seeded(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -90,7 +90,7 @@
     { id:'c25', t:'أجب ٢٥ إجابة صحيحة', n:25, ev:'correct' },
     { id:'hunt', t:'حلّ ٣ أسئلة «صيد الأحكام» صحيحة', n:3, ev:'hunt' },
     { id:'nb', t:'راجع سؤالين من دفتر أخطائك', n:2, ev:'nb', need:'nb' },
-    { id:'perfect', t:'أنهِ اختباراً بلا أي خطأ', n:1, ev:'perfect' },
+    { id:'perfect', t:'أنهِ اختبارًا بلا أي خطأ', n:1, ev:'perfect' },
     { id:'daily', t:'أتمّ تحدّي اليوم', n:1, ev:'daily' },
     { id:'speed', t:'العب جولة سريعة', n:1, ev:'speed' },
     { id:'riddle', t:'حلّ حزورة اليوم', n:1, ev:'riddle' },
@@ -123,7 +123,7 @@
   const BADGES = [
     { id:'first', e:'🌱', t:'البداية', s:'أنهيت أول اختبار', ok: () => G.quizzes >= 1 },
     { id:'s7', e:'🔥', t:'أسبوع كامل', s:'٧ أيام متتالية', ok: () => streakRaw().count >= 7 },
-    { id:'s30', e:'🌙', t:'شهر من المثابرة', s:'٣٠ يوماً متتالياً', ok: () => streakRaw().count >= 30 },
+    { id:'s30', e:'🌙', t:'شهر من المثابرة', s:'٣٠ يومًا متتاليًا', ok: () => streakRaw().count >= 30 },
     { id:'s100', e:'💎', t:'مئة يوم', s:'١٠٠ يوم متتالٍ', ok: () => streakRaw().count >= 100 },
     { id:'c100', e:'✅', t:'مئة إجابة', s:'١٠٠ إجابة صحيحة', ok: () => correctAll() >= 100 },
     { id:'c500', e:'🏅', t:'خمسمئة إجابة', s:'٥٠٠ إجابة صحيحة', ok: () => correctAll() >= 500 },
@@ -138,7 +138,7 @@
     { id:'speed', e:'⚡', t:'سريع البديهة', s:'١٥ إجابة صحيحة في جولة سريعة', ok: () => G.best60 >= 15 },
     { id:'riddle', e:'🧩', t:'محبّ الحزورات', s:'حللت ٧ حزورات يومية', ok: () => G.riddles >= 7 },
     { id:'hifz', e:'📖', t:'مراجع المحفوظ', s:'راجعت محفوظك ١٠ أيام', ok: () => G.hifzDays >= 10 },
-    { id:'month', e:'🗓️', t:'وسام الشهر', s:'أتممت مهام ٢٠ يوماً في شهر واحد', ok: () => Object.values(G.taskMonths).some(n => n >= 20) }
+    { id:'month', e:'🗓️', t:'وسام الشهر', s:'أتممت مهام ٢٠ يومًا في شهر واحد', ok: () => Object.values(G.taskMonths).some(n => n >= 20) }
   ];
   function checkBadges(){
     const fresh = [];
@@ -213,7 +213,7 @@
   async function enableNotif(){ // returns a short message for the user
     if(!('Notification' in window) || !('serviceWorker' in navigator)) return 'جوالك أو متصفحك لا يدعم التذكير.';
     const p = await Notification.requestPermission();
-    if(p !== 'granted') return 'لم تُمنح الموافقة على الإشعارات. يمكنك تفعيلها لاحقاً من إعدادات الجوال.';
+    if(p !== 'granted') return 'لم تُمنح الموافقة على الإشعارات. يمكنك تفعيلها لاحقًا من إعدادات الجوال.';
     try{
       const reg = await navigator.serviceWorker.ready;
       if('periodicSync' in reg){
@@ -321,7 +321,7 @@
     const f = box.querySelector('button,a,input'); if(f) f.focus({ preventScroll:true });
     return close;
   }
-  const DUA_OPEN = 'اللهم علّمنا ما ينفعنا، وانفعنا بما علّمتنا، وزدنا علماً';
+  const DUA_OPEN = 'اللهم علّمنا ما ينفعنا، وانفعنا بما علّمتنا، وزدنا علمًا';
   const DUA_CLOSE = 'سبحانك اللهم وبحمدك، أشهد أن لا إله إلا أنت، أستغفرك وأتوب إليك';
   function splash(){
     try{ if(!st.dua || sessionStorage.getItem('rz-dua')) return; sessionStorage.setItem('rz-dua', '1'); }catch(e){ return; }

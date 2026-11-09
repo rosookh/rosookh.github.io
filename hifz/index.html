@@ -180,8 +180,8 @@ function renderMt(v){
   const sel=$('select',{id:'mtsel','aria-label':'تصفية حسب السورة',on:{change:e=>{ST.mtS[ST.lv]=e.target.value;save();render()}}},
     $('option',{value:'all'},'كل سور المستوى'));
   levelSurahs().forEach(n=>sel.append($('option',{value:n,selected:String(n)===String(f)?'':null},'سورة '+S(n).name)));
-  v.append($('div',{class:'tools'},sel,$('span',{class:'muted',style:'font-size:13.5px'},AR(g.length+r.length)+' موضعاً')),
-    $('div',{class:'legend'},$('span',{},$('mark',{},'المقطع المشترك')),$('span',{},$('mark',{class:'d'},'أول كلمة يفترق عندها')),$('span',{},'الكلمة الخضراء مخفية: تذكّرها أولاً، ثم اضغط عليها لتكشفها.')));
+  v.append($('div',{class:'tools'},sel,$('span',{class:'muted',style:'font-size:13.5px'},AR(g.length+r.length)+' موضعًا')),
+    $('div',{class:'legend'},$('span',{},$('mark',{},'المقطع المشترك')),$('span',{},$('mark',{class:'d'},'أول كلمة يفترق عندها')),$('span',{},'الكلمة الخضراء مخفية: تذكّرها أولًا، ثم اضغط عليها لتكشفها.')));
   const box=$('div',{class:'mt'});
   if(r.length){
     box.append($('h3',{style:'margin:8px 0 0;font-size:16px'},'آيات تتكرر بلفظها'));
@@ -244,7 +244,7 @@ function genQ(sc){
       const n=pick(sc.s); if(S(n).ayat<3) continue;
       let a=1+rnd(S(n).ayat), b=1+rnd(S(n).ayat); if(a===b) continue; if(a>b)[a,b]=[b,a];
       const A=vt(n,a),B=vt(n,b); if(A===B) continue;
-      return {p:'في سورة '+S(n).name+': أيّ الآيتين تأتي أولاً؟',stem:null,a:A,w:[B],e:ref(n,a)+' قبل '+ref(n,b),two:true};
+      return {p:'في سورة '+S(n).name+': أيّ الآيتين تأتي أولًا؟',stem:null,a:A,w:[B],e:ref(n,a)+' قبل '+ref(n,b),two:true};
     }
     if(t==='start'){
       const n=pick(sc.s);const a=1+rnd(S(n).ayat);
@@ -270,7 +270,7 @@ function genQ(sc){
       const fill=shuffle(uniq(allVerses([n]).flatMap(([m,b])=>V(m,b)).map(strip),x=>x)).filter(x=>x!==right&&!wr.includes(x));
       wr=wr.concat(fill).slice(0,3);
       const stem=w.map((x,k)=>k===di?'⬚':x).join(' ');
-      return {p:'متشابهات: ما الكلمة الناقصة في الموضع ⬚ من سورة '+S(n).name+'؟',stem,a:right,w:wr,e:ref(n,a)+' · المقطع المشترك يرد أيضاً في: '+g.o.filter(o=>!(o[0]===n&&o[1]===a)).map(o=>ref(o[0],o[1])).join('، ')};
+      return {p:'متشابهات: ما الكلمة الناقصة في الموضع ⬚ من سورة '+S(n).name+'؟',stem,a:right,w:wr,e:ref(n,a)+' · المقطع المشترك يرد أيضًا في: '+g.o.filter(o=>!(o[0]===n&&o[1]===a)).map(o=>ref(o[0],o[1])).join('، ')};
     }
   }
   return null;
@@ -418,7 +418,7 @@ function renderRv(v){
   if(h.sel.length){
     const done=(h.today&&h.today.done)||[];
     const card=$('div',{class:'card',style:'display:flex;flex-direction:column;gap:12px'},$('b',{style:'font-size:20px'},'مراجعة اليوم'),
-      $('span',{class:'muted',style:'font-size:14px'},'نقترح كل يوم سورة أو سورتين من محفوظك: الأقدم مراجعةً أولاً، والتي أخطأت فيها أكثر تتقدّم.'));
+      $('span',{class:'muted',style:'font-size:14px'},'نقترح كل يوم سورة أو سورتين من محفوظك: الأقدم مراجعةً أولًا، والتي أخطأت فيها أكثر تتقدّم.'));
     list.forEach(n=>{
       const ok=done.includes(n);
       card.append($('div',{class:'rv-item'+(ok?' ok':'')},$('div',{style:'display:flex;flex-direction:column'},$('b',{},'سورة '+S(n).name),$('small',{class:'muted'},(h.last[n]?'آخر مراجعة: '+RZ.dateAR(h.last[n]):'لم تراجعها هنا بعد')+(h.miss[n]?' · أخطاء حديثة: '+AR(h.miss[n]):''))),
@@ -427,7 +427,7 @@ function renderRv(v){
           ok?$('span',{class:'rv-done'},'✓ تمّت'):$('button',{class:'btn pri',on:{click:()=>{const r=RZ.hifzDone(n);RZ.toast('بارك الله فيك · +٢٠ نقطة'+(r.goalReached?' · حقّقت هدفك اليومي':''));render()}}},'تمّت المراجعة'))));
     });
     v.append(card);
-  } else v.append($('p',{class:'muted',style:'margin:0'},'اختر السور التي تحفظها، ونقترح عليك كل يوم سورة أو سورتين لمراجعتها، فلا تُنسى. المراجعة تعطيك نقاطاً وتُحسب في سلسلتك.'));
+  } else v.append($('p',{class:'muted',style:'margin:0'},'اختر السور التي تحفظها، ونقترح عليك كل يوم سورة أو سورتين لمراجعتها، فلا تُنسى. المراجعة تعطيك نقاطًا وتُحسب في سلسلتك.'));
   const pick=$('details',{class:'card',open:h.sel.length?null:true},$('summary',{style:'cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center'},'السور التي أحفظها ('+AR(h.sel.length)+')'));
   const all=[...new Set(Object.values(D.levels).flatMap(L=>L.surahs))].sort((x,y)=>x-y), by={};
   all.forEach(n=>{const g=n===2?'سورة البقرة':'جزء '+AR(S(n).juz);(by[g]||(by[g]=[])).push(n)});

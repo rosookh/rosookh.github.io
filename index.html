@@ -20,9 +20,11 @@
 .goal .grow{flex-grow:1;display:flex;flex-direction:column;gap:6px;min-width:0}
 .pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mini{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);min-height:96px}
-.mini .ic{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
+.mini .ic{width:38px;height:38px;border-radius:11px;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center}
+#riddle{background:var(--wine-soft);border-color:transparent}#riddle .ic{background:var(--wine);color:var(--wine-ink)}
+.mini.speed{background:var(--ocean-soft);border-color:transparent}.mini.speed .ic{background:var(--ocean);color:var(--surface)}
 .mini .ic svg{width:20px;height:20px}
-.mini.done{background:var(--good-soft);border-color:var(--good)}
+.mini.done,#riddle.done{background:var(--good-soft);border-color:var(--good)}
 .resume{border:2px solid var(--ocean)}
 .resume .rz-ic{background:var(--ocean-soft)!important;color:var(--ocean)!important}
 </style>
@@ -42,7 +44,7 @@
   <a class="rz-hero" href="library/#/daily" id="daily" data-pattern="11">
     <div class="hero-top"><span class="rz-meta">تحدّي اليوم</span><span class="rz-badge" id="streak" hidden style="background:#C9AE8E;color:#2E2214"><span data-icon="flame" style="display:flex;width:14px;height:14px"></span><span></span></span></div>
     <b style="font-size:22px" id="dailyT">٥ أسئلة من دروسك</b>
-    <div class="hero-top"><span class="rz-meta" id="dailyS">دقيقتان تقريباً</span><span class="rz-cta" id="dailyB">ابدأ</span></div>
+    <div class="hero-top"><span class="rz-meta" id="dailyS">دقيقتان تقريبًا</span><span class="rz-cta" id="dailyB">ابدأ</span></div>
   </a>
 
   <a class="rz-list-btn resume" id="resume" hidden href="library/#/resume">
@@ -72,11 +74,11 @@
 
   <div class="pair">
     <a class="mini" href="library/#/riddle" id="riddle"><span class="ic" data-icon="puzzle"></span><b>حزورة اليوم</b><span class="rz-meta" id="riddleS">سؤال واحد للجميع</span></a>
-    <a class="mini" href="library/#/speed"><span class="ic" data-icon="bolt"></span><b>جولة سريعة</b><span class="rz-meta" id="speedS">أكبر عدد في ٦٠ ثانية</span></a>
+    <a class="mini speed" href="library/#/speed"><span class="ic" data-icon="bolt"></span><b>جولة سريعة</b><span class="rz-meta" id="speedS">أكبر عدد في ٦٠ ثانية</span></a>
   </div>
 
   <a class="rz-list-btn" id="hifzR" hidden href="hifz/#review">
-    <span class="rz-ic" data-icon="hifz"></span>
+    <span class="rz-ic sage" data-icon="hifz"></span>
     <span class="grow"><b id="hifzT">مراجعة اليوم</b><span class="rz-meta" id="hifzS"></span></span>
     <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
   </a>
@@ -89,14 +91,14 @@
 
   <h2 class="rz-h">الأبواب</h2>
   <nav class="rz-grid" aria-label="أقسام التطبيق">
-    <a class="rz-tile" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب من أبواب التجويد</span></a>
-    <a class="rz-tile" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درساً بعد درس، بالنجوم</span></a>
-    <a class="rz-tile" href="library/#/builder"><span data-icon="sliders"></span><b>صمّم اختبارك</b><span class="rz-meta">اختر دروسك ومستوى الصعوبة</span></a>
-    <a class="rz-tile" href="library/#/share"><span data-icon="share"></span><b>شارك اختباراً</b><span class="rz-meta">رابط واحد بالأسئلة نفسها للجميع</span></a>
-    <a class="rz-tile" href="library/#/mastery"><span data-icon="grid"></span><b>خريطة إتقاني</b><span class="rz-meta">أين وصلت في كل درس</span></a>
-    <a class="rz-tile" href="hifz/"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات وما قبل الآية وما بعدها</span></a>
-    <a class="rz-tile" href="imara/"><span data-icon="wave"></span><b>عمارة المخارج</b><span class="rz-meta">المخارج في رسمة واحدة</span></a>
-    <a class="rz-tile" href="progress.html"><span data-icon="progress"></span><b>تقدّمي</b><span class="rz-meta">أسبوعك، ومستواك، وأوسمتك</span></a>
+    <a class="rz-tile c-green" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب من أبواب التجويد</span></a>
+    <a class="rz-tile c-wine" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درسًا بعد درس، بالنجوم</span></a>
+    <a class="rz-tile c-sand" href="library/#/builder"><span data-icon="sliders"></span><b>صمّم اختبارك</b><span class="rz-meta">اختر دروسك ومستوى الصعوبة</span></a>
+    <a class="rz-tile c-ocean" href="library/#/share"><span data-icon="share"></span><b>شارك اختبارًا</b><span class="rz-meta">رابط واحد بالأسئلة نفسها للجميع</span></a>
+    <a class="rz-tile c-sage" href="library/#/mastery"><span data-icon="grid"></span><b>خريطة إتقاني</b><span class="rz-meta">أين وصلت في كل درس</span></a>
+    <a class="rz-tile c-wine" href="hifz/"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات وما قبل الآية وما بعدها</span></a>
+    <a class="rz-tile c-ocean" href="imara/"><span data-icon="wave"></span><b>عمارة المخارج</b><span class="rz-meta">المخارج في رسمة واحدة</span></a>
+    <a class="rz-tile c-sand" href="progress.html"><span data-icon="progress"></span><b>تقدّمي</b><span class="rz-meta">أسبوعك، ومستواك، وأوسمتك</span></a>
   </nav>
 
   <footer class="foot">
@@ -123,12 +125,12 @@
     $('goalS').textContent = AR(Math.min(x, 9999)) + ' من ' + AR(G.x) + ' نقطة اليوم';
     // streak + daily challenge
     const k = RZ.streak();
-    if(k.count){ const b = $('streak'); b.hidden = false; b.lastElementChild.textContent = RZ.count(k.count, ['يوم واحد', 'يومان متتاليان', 'أيام متتالية', 'يوماً متتالياً']); }
+    if(k.count){ const b = $('streak'); b.hidden = false; b.lastElementChild.textContent = RZ.count(k.count, ['يوم واحد', 'يومان متتاليان', 'أيام متتالية', 'يومًا متتاليًا']); }
     const sel = (RZ.ls.get('tajweed-library-custom-v1', {}).sel || []);
     const last = RZ_TOUR.lastKey();
     $('dailyS').textContent = last ? 'حتى: ' + RZ_TOUR.lessonName(last) : 'من دروس المستوى الأول';
     const dd = RZ.ls.get('rz-daily-done', '');
-    if(dd === RZ.today()){ $('dailyT').textContent = 'أتممت تحدّي اليوم'; $('dailyS').textContent = 'عُد غداً لتحافظ على سلسلتك'; $('dailyB').textContent = 'مرة أخرى'; }
+    if(dd === RZ.today()){ $('dailyT').textContent = 'أتممت تحدّي اليوم'; $('dailyS').textContent = 'عُد غدًا لتحافظ على سلسلتك'; $('dailyB').textContent = 'مرة أخرى'; }
     // resume
     const R = RZ.ls.get('rz-resume', null);
     if(R && R.qs && R.i < R.qs.length && Date.now() - R.at < 7 * 864e5){ $('resume').hidden = false; $('resumeS').textContent = (R.title || 'اختبار') + ' · ' + AR(R.i) + ' من ' + AR(R.qs.length); }
@@ -139,7 +141,7 @@
     $('taskN').textContent = AR(T.filter(t => t.done).length) + ' من ٣';
     // riddle + speed
     const rd = RZ.ls.get('rz-riddle', {});
-    if(rd.day === RZ.today()){ $('riddle').classList.add('done'); $('riddleS').textContent = rd.ok ? 'حللتها ✓' : 'غداً حزورة جديدة'; }
+    if(rd.day === RZ.today()){ $('riddle').classList.add('done'); $('riddleS').textContent = rd.ok ? 'حللتها ✓' : 'غدًا حزورة جديدة'; }
     if(RZ.game.best60) $('speedS').textContent = 'رقمك القياسي: ' + AR(RZ.game.best60);
     // hifz review
     const hz = RZ.hifzToday();

@@ -23,7 +23,7 @@
     const bd = document.createElement('div'); bd.className = 'bd';
     const ft = document.createElement('div'); ft.className = 'ft';
     root.append(hd, bd, ft); document.body.append(root); document.body.style.overflow = 'hidden';
-    const name = document.createElement('input'); name.className = 'rz-input'; name.type = 'text'; name.maxLength = 30; name.placeholder = 'اكتب اسمك أو اتركه فارغاً'; name.value = st.name || ''; name.setAttribute('aria-label', 'بماذا نناديك؟');
+    const name = document.createElement('input'); name.className = 'rz-input'; name.type = 'text'; name.maxLength = 30; name.placeholder = 'اكتب اسمك أو اتركه فارغًا'; name.value = st.name || ''; name.setAttribute('aria-label', 'بماذا نناديك؟');
     const les = lessonSelect(lastKey());
     let g = st.goal || 'm';
     const finish = () => {
@@ -43,7 +43,7 @@
     function paint(){
       bd.innerHTML = ''; ft.innerHTML = '';
       if(step === 0){
-        head('أهلاً بك في رسوخ', 'تعلّم التجويد واستعد لامتحانات المستويات');
+        head('أهلًا بك في رسوخ', 'تعلّم التجويد واستعد لامتحانات المستويات');
         const img = document.createElement('img'); img.src = RZ.base + 'icons/icon-192.png'; img.alt = 'شعار رسوخ'; img.style.cssText = 'width:72px;height:72px;border-radius:20px;align-self:center';
         const lab = document.createElement('b'); lab.textContent = 'بماذا نناديك؟ (اختياري)';
         const note = document.createElement('span'); note.className = 'rz-meta'; note.textContent = 'يظهر الاسم في التحية فقط، ويبقى على جوالك.';
@@ -53,7 +53,7 @@
         const note = document.createElement('span'); note.className = 'rz-meta'; note.textContent = 'تُختار الأسئلة من هذا الدرس وكل ما قبله. يمكنك تغييره متى شئت من الإعدادات.';
         bd.append(les, note);
       } else if(step === 2){
-        head('ما هدفك اليومي؟', 'كل إجابة صحيحة تعطيك نقاطاً');
+        head('ما هدفك اليومي؟', 'كل إجابة صحيحة تعطيك نقاطًا');
         Object.entries(RZ.GOALS).forEach(([k, G]) => {
           const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-opt'; b.setAttribute('aria-pressed', String(k === g));
           b.innerHTML = `<b>${G.t} · ${RZ.AR(G.x)} نقطة</b><small>${G.s}</small>`;
@@ -74,7 +74,7 @@
         head('قبل أن تبدأ', 'التطبيق وسيلة مساعدة');
         const p = document.createElement('div'); p.className = 'rz-card';
         p.innerHTML = '<span>المرجع في الأداء هو التلقّي من المعلم المتقن، والتطبيق يساعدك على المراجعة والتثبيت.</span><span class="rz-meta">يعمل التطبيق بلا إنترنت، وكل تقدّمك محفوظ على جوالك فقط.</span>';
-        const nb = btn('فعّل تذكيراً يومياً بتحدّي اليوم', '', async () => { nb.disabled = true; const m = await RZ.enableNotif(); nb.textContent = m; });
+        const nb = btn('فعّل تذكيرًا يوميًا بتحدّي اليوم', '', async () => { nb.disabled = true; const m = await RZ.enableNotif(); nb.textContent = m; });
         nb.style.minHeight = '52px'; if(RZ.settings().notif){ nb.disabled = true; nb.textContent = 'التذكير مفعّل'; }
         bd.append(p, nb);
       }

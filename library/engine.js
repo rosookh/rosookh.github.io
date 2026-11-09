@@ -49,13 +49,16 @@ function specNeeds(id, s){
 DATA.forEach(b => b.questions.forEach((q, i) => { q.id = 'b:' + b.id + ':' + i; q.ch = b.id; q.les = b.id + ':' + LESSONS[b.id].t[i]; }));
 if(window.RIDDLES && SPEC.l2c1){ RIDDLES.forEach(r => [1, 2, 3].forEach(d => SPEC.l2c1.push({ t:'riddle', i:r.i, d, les:1, r }))); }
 Object.entries(SPEC).forEach(([ch, list]) => list.forEach((s, i) => { s.id = 's:' + ch + ':' + i; s.ch = ch; s.needs = specNeeds(ch, s); s.les = ch + ':' + (s.needs[0] ?? 0); }));
+/* hidden sources stay in the data (ids keep their positions) but are left out of every pool */
+const HIDDEN_SRC = new Set(['tuhfa']); const SPEC_BY_ID = {};
+Object.keys(SPEC).forEach(ch => { SPEC[ch].forEach(s => SPEC_BY_ID[s.id] = s); SPEC[ch] = SPEC[ch].filter(s => !HIDDEN_SRC.has(s.src)); });
 const TOTAL = DATA.reduce((s, b) => s + b.questions.length, 0) + Object.values(SPEC).reduce((s, v) => s + v.length, 0);
 
 /* ---------- book images ---------- */
 const MAKH = { jawf:'الجوف', aqsa_halq:'أقصى الحلق', wasat_halq:'وسط الحلق', adna_halq:'أدنى الحلق',
-  qaf:'أقصى اللسان مع ما يحاذيه من الحنك الأعلى', kaf:'أقصى اللسان أسفل من مخرج القاف قليلاً', wasat:'وسط اللسان مع ما يحاذيه من الحنك الأعلى',
-  dad:'إحدى حافتي اللسان مع الأضراس العليا', lam:'أدنى حافتي اللسان إلى منتهى طرفه', nun:'طرف اللسان تحت مخرج اللام قليلاً',
-  ra:'طرف اللسان مع ظهره، قريباً من مخرج النون', nat:'طرف اللسان مع أصول الثنايا العليا', lith:'طرف اللسان مع أطراف الثنايا العليا',
+  qaf:'أقصى اللسان مع ما يحاذيه من الحنك الأعلى', kaf:'أقصى اللسان أسفل من مخرج القاف قليلًا', wasat:'وسط اللسان مع ما يحاذيه من الحنك الأعلى',
+  dad:'إحدى حافتي اللسان مع الأضراس العليا', lam:'أدنى حافتي اللسان إلى منتهى طرفه', nun:'طرف اللسان تحت مخرج اللام قليلًا',
+  ra:'طرف اللسان مع ظهره، قريبًا من مخرج النون', nat:'طرف اللسان مع أصول الثنايا العليا', lith:'طرف اللسان مع أطراف الثنايا العليا',
   safir:'طرف اللسان مع ما فوق الثنايا السفلى', fa:'بطن الشفة السفلى مع أطراف الثنايا العليا', shaf:'الشفتان' };
 const NEAR = [['nat','lith','safir'], ['lam','ra','nun'], ['shaf','fa','nun'], ['qaf','kaf']];
 const near = (a, b) => a === b || NEAR.some(s => s.includes(a) && s.includes(b));
@@ -66,12 +69,12 @@ const DL = { 1:'سهل', 2:'متوسط', 3:'صعب' };
 const isOrderQ = q => /الترتيب الصحيح/.test(q.q) && q.a.split('، ').length >= 4;
 const shortQ = q => q.a.length <= 34 && q.q.length <= 95 && !isOrderQ(q);
 const base = q => ({ ch: q.ch, les: q.les, src: q.id });
-function toQ(q){ return { ...base(q), type:'mcq', q:q.q, big:q.big, d:q.d, opts:shuffle([q.a, ...q.w]), ans:q.a, e:q.e || '' }; }
+function toQ(q){ return { ...base(q), type:'mcq', q:q.q, big:q.big, ctx:q.ctx, d:q.d, opts:shuffle([q.a, ...q.w]), ans:q.a, e:q.e || '' }; }
 function toTF(q){ const right = RAND() < .5; const prop = right ? q.a : q.w[rnd(q.w.length)];
-  return { ...base(q), type:'tf', q:q.q, big:q.big, d:q.d, prop, right, ans:q.a, opts:shuffle([q.a, ...q.w]), e:q.e || '' }; }
+  return { ...base(q), type:'tf', q:q.q, big:q.big, ctx:q.ctx, d:q.d, prop, right, ans:q.a, opts:shuffle([q.a, ...q.w]), e:q.e || '' }; }
 function toOrder(q){ const items = q.a.split('، ').map(s => s.replace(/^ثم\s+/, '').trim());
   return { ...base(q), type:'order', q:q.q, d:q.d, items, ans:items.join('، '), e:q.e || '' }; }
-function toMatch(qs){ return { ch: qs[0].ch, les: qs[0].les, src: 'm:' + qs.map(q => q.id).join('+'), type:'match', d:2, pairs:qs.map(q => ({ q:q.q + (q.big ? ' ' + q.big : ''), a:q.a })), q:'صِل كل سؤال بجوابه', ans:qs.map(q => q.a).join(' · '), e:'' }; }
+function toMatch(qs){ return { ch: qs[0].ch, les: qs[0].les, src: 'm:' + qs.map(q => q.id).join('+'), type:'match', d:2, pairs:qs.map(q => ({ q:q.q + (q.big || (q.ctx && q.ctx.hit) ? ' ' + ctxShort(q) : ''), a:q.a })), q:'صِل كل سؤال بجوابه', ans:qs.map(q => q.a).join(' · '), e:'' }; }
 function toSpecial(s){
   const b = base(s);
   if(s.t === 'pick') return { ...b, type:'pick', d:2, q:s.p, v:s.v, g:s.g, ref:s.ref, ans:s.g.map(g => g.map(i => s.v[i]).join(' ')).join('، '), e:s.e };
@@ -137,8 +140,8 @@ const LV = [
   { k:'mix', t:'متدرّج', s:'يبدأ بالأسئلة السهلة وينتهي بالصعبة.' },
   { k:'1', t:'سهل', s:'أسئلة مباشرة لتثبيت التعريفات والحروف.' },
   { k:'2', t:'متوسط', s:'أسئلة تطبيقية واستخراج من الآيات.' },
-  { k:'3', t:'صعب', s:'أسئلة تحتاج تمييزاً دقيقاً بين الأحكام المتشابهة.' },
-  { k:'4', t:'صعب جداً', s:'أصعب الأسئلة، بمؤقت: ٢٥ ثانية للسؤال، و٥٥ ثانية للأسئلة التفاعلية.' }
+  { k:'3', t:'صعب', s:'أسئلة تحتاج تمييزًا دقيقًا بين الأحكام المتشابهة.' },
+  { k:'4', t:'صعب جدًا', s:'أصعب الأسئلة، بمؤقت: ٢٥ ثانية للسؤال، و٥٥ ثانية للأسئلة التفاعلية.' }
 ];
 const specD = s => s.d || ({ pick:2, multi:3, mcq:2, fill:2, stmt:2, open:2, match:2, sort:2, hunt:2, img:2, riddle:2 })[s.t] || 2;
 function byLevel(pool, lvl){
@@ -227,7 +230,7 @@ function start(T){
   T.used = true;
   const make = () => T.make();
   const qs = T.seed != null ? withSeed(T.seed, make) : make();
-  if(!qs.length){ app.innerHTML = ''; app.append(topBar(T.title, T.back || '#/'), el('div', { class:'rz-card rz-empty' }, 'لا توجد أسئلة كافية لهذا الاختيار. جرّب مستوى صعوبة آخر أو أضف دروساً.')); return; }
+  if(!qs.length){ app.innerHTML = ''; app.append(topBar(T.title, T.back || '#/'), el('div', { class:'rz-card rz-empty' }, 'لا توجد أسئلة كافية لهذا الاختيار. جرّب مستوى صعوبة آخر أو أضف دروسًا.')); return; }
   S = { T, qs, i:0, score:0, right:0, streak:0, best:0, res:[], nbOut:0, xp:0, weak:[], hearts: T.hearts ? 3 : null };
   saveResume();
   if(T.replace){ history.replaceState(null, '', '#/quiz'); route(); } else go('#/quiz');
@@ -286,8 +289,8 @@ function audioBtn(ref){
 const canShareQ = q => q && q.src && /^[bs]:/.test(q.src) && !['match', 'sort', 'open'].includes(q.type);
 function qText(q){
   if(q.type === 'riddle') return 'فزورة تجويدية: ' + q.q;
-  let t = q.q || ''; if(q.big) t += ' ' + q.big; if(q.v) t += ' ﴿' + q.v.join(' ') + '﴾';
-  if(q.type === 'tf') t = (q.q || '') + (q.big ? ' ' + q.big : '');
+  let t = q.q || ''; if(q.big || q.ctx) t += ' ' + ctxText(q); if(q.v) t += ' ﴿' + q.v.join(' ') + '﴾';
+  if(q.type === 'tf') t = (q.q || '') + (q.big || q.ctx ? ' ' + ctxText(q) : '');
   return t;
 }
 function qOpts(q){ if(q.type === 'tf' || q.type === 'stmt') return (q.type === 'stmt' ? ['صحيحة', 'خاطئة'] : q.opts) || []; return q.opts || []; }
@@ -316,10 +319,24 @@ async function qCard(q){
   x.fillStyle = '#2B2A24'; x.font = '700 48px "IBM Plex Sans Arabic"';
   const head = q.type === 'tf' ? (q.q || '') : q.type === 'riddle' ? q.q : (q.q || '').replace(/____/g, '……');
   wrapText(x, head, maxW).slice(0, 5).forEach(l => { x.fillText(l, W - pad, y); y += 70; });
-  const verse = q.v ? '﴿' + q.v.join(' ') + '﴾' : q.big || '';
-  if(verse){ y += 10; x.font = '400 54px "Amiri Quran"'; x.textAlign = 'center'; const ls_ = wrapText(x, verse, maxW - 40).slice(0, 3);
-    x.fillStyle = '#FBF8F3'; x.strokeStyle = '#E2D8C8'; x.lineWidth = 3; x.beginPath(); const bh = ls_.length * 92 + 40; x.roundRect ? x.roundRect(pad, y - 20, maxW, bh, 28) : x.rect(pad, y - 20, maxW, bh); x.fill(); x.stroke();
-    x.fillStyle = '#2B2A24'; ls_.forEach((l, k) => x.fillText(l, W / 2, y + 62 + k * 92)); y += bh + 30; x.textAlign = 'right'; }
+  // verse words with the target ones flagged, drawn word by word so the target shows in burgundy
+  let vw = null;
+  if(q.v) vw = q.v.map((w, i) => [w, !!(q.hl && q.hl.includes(i))]);
+  else if(q.ctx && q.ctx.hit){ const sp = t => (t || '').split(' ').filter(Boolean); vw = [...sp(q.ctx.pre).map(w => [w, false]), ...sp(q.ctx.hit).map(w => [w, true]), ...sp(q.ctx.post).map(w => [w, false])]; }
+  else if(q.ctx && q.ctx.mq) vw = [[q.ctx.mq, false]];
+  else if(q.big) vw = q.big.replace(/[﴿﴾]/g, '').split(' ').filter(Boolean).map(w => [w, false]);
+  if(vw && vw.length){
+    vw[0][0] = '﴿' + vw[0][0]; vw[vw.length - 1][0] += '﴾';
+    const ref = q.ref || (q.ctx && q.ctx.ref);
+    y += 10; x.font = '400 54px "Amiri Quran"'; x.textAlign = 'right';
+    const sw = x.measureText(' ').width, lines_ = []; let cur = [], cw = 0;
+    vw.forEach(([w, h]) => { const ww = x.measureText(w).width; if(cur.length && cw + sw + ww > maxW - 60){ lines_.push([cur, cw]); cur = []; cw = 0; } cw += (cur.length ? sw : 0) + ww; cur.push([w, h, ww]); });
+    if(cur.length) lines_.push([cur, cw]);
+    const shown = lines_.slice(0, 4), refH = ref ? 56 : 0;
+    x.fillStyle = '#FBF8F3'; x.strokeStyle = '#E2D8C8'; x.lineWidth = 3; x.beginPath(); const bh = shown.length * 92 + 40 + refH; x.roundRect ? x.roundRect(pad, y - 20, maxW, bh, 28) : x.rect(pad, y - 20, maxW, bh); x.fill(); x.stroke();
+    shown.forEach(([ws, tw], k) => { let xx = W / 2 + tw / 2; ws.forEach(([w, h, ww]) => { x.fillStyle = h ? '#6B3439' : '#2B2A24'; x.fillText(w, xx, y + 62 + k * 92); xx -= ww + sw; }); });
+    if(ref){ x.font = '500 34px "IBM Plex Sans Arabic"'; x.fillStyle = '#625E52'; x.textAlign = 'center'; x.fillText('(' + ref.replace(/:\s*/, ' ').replace(/\d+/g, d => AR(d)) + ')', W / 2, y + 62 + shown.length * 92 - 20); }
+    y += bh + 30; x.textAlign = 'right'; }
   if(q.f && (q.type === 'img' || q.type === 'riddle')){
     const im = new Image(); im.src = 'img/' + q.f; await new Promise(r => { im.onload = r; im.onerror = r; });
     if(im.naturalWidth){ const ih = 330, iw = im.naturalWidth * ih / im.naturalHeight; x.fillStyle = '#FFFFFF'; x.fillRect((W - iw) / 2 - 10, y - 10, iw + 20, ih + 20); x.drawImage(im, (W - iw) / 2, y, iw, ih); y += ih + 40; }
@@ -371,7 +388,7 @@ function shareQ(q){
 function singleQ(id){
   const m = id.match(/^([bs]):([a-z0-9]+):(\d+)$/); let q = null;
   if(m && m[1] === 'b' && BANK[m[2]] && BANK[m[2]].questions[+m[3]]) q = toQ(BANK[m[2]].questions[+m[3]]);
-  if(m && m[1] === 's' && SPEC[m[2]] && SPEC[m[2]][+m[3]]) q = toSpecial(SPEC[m[2]][+m[3]]);
+  if(m && m[1] === 's' && SPEC_BY_ID[id] && !HIDDEN_SRC.has(SPEC_BY_ID[id].src)) q = toSpecial(SPEC_BY_ID[id]);
   if(!q){ app.innerHTML = ''; app.append(topBar('سؤال مشترك'), el('p', { class:'rz-empty' }, 'لم نجد هذا السؤال. ربما تغيّر بعد تحديث التطبيق.')); return; }
   start({ id:'single', kind:'single', title:'سؤال وصلك من صديق', les:q.les, replace:true, make:() => [q] });
 }
@@ -458,15 +475,15 @@ function home(){
   app.innerHTML = '';
   app.append(el('header', { style:'display:flex;flex-direction:column;gap:4px' },
     el('h1', { class:'rz-title' }, 'مكتبة الاختبارات'),
-    el('p', { class:'rz-meta', style:'margin:0' }, `اختبار لكل باب من المستوى الأول حتى متطلب الإجازة، من بنك يضم ${AR(TOTAL)} سؤالاً تتغيّر في كل مرة.`)));
+    el('p', { class:'rz-meta', style:'margin:0' }, `اختبار لكل باب من المستوى الأول حتى متطلب الإجازة، من بنك يضم ${AR(TOTAL)} سؤالًا تتغيّر في كل مرة.`)));
   const lvCard = el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'مستوى الصعوبة لاختبارات الأبواب'),
     ...lvChips(PREF.lvl, k => { PREF.lvl = k; psave(); }), heartsToggle(true));
   app.append(resumeCard(),
     el('div', { class:'rz-grid' },
-      el('a', { class:'rz-tile', href:'#/path' }, el('span', { html:icon('path') }), el('b', {}, 'مسار الدروس'), el('span', { class:'rz-meta' }, 'درساً بعد درس، واختبار ختام لكل باب')),
-      el('a', { class:'rz-tile', href:'#/speed' }, el('span', { html:icon('bolt') }), el('b', {}, 'جولة سريعة'), el('span', { class:'rz-meta' }, 'أكبر عدد في ٦٠ ثانية'))),
+      el('a', { class:'rz-tile c-wine', href:'#/path' }, el('span', { html:icon('path') }), el('b', {}, 'مسار الدروس'), el('span', { class:'rz-meta' }, 'درسًا بعد درس، واختبار ختام لكل باب')),
+      el('a', { class:'rz-tile c-ocean', href:'#/speed' }, el('span', { html:icon('bolt') }), el('b', {}, 'جولة سريعة'), el('span', { class:'rz-meta' }, 'أكبر عدد في ٦٠ ثانية'))),
 
-    el('a', { class:'rz-list-btn', href:'#/builder' }, el('span', { class:'rz-ic', html:icon('sliders') }), el('span', { class:'grow' }, el('b', {}, 'صمّم اختبارك'), el('span', { class:'rz-meta' }, CUS.sel.length ? `محفوظ: ${plural(CUS.sel.length, ['درس واحد', 'درسان', 'دروس', 'درساً'])}` : 'اختر الدروس التي وصلت إليها، واختبر نفسك فيها فقط.')), el('span', { class:'chev', html:icon('chev') })),
+    el('a', { class:'rz-list-btn', href:'#/builder' }, el('span', { class:'rz-ic', html:icon('sliders') }), el('span', { class:'grow' }, el('b', {}, 'صمّم اختبارك'), el('span', { class:'rz-meta' }, CUS.sel.length ? `محفوظ: ${plural(CUS.sel.length, ['درس واحد', 'درسان', 'دروس', 'درسًا'])}` : 'اختر الدروس التي وصلت إليها، واختبر نفسك فيها فقط.')), el('span', { class:'chev', html:icon('chev') })),
     lvCard);
   LEVELS.forEach(L => {
     const sec = el('section', { class:'lvl' });
@@ -474,7 +491,7 @@ function home(){
       el('button', { type:'button', class:'rz-link', on:{ click:() => start({ id:'L' + L.n, kind:'chapter', title:`اختبار شامل: ${L.name}`, lvl:PREF.lvl, hearts:PREF.hearts, make:() => buildN(L.ids.flatMap(id => BANK[id].questions), L.ids.flatMap(id => SPEC[id] || []), 10, PREF.lvl) }) } }, 'اختبار شامل')));
     const grid = el('div', { class:'rz-grid' });
     L.ids.forEach(id => { const b = BANK[id]; const best = save.best[id];
-      grid.append(el('button', { type:'button', class:'rz-tile chap' + (save.gold[id] ? ' gold' : ''), on:{ click:() => start({ id, kind:'chapter', title:short(b.title), lvl:PREF.lvl, hearts:PREF.hearts, make:() => { const p = chapterPool(id); return buildN(p.pool, p.spec, 10, PREF.lvl); } }) } },
+      grid.append(el('button', { type:'button', class:'rz-tile chap c-' + ['green', 'ocean', 'sand', 'wine'][(L.n || 1) - 1] + (save.gold[id] ? ' gold' : ''), on:{ click:() => start({ id, kind:'chapter', title:short(b.title), lvl:PREF.lvl, hearts:PREF.hearts, make:() => { const p = chapterPool(id); return buildN(p.pool, p.spec, 10, PREF.lvl); } }) } },
         el('span', { class:'rz-meta' }, bab(b.title)), el('b', {}, short(b.title)),
         el('span', { class:'rz-meta' }, best != null ? `أفضل نتيجة: ${AR(best)} من ${AR(NQ)}` : `${plural(b.questions.length + (SPEC[id] || []).length, RZ.Q_FORMS)} في البنك`),
         el('div', { class:'rz-between', style:'margin-top:auto' }, starStr(save.stars[id] || 0), save.gold[id] ? el('span', { title:'باب ذهبي' }, '🥇') : '')));
@@ -490,7 +507,7 @@ function builder(){
   const sel = new Set(CUS.sel);
   const count = el('span', { class:'rz-meta', style:'text-align:center' });
   const goBtn = el('button', { type:'button', class:'rz-btn pri block' }, 'ابدأ الاختبار');
-  const refresh = () => { CUS.sel = [...sel]; csave(); const { pool, spec } = poolFor(CUS.sel); const n = pool.length + spec.length; count.textContent = n ? `${plural(n, RZ.Q_FORMS)} في الدروس المختارة` : 'اختر درساً واحداً على الأقل'; goBtn.disabled = pool.length < 4; };
+  const refresh = () => { CUS.sel = [...sel]; csave(); const { pool, spec } = poolFor(CUS.sel); const n = pool.length + spec.length; count.textContent = n ? `${plural(n, RZ.Q_FORMS)} في الدروس المختارة` : 'اختر درسًا واحدًا على الأقل'; goBtn.disabled = pool.length < 4; };
   goBtn.addEventListener('click', () => { const L = LV.find(x => x.k === CUS.lvl) || LV[0]; const keys = CUS.sel.slice();
     start({ id:'custom', kind:'custom', title:'اختباري · ' + L.t, lvl:CUS.lvl, keys, hearts:PREF.hearts, seed:1 + Math.floor(Math.random() * 1e9), make:() => { const { pool, spec } = poolFor(keys); return buildN(pool, spec, CUS.n, CUS.lvl); } }); });
   app.append(topBar('صمّم اختبارك'),
@@ -503,7 +520,7 @@ function builder(){
   refresh(); fitAction();
 }
 
-/* ---------- شارك اختباراً ---------- */
+/* ---------- شارك اختبارًا ---------- */
 function encodeSel(keys){ // bitmap over ORDER, base36 chunks
   const set = new Set(keys); let bits = ''; ORDER.forEach(o => bits += set.has(o.key) ? '1' : '0');
   const out = []; for(let i = 0; i < bits.length; i += 30) out.push(parseInt(bits.slice(i, i + 30).padEnd(30, '0').split('').reverse().join(''), 2).toString(36));
@@ -524,12 +541,12 @@ function share(){
   const SH = Object.assign({ sel:CUS.sel.slice(), n:10, lvl:'mix', name:'' }, ls.get('rz-share', {}));
   const sel = new Set(SH.sel);
   const keep = () => { SH.sel = [...sel]; ls.set('rz-share', SH); };
-  const name = el('input', { class:'rz-select', type:'text', maxlength:'60', placeholder:'مثلاً: مراجعة أحكام النون', value:SH.name, 'aria-label':'اسم الاختبار' });
+  const name = el('input', { class:'rz-select', type:'text', maxlength:'60', placeholder:'مثلًا: مراجعة أحكام النون', value:SH.name, 'aria-label':'اسم الاختبار' });
   name.addEventListener('input', () => { SH.name = name.value.trim(); keep(); });
   const out = el('section', { class:'rz-card', hidden:true });
   const count = el('span', { class:'rz-meta', style:'text-align:center' });
   const make = el('button', { type:'button', class:'rz-btn pri block' }, 'أنشئ رابط الاختبار');
-  const refresh = () => { keep(); const { pool } = poolFor(SH.sel); count.textContent = SH.sel.length ? 'كل من يفتح الرابط يحصل على الأسئلة نفسها بالترتيب نفسه.' : 'اختر الدروس أولاً'; make.disabled = pool.length < 4; out.hidden = true; fitAction(); };
+  const refresh = () => { keep(); const { pool } = poolFor(SH.sel); count.textContent = SH.sel.length ? 'كل من يفتح الرابط يحصل على الأسئلة نفسها بالترتيب نفسه.' : 'اختر الدروس أولًا'; make.disabled = pool.length < 4; out.hidden = true; fitAction(); };
   make.addEventListener('click', () => {
     const cfg = { sel:SH.sel, n:SH.n, lvl:SH.lvl, name:SH.name, seed:1 + Math.floor(Math.random() * 1e9) };
     const url = shareUrl(cfg);
@@ -546,7 +563,7 @@ function share(){
     function copy(){ field.select(); (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => copied.textContent = 'تم نسخ الرابط.', () => { document.execCommand && document.execCommand('copy'); copied.textContent = 'تم تحديد الرابط، انسخه.'; }); }
     out.hidden = false; out.scrollIntoView({ behavior:'smooth', block:'center' });
   });
-  app.append(topBar('شارك اختباراً'),
+  app.append(topBar('شارك اختبارًا'),
     el('p', { class:'rz-meta', style:'margin:0' }, 'للمعلمات والمجموعات: اختر الدروس والمستوى وعدد الأسئلة، فيتكوّن رابط واحد. كل من يفتحه يحلّ الأسئلة نفسها بالترتيب نفسه، ويعمل بلا تسجيل.'),
     el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'اسم الاختبار (اختياري)'), name),
     el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'الدروس'), lessonPicker(sel, refresh)),
@@ -570,7 +587,7 @@ function sharedIntro(arg){
       el('span', { class:'rz-meta' }, vs != null ? 'وصلك تحدٍّ' + (by ? ' من ' + by : '') : 'وصلك هذا الاختبار برابط مشترك'),
       vs != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, `🏆 ${by || 'صاحب التحدّي'} حصل على ${AR(vs)} من ${AR(n)}. هل تتفوق؟`) : '',
       el('b', { style:'font-size:22px' }, name || 'اختبار تجويد'),
-      el('div', { class:'rz-wrap' }, el('span', { class:'rz-badge plain' }, plural(n, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً'])), el('span', { class:'rz-badge' }, L.t), el('span', { class:'rz-badge plain' }, plural(keys.length, ['درس واحد', 'درسان', 'دروس', 'درساً']))),
+      el('div', { class:'rz-wrap' }, el('span', { class:'rz-badge plain' }, plural(n, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالًا'])), el('span', { class:'rz-badge' }, L.t), el('span', { class:'rz-badge plain' }, plural(keys.length, ['درس واحد', 'درسان', 'دروس', 'درسًا']))),
       el('span', { class:'rz-meta' }, 'الأبواب: ' + chs.join('، ')),
       el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => start({ id:'shared', kind:'shared', title:name || 'اختبار مشترك', lvl, seed, vs, by, cfg:{ sel:keys, n, lvl, seed, name }, make:() => { const { pool, spec } = poolFor(keys); return buildN(pool, spec, n, lvl); } }) } }, 'ابدأ')));
 }
@@ -580,14 +597,14 @@ function mistakes(){
   app.innerHTML = '';
   const all = Object.entries(nbAll()).sort((a, b) => a[1].due - b[1].due); const due = nbDue();
   app.append(topBar('دفتر أخطائي', '../'),
-    el('p', { class:'rz-meta', style:'margin:0' }, 'كل سؤال تخطئ فيه يُحفظ هنا ويعود إليك: بعد يوم، ثم بعد ٣ أيام، ثم أسبوع، ثم أسبوعين إن تكرر خطؤك فيه. ويخرج من الدفتر عندما تجيبه صحيحاً مرتين متتاليتين.'));
+    el('p', { class:'rz-meta', style:'margin:0' }, 'كل سؤال تخطئ فيه يُحفظ هنا ويعود إليك: بعد يوم، ثم بعد ٣ أيام، ثم أسبوع، ثم أسبوعين إن تكرر خطؤك فيه. ويخرج من الدفتر عندما تجيبه صحيحًا مرتين متتاليتين.'));
   if(!all.length){ app.append(el('div', { class:'rz-card rz-empty' }, el('b', {}, 'الدفتر فارغ'), el('span', {}, 'لم تخطئ في أي سؤال بعد، أو أتقنت كل أخطائك.'), el('a', { class:'rz-btn pri', href:'#/' }, 'إلى مكتبة الاختبارات'))); return; }
   app.append(el('section', { class:'rz-card' },
-    el('b', { style:'font-size:22px' }, due.length ? plural(due.length, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً']) + ' للمراجعة اليوم' : 'لا مراجعة اليوم'),
-    el('span', { class:'rz-meta' }, 'في الدفتر ' + plural(all.length, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالاً'])),
+    el('b', { style:'font-size:22px' }, due.length ? plural(due.length, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالًا']) + ' للمراجعة اليوم' : 'لا مراجعة اليوم'),
+    el('span', { class:'rz-meta' }, 'في الدفتر ' + plural(all.length, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالًا'])),
     due.length ? el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => start({ id:'review', kind:'review', title:'مراجعة دفتر الأخطاء', make:() => nbDue().slice(0, 20).map(([k, e]) => revive(k, e)) }) } }, 'راجع الآن') : ''));
   const list = el('div', { style:'display:flex;flex-direction:column;gap:8px' });
-  const when = t => { const d = Math.ceil((t - Date.now()) / DAY); return d <= 0 ? 'اليوم' : d === 1 ? 'غداً' : 'بعد ' + plural(d, ['يوم', 'يومين', 'أيام', 'يوماً']); };
+  const when = t => { const d = Math.ceil((t - Date.now()) / DAY); return d <= 0 ? 'اليوم' : d === 1 ? 'غدًا' : 'بعد ' + plural(d, ['يوم', 'يومين', 'أيام', 'يومًا']); };
   all.forEach(([k, e]) => {
     const txt = e.q.type === 'match' ? (e.q.q || 'توصيل') : e.q.type === 'sort' ? e.q.q : (e.q.q || '') + (e.q.big ? ' ' + e.q.big : '');
     list.append(el('div', { class:'rz-card nb-item' },
@@ -605,7 +622,7 @@ function mastery(){
   app.innerHTML = '';
   app.append(topBar('خريطة إتقاني', '../'),
     el('div', { class:'legend' }, el('span', {}, el('i', { class:'dot good' }), 'متقن (٨٠٪ فأكثر في آخر محاولاتك)'), el('span', {}, el('i', { class:'dot review' }), 'يحتاج مراجعة'), el('span', {}, el('i', { class:'dot none' }), 'لم تبدأه بعد')),
-    el('p', { class:'rz-meta', style:'margin:0' }, 'اضغط على أي درس لتبدأ اختباراً فيه.'));
+    el('p', { class:'rz-meta', style:'margin:0' }, 'اضغط على أي درس لتبدأ اختبارًا فيه.'));
   let g = 0, r = 0, z = 0;
   LEVELS.forEach(L => {
     const sec = el('section', { class:'rz-card' }, el('b', {}, L.name + (L.sub ? ' · ' + L.sub : '')));
@@ -639,6 +656,36 @@ function daily(){
 }
 
 /* ---------- question screen ---------- */
+/* short quotes keep their context: the verse (or a few words around the quote), its ref, the quote highlighted */
+const ctxRef = r => '(' + r.replace(/\d+/g, d => AR(d)) + ')';
+function ctxText(q){
+  const c = q.ctx; if(!c) return q.big || '';
+  if(c.mq) return '﴿' + c.mq + '﴾ ' + ctxRef(c.ref);
+  if(c.hit) return '﴿' + [c.pre, c.hit, c.post].filter(Boolean).join(' ') + '﴾ ' + ctxRef(c.ref);
+  return (q.big || '') + ' ' + ctxRef(c.ref);
+}
+function ctxShort(q){
+  const c = q.ctx; if(!c || !c.hit) return q.big || '';
+  const pre = (c.pre || '').replace('… ', '').split(' ').filter(Boolean), post = (c.post || '').replace(' …', '').split(' ').filter(Boolean);
+  return '﴿' + [pre.slice(-1)[0], c.hit, post[0]].filter(Boolean).join(' ') + '﴾';
+}
+function bigBox(q, card){
+  const c = q.ctx;
+  if(!c){ if(q.big) card.append(el('div', { class:'big' }, q.big)); return; }
+  if(c.mq){
+    card.append(el('div', { class:'verse mq' }, el('div', { class:'mqf' }, c.mq),
+      el('div', { class:'pron' }, el('small', {}, 'تُقرأ: '), ...c.pron.map(([t, h]) => h ? el('span', { class:'mhl' }, t) : t)),
+      el('div', { class:'mqr' }, el('span', { class:'vref' }, ctxRef(c.ref)), audioBtn(c.ref))));
+    return;
+  }
+  if(c.hit){
+    const ref = c.ref.replace(/–\d+$/, '');
+    card.append(el('div', { class:'verse' }, c.pre ? c.pre + ' ' : '', ...c.hit.split(' ').flatMap((w, k) => k ? [' ', el('span', { class:'mhl' }, w)] : [el('span', { class:'mhl' }, w)]), c.post ? ' ' + c.post : '', ' ', el('span', { class:'vref' }, ctxRef(c.ref)), ' ', audioBtn(ref)));
+    return;
+  }
+  if(q.big) card.append(el('div', { class:'big' }, q.big, ' ', el('span', { class:'vref' }, ctxRef(c.ref))));
+  else card.append(el('div', { class:'vref', style:'text-align:center' }, 'الموضع: ' + ctxRef(c.ref)));
+}
 function verseBox(q, onTap){
   const box = el('div', { class:'verse' });
   q.v.forEach((w, i) => {
@@ -659,7 +706,7 @@ function choiceList(opts, cls){ // single choice, selected until checked
   return { box, get: () => cur, mark(ans){ bs.forEach((b, k) => { b.disabled = true; const o = opts[k]; if(o === ans){ b.classList.add('right'); b.querySelector('.om').innerHTML = icon('check'); } else if(o === cur){ b.classList.add('wrong'); b.querySelector('.om').innerHTML = icon('x'); } }); } };
 }
 const R = {
-  mcq(q, card){ card.append(el('div', { class:'q' }, q.q)); if(q.big) card.append(el('div', { class:'big' }, q.big)); return single(q, card); },
+  mcq(q, card){ card.append(el('div', { class:'q' }, q.q)); bigBox(q, card); return single(q, card); },
   vmcq(q, card){ card.append(el('div', { class:'q' }, q.q), verseBox(q)); return single(q, card); },
   fill(q, card){ card.append(el('div', { class:'q fillq' }, ...q.q.split('____').flatMap((t, i, a) => i < a.length - 1 ? [t, el('span', { class:'blank' }, '      ')] : [t]))); return single(q, card); },
   img(q, card){
@@ -674,7 +721,7 @@ const R = {
     return r;
   },
   tf(q, card){
-    card.append(el('div', { class:'q' }, q.q)); if(q.big) card.append(el('div', { class:'big' }, q.big));
+    card.append(el('div', { class:'q' }, q.q)); bigBox(q, card);
     card.append(el('div', { class:'prop' }, el('small', {}, 'الإجابة المقترحة'), el('b', {}, q.prop)));
     return twoStage(card, q.right, q.opts.filter(x => x !== q.prop), q.ans, ['✓ صح', '✗ خطأ'], 'أحسنت، الإجابة المقترحة خاطئة. فما الإجابة الصحيحة؟');
   },
@@ -886,7 +933,7 @@ function end(){
   if(canAgain) btns.append(el('button', { type:'button', class:'rz-btn' + (S.heartsOut ? '' : ' pri'), on:{ click:again } }, T.kind === 'shared' ? 'أعد الاختبار نفسه' : T.kind === 'final' || T.kind === 'jump' ? 'حاول مرة أخرى' : 'اختبار جديد'));
   if(T.kind === 'custom') btns.append(el('a', { class:'rz-btn', href:'#/builder' }, 'تعديل الدروس'));
   if(['lesson', 'jump', 'final'].includes(T.kind)) btns.append(el('a', { class:'rz-btn', href:'#/path' }, 'مسار الدروس'));
-  if(T.kind === 'single' && T.les && LES_NAME[T.les]) btns.append(el('button', { type:'button', class:'rz-btn pri', on:{ click:() => lessonQuiz(T.les, true) } }, 'جرّب اختباراً في الدرس نفسه'));
+  if(T.kind === 'single' && T.les && LES_NAME[T.les]) btns.append(el('button', { type:'button', class:'rz-btn pri', on:{ click:() => lessonQuiz(T.les, true) } }, 'جرّب اختبارًا في الدرس نفسه'));
   // challenge a friend with exactly the same questions
   const shareCfg = T.kind === 'shared' ? T.cfg : (T.kind === 'custom' || T.kind === 'lesson') && T.seed != null ? { sel:T.keys, n, lvl:T.lvl || 'mix', seed:T.seed, name:T.kind === 'lesson' ? T.title : '' } : null;
   if(shareCfg && shareCfg.sel && shareCfg.sel.length) btns.append(el('button', { type:'button', class:'rz-btn', on:{ click:async () => {
@@ -894,10 +941,10 @@ function end(){
     const text = `حصلت على ${AR(r)} من ${AR(n)} في «${T.title}» على تطبيق رسوخ. هل تتفوق عليّ؟ الأسئلة نفسها في هذا الرابط:`;
     try{ if(navigator.share){ await navigator.share({ title:'تحدٍّ في رسوخ', text, url }); return; } }catch(e){ return; }
     try{ await navigator.clipboard.writeText(text + '\n' + url); RZ.toast('نُسخ رابط التحدّي'); }catch(e){}
-  } } }, 'تحدَّ صديقاً'));
+  } } }, 'تحدَّ صديقًا'));
   btns.append(el('a', { class:'rz-btn', href:T.kind === 'daily' || T.kind === 'single' ? '../' : T.kind === 'review' ? '#/mistakes' : '#/' }, T.kind === 'daily' || T.kind === 'single' ? 'الرئيسية' : T.kind === 'review' ? 'دفتر أخطائي' : 'مكتبة الاختبارات'));
   let msg = r === n ? 'ما شاء الله، علامة كاملة!' : f >= .7 ? 'أحسنت! أتقنت معظم الأسئلة.' : 'راجع أخطاءك في الأسفل؛ ستعود إليك في دفتر أخطائك.';
-  if(passed === true) msg = T.kind === 'final' ? '🥇 نجحت في اختبار الختام، وصار هذا الباب ذهبياً!' : 'نجحت في اختبار القفز، وفُتحت الدروس حتى هذا الدرس.';
+  if(passed === true) msg = T.kind === 'final' ? '🥇 نجحت في اختبار الختام، وصار هذا الباب ذهبيًا!' : 'نجحت في اختبار القفز، وفُتحت الدروس حتى هذا الدرس.';
   if(passed === false) msg = 'تحتاج ' + AR(Math.ceil(n * .8)) + ' إجابات صحيحة على الأقل للنجاح. راجع الدروس ثم حاول مرة أخرى.';
   if(S.heartsOut) msg = 'انتهت القلوب الثلاثة. يمكنك إكمال الأسئلة الباقية للتعلّم بلا قلوب.';
   const vs = T.vs != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, r > T.vs ? `🏆 تفوقت على ${T.by || 'صاحب التحدّي'} (${AR(T.vs)} من ${AR(n)})` : r === T.vs ? `تعادلت مع ${T.by || 'صاحب التحدّي'}` : `${T.by || 'صاحب التحدّي'} حصل على ${AR(T.vs)} من ${AR(n)}. جرّب مرة أخرى!`) : '';
@@ -957,7 +1004,7 @@ function path(){
         wrap.append(node);
       });
       wrap.append(el('button', { type:'button', class:'pnode final' + (save.gold[id] ? ' crown' : ''), style:'--x:1', on:{ click:() => finalExam(id) } },
-        el('span', { class:'disc' }, save.gold[id] ? '🥇' : '🏆'), el('span', { class:'pl' }, 'اختبار ختام الباب'), el('span', { class:'rz-meta' }, save.gold[id] ? 'نجحت فيه' : '١٥ سؤالاً صعباً · ١٢ للنجاح')));
+        el('span', { class:'disc' }, save.gold[id] ? '🥇' : '🏆'), el('span', { class:'pl' }, 'اختبار ختام الباب'), el('span', { class:'rz-meta' }, save.gold[id] ? 'نجحت فيه' : '١٥ سؤالًا صعبًا · ١٢ للنجاح')));
       sec.append(wrap); app.append(sec);
     });
   });
@@ -987,7 +1034,7 @@ function speedPool(){
 function speed(){
   app.innerHTML = ''; document.body.classList.remove('rz-quiz');
   app.append(topBar('جولة سريعة', '../'),
-    el('section', { class:'rz-card' }, el('b', { style:'font-size:22px' }, '٦٠ ثانية'), el('span', {}, 'أجب عن أكبر عدد من الأسئلة. اضغط على الإجابة مباشرة، والسؤال التالي يظهر فوراً.'),
+    el('section', { class:'rz-card' }, el('b', { style:'font-size:22px' }, '٦٠ ثانية'), el('span', {}, 'أجب عن أكبر عدد من الأسئلة. اضغط على الإجابة مباشرة، والسؤال التالي يظهر فورًا.'),
       el('span', { class:'rz-meta' }, 'الأسئلة من دروسك' + (CUS.sel.length ? '' : ' (المستوى الأول)') + '. رقمك القياسي: ' + AR(RZ.game.best60 || 0)),
       el('button', { type:'button', class:'rz-btn pri block', on:{ click:runSpeed } }, 'ابدأ')));
 }
@@ -1002,7 +1049,7 @@ function runSpeed(){
   function show(){
     const q = qs[i % qs.length]; card.innerHTML = '';
     card.append(el('div', { class:'q', style:'font-size:20px' }, q.type === 'fill' ? q.q.replace(/____/g, '……') : q.q));
-    if(q.big) card.append(el('div', { class:'big' }, q.big));
+    bigBox(q, card);
     if(q.type === 'img' || (q.type === 'riddle' && q.showImg)) card.append(el('figure', { class:'bookimg' }, el('img', { src:'img/' + q.f, alt:'موضع خروج الحرف', style:'max-width:240px' })));
     if(q.v) card.append(verseBox(q));
     const box = el('div', { class:'opts' });
@@ -1042,7 +1089,7 @@ function riddleDone(st){
   app.innerHTML = ''; document.body.classList.remove('rz-quiz');
   const text = `رسوخ · حزورة ${RZ.dateAR(RZ.today())} 🧩\n${st.ok ? '✅ حللتها من المحاولة الأولى' : '❌ لم أحلّها اليوم'}\nجرّب حزورة اليوم في تطبيق رسوخ:`;
   app.append(topBar('حزورة اليوم', '../'), el('section', { class:'rz-card pop end' },
-    el('div', { class:'score' }, st.ok ? '✅' : '❌'), el('b', {}, st.ok ? 'أحسنت، حللت حزورة اليوم!' : 'لم تُصب هذه المرة'), el('span', { class:'rz-meta' }, 'حزورة جديدة غداً. لكل يوم محاولة واحدة.' + (st.ans ? ' الجواب: ' + st.ans : '')),
+    el('div', { class:'score' }, st.ok ? '✅' : '❌'), el('b', {}, st.ok ? 'أحسنت، حللت حزورة اليوم!' : 'لم تُصب هذه المرة'), el('span', { class:'rz-meta' }, 'حزورة جديدة غدًا. لكل يوم محاولة واحدة.' + (st.ans ? ' الجواب: ' + st.ans : '')),
     el('div', { class:'rz-wrap' }, el('button', { type:'button', class:'rz-btn pri', on:{ click:async () => { const url = location.origin + location.pathname.replace(/library\/.*$/, ''); try{ if(navigator.share){ await navigator.share({ text, url }); return; } }catch(e){ return; } try{ await navigator.clipboard.writeText(text + '\n' + url); RZ.toast('نُسخت النتيجة'); }catch(e){} } } }, 'شارك نتيجتك'), el('a', { class:'rz-btn', href:'../' }, 'الرئيسية'))));
 }
 
