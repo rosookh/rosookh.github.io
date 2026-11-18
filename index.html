@@ -16,17 +16,26 @@
 <style>
 .hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .foot{font-size:13px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:4px}
-.goal{display:flex;align-items:center;gap:14px}
-.goal .grow{flex-grow:1;display:flex;flex-direction:column;gap:6px;min-width:0}
-.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.mini{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);min-height:96px}
-.mini .ic{width:38px;height:38px;border-radius:11px;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center}
-#riddle{background:var(--wine-soft);border-color:transparent}#riddle .ic{background:var(--wine);color:var(--wine-ink)}
-.mini.speed{background:var(--ocean-soft);border-color:transparent}.mini.speed .ic{background:var(--ocean);color:var(--surface)}
-.mini .ic svg{width:20px;height:20px}
-.mini.done,#riddle.done{background:var(--good-soft);border-color:var(--good)}
+.dwrap{position:relative}
+.dwrap .rz-hero{padding-top:18px}
+.frz{position:absolute;top:14px;left:14px;z-index:2;width:40px;height:40px;border-radius:12px;border:none;background:rgba(244,237,224,.16);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.frz.on{background:#DCEBF5;box-shadow:0 0 0 2px #8FC3E6}
+.dwrap #streak{margin-inline-end:50px}
+.gbar{display:flex;align-items:center;gap:10px;font-size:13px}
+.gbar .rz-bar{flex-grow:1;background:rgba(244,237,224,.25)}.gbar .rz-bar i{background:#C9AE8E}
+.short{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.short a{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink);font-size:12.5px;font-weight:600;text-align:center;line-height:1.35}
+.short .ic{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.short .ic svg{width:24px;height:24px}
+.short .done .ic{box-shadow:0 0 0 2px var(--good)}
+.short .dot{position:absolute;top:-4px;left:calc(50% - 34px);min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--bad,#B4443A);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
+.s1 .ic{background:var(--wine-soft);color:var(--wine)}.s2 .ic{background:var(--ocean-soft);color:var(--ocean)}
+.s3 .ic{background:var(--bad-soft,#F6E0DD);color:var(--bad-ink,#8A2D25)}.s4 .ic{background:var(--sage-soft);color:var(--sage)}
 .resume{border:2px solid var(--ocean)}
 .resume .rz-ic{background:var(--ocean-soft)!important;color:var(--ocean)!important}
+.rz-grid .rz-tile{min-height:104px}
+.ios{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;font-size:14px;line-height:1.7}
+.ios button{border:none;background:none;font-size:18px;color:var(--muted);cursor:pointer;padding:0 4px}
 </style>
 </head><body data-nav="home">
 <main class="rz-main">
@@ -41,11 +50,17 @@
     <a class="rz-lvl" href="progress.html" id="lvl" aria-label="مستواك"></a>
   </header>
 
-  <a class="rz-hero" href="library/#/daily" id="daily" data-pattern="11">
-    <div class="hero-top"><span class="rz-meta">تحدّي اليوم</span><span class="rz-badge" id="streak" hidden style="background:#C9AE8E;color:#2E2214"><span data-icon="flame" style="display:flex;width:14px;height:14px"></span><span></span></span></div>
-    <b style="font-size:22px" id="dailyT">٥ أسئلة من دروسك</b>
-    <div class="hero-top"><span class="rz-meta" id="dailyS">دقيقتان تقريبًا</span><span class="rz-cta" id="dailyB">ابدأ</span></div>
-  </a>
+  <div id="ios" class="ios" hidden><span style="flex-grow:1">ثبّت رسوخ على شاشتك: افتحه في <b>سفاري</b>، اضغط زر المشاركة <b>⬆︎</b> أسفل الشاشة، ثم <b>«إضافة إلى الشاشة الرئيسية»</b>.</span><button type="button" id="iosX" aria-label="إخفاء">×</button></div>
+
+  <div class="dwrap">
+    <a class="rz-hero" href="library/#/daily" id="daily" data-pattern="11">
+      <div class="hero-top"><span class="rz-meta">تحدّي اليوم</span><span class="rz-badge" id="streak" hidden style="background:#C9AE8E;color:#2E2214"><span data-icon="flame" style="display:flex;width:14px;height:14px"></span><span></span></span></div>
+      <b style="font-size:22px" id="dailyT">٥ أسئلة من دروسك</b>
+      <div class="gbar"><span id="goalT">هدفك</span><div class="rz-bar"><i id="goalBar"></i></div><span id="goalS"></span></div>
+      <div class="hero-top"><span class="rz-meta" id="dailyS">دقيقتان تقريبًا</span><span class="rz-cta" id="dailyB">ابدأ</span></div>
+    </a>
+    <button type="button" class="frz" id="frz" aria-label="وضع التجميد" title="وضع التجميد">❄️</button>
+  </div>
 
   <a class="rz-list-btn resume" id="resume" hidden href="library/#/resume">
     <span class="rz-ic" data-icon="resume"></span>
@@ -53,52 +68,21 @@
     <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
   </a>
 
-  <section class="rz-card">
-    <div class="goal">
-      <div class="rz-ring" id="ring"></div>
-      <div class="grow">
-        <b id="goalT">هدف اليوم</b>
-        <span class="rz-meta" id="goalS"></span>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <div class="rz-between"><span class="rz-meta" id="lvlT"></span><span class="rz-meta" id="lvlN"></span></div>
-      <div class="rz-bar"><i id="lvlBar"></i></div>
-    </div>
-  </section>
+  <nav class="short" aria-label="اختصارات">
+    <a class="s1" href="library/#/riddle" id="riddle"><span class="ic" data-icon="puzzle"></span>حزورة اليوم</a>
+    <a class="s2" href="library/#/wheel" id="speed"><span class="ic" data-icon="bolt"></span>دولاب التجويد</a>
+    <a class="s3" href="library/#/mistakes" id="mist"><span class="ic" data-icon="mistake"></span>دفتر أخطائي</a>
+    <a class="s4" href="hifz/#review" id="hifzR"><span class="ic" data-icon="hifz"></span>مراجعة الحفظ</a>
+  </nav>
 
-  <section class="rz-card">
-    <div class="rz-between"><b>مهام اليوم</b><span class="rz-meta" id="taskN"></span></div>
-    <div id="tasks"></div>
-  </section>
-
-  <div class="pair">
-    <a class="mini" href="library/#/riddle" id="riddle"><span class="ic" data-icon="puzzle"></span><b>حزورة اليوم</b><span class="rz-meta" id="riddleS">سؤال واحد للجميع</span></a>
-    <a class="mini speed" href="library/#/speed"><span class="ic" data-icon="bolt"></span><b>جولة سريعة</b><span class="rz-meta" id="speedS">أكبر عدد في ٦٠ ثانية</span></a>
-  </div>
-
-  <a class="rz-list-btn" id="hifzR" hidden href="hifz/#review">
-    <span class="rz-ic sage" data-icon="hifz"></span>
-    <span class="grow"><b id="hifzT">مراجعة اليوم</b><span class="rz-meta" id="hifzS"></span></span>
-    <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
-  </a>
-
-  <a class="rz-list-btn" href="library/#/mistakes">
-    <span class="rz-ic bad" data-icon="mistake"></span>
-    <span class="grow"><b>دفتر أخطائي</b><span class="rz-meta" id="mist">الأسئلة التي أخطأت فيها تعود إليك للمراجعة</span></span>
-    <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
-  </a>
-
-  <h2 class="rz-h">الأبواب</h2>
+  <h2 class="rz-h">الأقسام</h2>
   <nav class="rz-grid" aria-label="أقسام التطبيق">
-    <a class="rz-tile c-green" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب من أبواب التجويد</span></a>
-    <a class="rz-tile c-wine" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درسًا بعد درس، بالنجوم</span></a>
-    <a class="rz-tile c-sand" href="library/#/builder"><span data-icon="sliders"></span><b>صمّم اختبارك</b><span class="rz-meta">اختر دروسك ومستوى الصعوبة</span></a>
-    <a class="rz-tile c-ocean" href="library/#/share"><span data-icon="share"></span><b>شارك اختبارًا</b><span class="rz-meta">رابط واحد بالأسئلة نفسها للجميع</span></a>
-    <a class="rz-tile c-sage" href="library/#/mastery"><span data-icon="grid"></span><b>خريطة إتقاني</b><span class="rz-meta">أين وصلت في كل درس</span></a>
-    <a class="rz-tile c-wine" href="hifz/"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات وما قبل الآية وما بعدها</span></a>
-    <a class="rz-tile c-ocean" href="imara/"><span data-icon="wave"></span><b>عمارة المخارج</b><span class="rz-meta">المخارج في رسمة واحدة</span></a>
-    <a class="rz-tile c-sand" href="progress.html"><span data-icon="progress"></span><b>تقدّمي</b><span class="rz-meta">أسبوعك، ومستواك، وأوسمتك</span></a>
+    <a class="rz-tile c-green" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب</span></a>
+    <a class="rz-tile c-wine" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درسًا بعد درس</span></a>
+    <a class="rz-tile c-sand" href="library/#/exam"><span data-icon="timer"></span><b>اختبر استعدادك</b><span class="rz-meta">امتحان كامل من ١٠٠</span></a>
+    <a class="rz-tile c-ocean" href="makharij/"><span data-icon="wave"></span><b>كيف يخرج الحرف؟</b><span class="rz-meta">المخارج بالصوت والصورة</span></a>
+    <a class="rz-tile c-sage" href="hifz/"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات والتسميع</span></a>
+    <a class="rz-tile c-wine" href="library/#/share"><span data-icon="share"></span><b>للمعلّم</b><span class="rz-meta">صمّم اختبارًا وشاركه</span></a>
   </nav>
 
   <footer class="foot">
@@ -114,44 +98,29 @@
     $('hello').textContent = s.name ? 'السلام عليكم يا ' + s.name : 'السلام عليكم';
     const L = RZ.level();
     $('lvl').innerHTML = `<span class="rz-medal m-${L.cls}">${AR(L.step)}</span>${L.name}`;
-    $('lvlT').textContent = 'مستواك: ' + L.name;
-    $('lvlN').textContent = L.next != null ? 'باقي ' + RZ.count(L.left, RZ.PT_FORMS) + ' على ' + L.nextName : 'أعلى مستوى، ما شاء الله';
-    if(L.left === 1 || L.left === 2) $('lvlN').textContent = 'باقي ' + RZ.count(L.left, RZ.PT_FORMS) + ' على ' + L.nextName;
-    $('lvlBar').style.width = Math.round(L.pct * 100) + '%';
-    // daily goal ring
-    const G = RZ.goal(), x = RZ.dayLog().x, f = Math.min(1, x / G.x), C = 2 * Math.PI * 24;
-    $('ring').innerHTML = `<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="28" cy="28" r="24" fill="none" stroke="${f >= 1 ? 'var(--good)' : 'var(--primary)'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - f)}"/></svg><b>${f >= 1 ? '✓' : AR(Math.round(f * 100)) + '٪'}</b>`;
-    $('goalT').textContent = f >= 1 ? 'حقّقت هدف اليوم!' : 'هدف اليوم (' + G.t + ')';
-    $('goalS').textContent = AR(Math.min(x, 9999)) + ' من ' + AR(G.x) + ' نقطة اليوم';
-    // streak + daily challenge
-    const k = RZ.streak();
-    if(k.count){ const b = $('streak'); b.hidden = false; b.lastElementChild.textContent = RZ.count(k.count, ['يوم واحد', 'يومان متتاليان', 'أيام متتالية', 'يومًا متتاليًا']); }
-    const sel = (RZ.ls.get('tajweed-library-custom-v1', {}).sel || []);
+    // daily goal (slim bar inside the daily card)
+    const G = RZ.goal(), x = RZ.dayLog().x, f = Math.min(1, x / G.x);
+    $('goalBar').style.width = Math.round(f * 100) + '%';
+    $('goalT').textContent = f >= 1 ? 'حقّقت هدفك ✓' : 'هدفك';
+    $('goalS').textContent = AR(Math.min(x, G.x)) + '/' + AR(G.x);
+    // streak + freeze
+    const k = RZ.streak(), b = $('streak');
+    b.hidden = !k.count; if(k.count) b.lastElementChild.textContent = RZ.count(k.count, RZ.DAY_FORMS);
+    $('frz').classList.toggle('on', !!k.vac);
+    $('frz').setAttribute('aria-label', k.vac ? 'السلسلة مجمّدة حتى ' + RZ.dateAR(k.vac.to) : 'وضع التجميد');
     const last = RZ_TOUR.lastKey();
     $('dailyS').textContent = last ? 'حتى: ' + RZ_TOUR.lessonName(last) : 'من دروس المستوى الأول';
-    const dd = RZ.ls.get('rz-daily-done', '');
-    if(dd === RZ.today()){ $('dailyT').textContent = 'أتممت تحدّي اليوم'; $('dailyS').textContent = 'عُد غدًا لتحافظ على سلسلتك'; $('dailyB').textContent = 'مرة أخرى'; }
+    if(RZ.ls.get('rz-daily-done', '') === RZ.today()){ $('dailyT').textContent = 'أتممت تحدّي اليوم'; $('dailyS').textContent = 'عُد غدًا لتحافظ على سلسلتك'; $('dailyB').textContent = 'مرة أخرى'; }
+    else if(k.vac){ $('dailyS').textContent = '❄️ مجمّدة حتى ' + RZ.dateAR(k.vac.to); }
     // resume
     const R = RZ.ls.get('rz-resume', null);
     if(R && R.qs && R.i < R.qs.length && Date.now() - R.at < 7 * 864e5){ $('resume').hidden = false; $('resumeS').textContent = (R.title || 'اختبار') + ' · ' + AR(R.i) + ' من ' + AR(R.qs.length); }
-    // tasks
-    const T = RZ.tasks(), box = $('tasks'); box.innerHTML = '';
-    T.forEach(t => { const r = document.createElement('div'); r.className = 'rz-task' + (t.done ? ' done' : '');
-      r.innerHTML = `<span class="box">${t.done ? RZ.icon('check') : ''}</span><span>${t.t}</span><small>${t.n > 1 ? AR(t.p) + '/' + AR(t.n) : ''}</small>`; box.append(r); });
-    $('taskN').textContent = AR(T.filter(t => t.done).length) + ' من ٣';
-    // riddle + speed
-    const rd = RZ.ls.get('rz-riddle', {});
-    if(rd.day === RZ.today()){ $('riddle').classList.add('done'); $('riddleS').textContent = rd.ok ? 'حللتها ✓' : 'غدًا حزورة جديدة'; }
-    if(RZ.game.best60) $('speedS').textContent = 'رقمك القياسي: ' + AR(RZ.game.best60);
-    // hifz review
-    const hz = RZ.hifzToday();
-    if(hz.list.length){ $('hifzR').hidden = false; const left = hz.list.filter(n => !(hz.h.today.done || []).includes(n));
-      $('hifzT').textContent = left.length ? 'مراجعة اليوم: ' + hz.list.map(n => 'سورة ' + (hz.h.names[n] || n)).join(' و') : 'أتممت مراجعة اليوم ✓';
-      $('hifzS').textContent = left.length ? 'من محفوظك، بحسب آخر مراجعة وأخطائك' : 'بارك الله فيك'; }
-    // mistakes
-    const due = RZ.mistakesDue(), all = Object.keys(RZ.mistakes()).length, m = $('mist');
-    if(due) m.textContent = RZ.count(due, RZ.Q_FORMS) + (due === 1 ? ' حان موعد مراجعته اليوم' : due === 2 ? ' حان موعد مراجعتهما اليوم' : ' حان موعد مراجعتها اليوم');
-    else if(all) m.textContent = 'لا مراجعة اليوم · في الدفتر ' + RZ.count(all, RZ.Q_FORMS);
+    // shortcuts
+    const dot = (el, n) => { let d = el.querySelector('.dot'); if(!n){ if(d) d.remove(); return; } if(!d){ d = document.createElement('span'); d.className = 'dot'; el.append(d); } d.textContent = AR(n); };
+    const rd = RZ.ls.get('rz-riddle', {}); $('riddle').classList.toggle('done', rd.day === RZ.today());
+    dot($('mist'), RZ.mistakesDue());
+    const hz = RZ.hifzToday(), left = hz.list.filter(n => !(hz.h.today.done || []).includes(n));
+    dot($('hifzR'), left.length); $('hifzR').classList.toggle('done', hz.list.length > 0 && !left.length);
   }
   paint();
   // first run tour, or "what's new" after an update
@@ -169,6 +138,29 @@
       const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn pri block'; b.textContent = 'تمام'; b.addEventListener('click', close); box.append(b);
       if(!st.name){ const t = document.createElement('a'); t.href = 'settings.html#name'; t.className = 'rz-link'; t.style.textAlign = 'center'; t.textContent = 'أضف اسمك ليظهر في التحية'; box.append(t); }
     });
+  }
+  // ❄️ freeze sheet
+  $('frz').addEventListener('click', () => RZ.sheet((box, close) => {
+    const draw = () => {
+      const v = RZ.streak().vac;
+      box.innerHTML = `<b style="font-size:20px">❄️ وضع التجميد</b><span class="rz-meta">جمّد سلسلتك أيامًا لسفر أو مرض، فلا تنقطع.</span>`;
+      if(v){
+        box.insertAdjacentHTML('beforeend', `<span class="rz-badge plain" style="align-self:flex-start">مجمّدة حتى ${RZ.dateAR(v.to)}</span>`);
+        const e = document.createElement('button'); e.type = 'button'; e.className = 'rz-btn block'; e.textContent = 'إنهاء التجميد';
+        e.addEventListener('click', () => { RZ.setVacation(0); RZ.toast('عادت سلسلتك إلى العمل'); paint(); draw(); }); box.append(e); return;
+      }
+      const sel = document.createElement('select'); sel.className = 'rz-select'; sel.setAttribute('aria-label', 'مدة التجميد');
+      sel.innerHTML = [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}"${n === 3 ? ' selected' : ''}>${RZ.count(n, RZ.DAY_FORMS)}</option>`).join('');
+      const go = document.createElement('button'); go.type = 'button'; go.className = 'rz-btn pri block'; go.textContent = 'فعّل التجميد';
+      go.addEventListener('click', () => { RZ.setVacation(+sel.value); RZ.toast('جُمّدت سلسلتك ❄️'); paint(); close(); });
+      box.append(sel, go);
+    };
+    draw();
+  }));
+  // iPhone / iPad: "Add to Home Screen" hint (Safari has no install prompt)
+  const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(iOS && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches && !RZ.ls.get('rz-ios-hint', 0)){
+    $('ios').hidden = false; $('iosX').addEventListener('click', () => { $('ios').hidden = true; RZ.ls.set('rz-ios-hint', 1); });
   }
   // closing du'a: the first "back" on the home screen shows it; a second "back" leaves the app
   if(st.dua && history.pushState){

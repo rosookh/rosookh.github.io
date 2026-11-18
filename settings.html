@@ -69,12 +69,6 @@
   </section>
 
   <section class="rz-card">
-    <b>وضع التجميد</b>
-    <span class="rz-meta">يجمّد سلسلتك أيامًا تختارها، لسفر أو مرض أو أي عذر، فلا تنقطع.</span>
-    <div id="vac"></div>
-  </section>
-
-  <section class="rz-card">
     <b>نسخة احتياطية</b>
     <span class="rz-meta">تقدّمك محفوظ على هذا الجوال فقط. احفظ نسخة منه لتسترجعها إذا غيّرت جوالك أو مسحت بيانات التطبيق.</span>
     <div class="two">
@@ -129,22 +123,6 @@
   nt.addEventListener('change', async () => { if(nt.checked){ const m = await RZ.enableNotif(); $('notifMsg').textContent = m; nt.checked = !!RZ.settings().notif; } else { await RZ.disableNotif(); $('notifMsg').textContent = 'أُوقف التذكير.'; } });
   const sn = $('snd'); sn.checked = st.sound !== false; sn.addEventListener('change', () => RZ.setSettings({ sound: sn.checked }));
   const du = $('dua'); du.checked = st.dua !== false; du.addEventListener('change', () => RZ.setSettings({ dua: du.checked }));
-  // vacation
-  function paintVac(){
-    const v = RZ.streak().vac, box = $('vac'); box.innerHTML = '';
-    if(v){
-      const p = document.createElement('div'); p.className = 'rz-between';
-      p.innerHTML = `<span class="rz-badge plain">مفعّل حتى ${RZ.dateAR(v.to)}</span>`;
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-link'; b.textContent = 'إنهاء التجميد'; b.addEventListener('click', () => { RZ.setVacation(0); paintVac(); });
-      p.append(b); box.append(p); return;
-    }
-    const s = document.createElement('select'); s.className = 'rz-select'; s.setAttribute('aria-label', 'مدة التجميد');
-    s.innerHTML = '<option value="">اختر المدة…</option>' + [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${RZ.count(n, RZ.DAY_FORMS)}</option>`).join('');
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-btn'; b.textContent = 'فعّل وضع التجميد'; b.style.marginTop = '8px'; b.style.width = '100%';
-    b.addEventListener('click', () => { if(!s.value) return; RZ.setVacation(+s.value); RZ.toast('فُعّل وضع التجميد'); paintVac(); });
-    box.append(s, b);
-  }
-  paintVac();
   // backup
   $('bkSave').addEventListener('click', async () => {
     const data = JSON.stringify(RZ.backupData()); const name = 'rosookh-backup-' + RZ.today() + '.json';

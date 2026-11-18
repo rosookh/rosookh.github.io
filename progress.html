@@ -11,7 +11,7 @@
 <title>تقدّمي · رسوخ</title>
 <style>
 .lvhero{position:relative;overflow:hidden;background:#2F5D50;color:#F4EDE0;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px}
-.lvhero>*{position:relative}
+.lvhero>*{position:relative}.lvhero>.rz-pat{position:absolute}
 .lvhero .rz-bar{background:rgba(244,237,224,.25)} .lvhero .rz-bar i{background:#C9AE8E}
 .big-medal{width:64px;height:64px;font-size:26px}
 .tiers{display:flex;justify-content:space-between;gap:4px}
@@ -41,6 +41,14 @@
     h('span', { style:'font-size:13px;opacity:.9' }, L.next != null ? 'باقي ' + RZ.count(L.left, RZ.PT_FORMS) + ' على ' + L.nextName : 'وصلت إلى أعلى مستوى، ما شاء الله'),
     h('div', { class:'tiers' }, RZ.TIERS.map(([c, t], k) => `<span class="${L.i >= k * 3 ? 'on' : ''}"><i class="rz-medal m-${c}"></i>${t}</span>`).join('')));
   app.append(lv);
+  // today: goal ring + tasks (moved here from home)
+  { const G0 = RZ.goal(), x0 = RZ.dayLog().x, f0 = Math.min(1, x0 / G0.x), C = 2 * Math.PI * 24;
+    const T = RZ.tasks();
+    app.append(h('section', { class:'rz-card' }, `<div class="rz-row" style="gap:14px"><div class="rz-ring"><svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="24" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="28" cy="28" r="24" fill="none" stroke="${f0 >= 1 ? 'var(--good)' : 'var(--accent)'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(C * f0).toFixed(1)} ${C.toFixed(1)}"/></svg><b>${AR(Math.round(f0 * 100))}٪</b></div>
+      <div style="display:flex;flex-direction:column;gap:2px"><b>${f0 >= 1 ? 'حقّقت هدف اليوم!' : 'هدف اليوم (' + G0.t + ')'}</b><span class="rz-meta">${AR(Math.min(x0, 9999))} من ${AR(G0.x)} نقطة</span></div></div>
+      <div class="rz-between"><b>مهام اليوم</b><span class="rz-meta">${AR(T.filter(t => t.done).length)} من ${AR(T.length)}</span></div>
+      <div>${T.map(t => `<div class="rz-task${t.done ? ' done' : ''}"><span class="box">${t.done ? RZ.icon('check') : ''}</span><span>${t.t}</span><small>${t.n > 1 ? AR(t.p) + '/' + AR(t.n) : ''}</small></div>`).join('')}</div>
+      <a class="rz-link" href="library/#/mastery">خريطة إتقاني: أين وصلت في كل درس ←</a>`)); }
 
   // this week (Saturday → Friday)
   const now = new Date(); const dow = (now.getDay() + 1) % 7; // Saturday = 0
@@ -80,7 +88,7 @@
   app.append(h('section', { class:'rz-card' }, `<div class="rz-between"><b>سلسلتك</b><span class="rz-badge">🔥 ${s.count ? RZ.count(s.count, RZ.DAY_FORMS) : 'لم تبدأ بعد'}</span></div>
     <span class="rz-meta">تكبر السلسلة كل يوم تحقّق فيه هدفك اليومي أو تُتمّ تحدّي اليوم.</span>
     <div class="rz-between"><span>أيام العذر المحفوظة: ${AR(s.freeze)} من ٢</span><span class="rz-meta">تُكسب كل ٧ أيام متتالية</span></div>
-    ${s.vac ? `<span class="rz-badge plain">السلسلة مجمّدة حتى ${RZ.dateAR(s.vac.to)}</span>` : ''}`));
+    ${s.vac ? `<span class="rz-badge plain">❄️ مجمّدة حتى ${RZ.dateAR(s.vac.to)}</span>` : '<span class="rz-meta">للتجميد اضغط ❄️ على بطاقة تحدّي اليوم.</span>'}`));
 
   // month calendar
   const [y, m] = today.split('-').map(Number); const first = `${y}-${String(m).padStart(2, '0')}-01`;
@@ -103,6 +111,11 @@
   app.append(h('section', { class:'rz-card' }, `<div class="rz-between"><b>أوسمتي</b><span class="rz-meta">${AR(got)} من ${AR(RZ.BADGES.length)}</span></div>
     <div class="rz-badges">${RZ.BADGES.map(b => `<div class="rz-bdg${G.badges['got_' + b.id] ? ' on' : ''}"><span class="e">${b.e}</span><b>${b.t}</b><span>${b.s}</span></div>`).join('')}</div>`));
 
+  // titles (one per chapter, 3 stars)
+  { const tg = RZ.TITLES.filter(t => G.badges['got_' + t.id]).length;
+    app.append(h('section', { class:'rz-card' }, `<div class="rz-between"><b>ألقابي</b><span class="rz-meta">${AR(tg)} من ${AR(RZ.TITLES.length)}</span></div>
+      <span class="rz-meta">احصل على ٣ نجوم في اختبار الباب لتنال لقبه.</span>
+      <div class="rz-badges">${RZ.TITLES.map(t => `<div class="rz-bdg${G.badges['got_' + t.id] ? ' on' : ''}"><span class="e">${t.e}</span><b>${t.t}</b><span>${(CH[t.ch] || '').replace(/^الباب [^:]+: /, '')}</span></div>`).join('')}</div>`)); }
   // totals
   const tot = Object.values(G.log).reduce((a, x) => [a[0] + x.a, a[1] + x.c], [0, 0]);
   app.append(h('section', { class:'rz-card' }, `<b>منذ البداية</b><div class="rz-stats"><div class="rz-stat"><b>${AR(tot[1])}</b><small>إجابة صحيحة</small></div><div class="rz-stat"><b>${AR(G.quizzes)}</b><small>اختبارًا أنهيته</small></div><div class="rz-stat"><b>${AR(G.best60 || 0)}</b><small>رقمك في الجولة السريعة</small></div></div>`));
