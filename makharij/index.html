@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>كيف يخرج الحرف؟ · رسوخ</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<script src="../assets/rz.js"></script>
+<style>
+/* Layout: stage (anatomy) beside a reading panel; letter keys grouped by makhraj region below. */
+:root{
+  --bg:#F3F1EC; --surface:#FFFFFF; --ink:#1E2B28; --muted:#55605C; --line:#DCD8CE;
+  --accent:#1F5C4A; --gold:#B8862E;
+  --skin:#F1D3C2; --skin-line:#B98872; --air:#FBF7F2; --bone:#E9DFC9; --bone-line:#A8946A;
+  --tongue:#D9827B; --tongue-line:#9E4E48; --tooth:#FFFFFF; --tooth-line:#9C8A66;
+  --jawf:#8A6A22; --halq:#8E3B1F; --lisan:#1F5C4A; --shafa:#1D4E6B; --khay:#5B2C4F;
+  --display:"Amiri",serif; --body:"IBM Plex Sans Arabic",Tahoma,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141917; --surface:#1C2320; --ink:#EDEAE2; --muted:#A9B0AB; --line:#323B37;
+  --accent:#6CC3A4; --gold:#E0B460;
+  --skin:#5A4339; --skin-line:#9C7462; --air:#232A27; --bone:#6E644F; --bone-line:#A8946A;
+  --tongue:#C46F68; --tongue-line:#F0A9A2; --tooth:#ECE8DF; --tooth-line:#8F8264;
+  --jawf:#E0B460; --halq:#F08E68; --lisan:#6CC3A4; --shafa:#7FB6DA; --khay:#D79BC6;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1C2320; --ink:#EDEAE2; --muted:#A9B0AB; --line:#323B37;
+  --accent:#6CC3A4; --gold:#E0B460;
+  --skin:#5A4339; --skin-line:#9C7462; --air:#232A27; --bone:#6E644F; --bone-line:#A8946A;
+  --tongue:#C46F68; --tongue-line:#F0A9A2; --tooth:#ECE8DF; --tooth-line:#8F8264;
+  --jawf:#E0B460; --halq:#F08E68; --lisan:#6CC3A4; --shafa:#7FB6DA; --khay:#D79BC6;
+  color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 32px}
+.eyebrow{font-size:14px;font-weight:600;letter-spacing:.5px;color:var(--gold)}
+h1{margin:0;font-family:var(--display);font-size:clamp(40px,6vw,60px);line-height:1.15;color:var(--accent);text-wrap:balance}
+header p{margin:0;max-width:46ch;color:var(--muted)}
+.main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.main{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;position:relative}
+.stage svg{display:block;width:100%;height:auto;direction:ltr}
+.bookview{position:relative;aspect-ratio:1/1;background:#fff;border-radius:12px;overflow:hidden;direction:ltr}
+.bookview[hidden]{display:none}
+.try b{display:block;margin-bottom:2px}.try small{display:block;opacity:.75;margin-top:4px}
+.bookview img,.bookview video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:top;opacity:0;transition:opacity .3s ease;background:#fff}
+.bookview video{pointer-events:none}.bookview video.on{opacity:1}
+.bookview img.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.bookview img,.bookview video{transition:none}}
+.bkcap{position:absolute;inset-inline:0;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(to top,rgba(255,255,255,.96) 60%,rgba(255,255,255,0));color:#1E2B28;direction:rtl}
+.bkcap b{font-family:var(--display);font-size:30px;line-height:1.2;color:#1F5C4A}
+.bkcap span{font-size:13px;font-weight:600;color:#55605C}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--ink);padding:6px 16px;min-height:40px;font-size:15px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+#svg[hidden]{display:none}
+.stage .bar{display:flex;flex-wrap:wrap;gap:8px;padding:6px 8px 4px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.region{font-size:14px;font-weight:600;color:var(--muted)}
+.num{min-width:46px;height:46px;border-radius:999px;display:grid;place-items:center;font-weight:700;font-size:20px;color:var(--surface);background:var(--c,var(--accent))}
+.pname{font-size:24px;font-weight:700;line-height:1.4;color:var(--c,var(--accent));text-wrap:balance}
+.pletters{font-family:var(--display);font-size:46px;font-weight:700;line-height:1.3}
+.box{background:var(--bg);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.box b{font-size:13px;color:var(--gold)}
+.box span{font-weight:600}
+.book{font-size:16px;color:var(--ink)}
+.book small{display:block;color:var(--muted);font-size:13px}
+.try{font-size:16px;line-height:1.75}
+.sound{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1.5px dashed var(--line);border-radius:10px;padding:10px 12px}
+.sound b{font-size:13px;color:var(--gold);width:100%}
+.sound .pill{font-size:15px}
+.sound .src{font-size:12px;color:var(--muted);width:100%}
+.sound video{width:100%;border-radius:8px;background:#000;aspect-ratio:16/9}
+.sound.empty{color:var(--muted);font-size:14px}
+.vid{font-size:14px;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+button{font-family:var(--body);cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.pill{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 16px;min-height:40px;font-size:15px;font-weight:600}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.vowels{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vowels[hidden]{display:none!important}
+.vowels .v{font-family:var(--display);font-size:26px;min-width:64px;padding:2px 14px}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.grp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.grp h3{margin:0;font-size:14px;font-weight:700;color:var(--gc)}
+.keys{display:flex;flex-wrap:wrap;gap:6px}
+.k{font-family:var(--display);font-size:26px;font-weight:700;min-width:48px;min-height:48px;border-radius:10px;border:2px solid var(--gc);background:var(--surface);color:var(--ink);line-height:1;padding:4px 8px}
+.k.sm{font-family:var(--body);font-size:14px}
+.k[aria-pressed="true"]{background:var(--gc);color:var(--surface)}
+.lb2{font-family:var(--body);font-size:14px;font-weight:700}
+.lbl{font-family:var(--body);font-size:13px;font-weight:600;fill:var(--muted)}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none!important}}
+.pulse{animation:pl 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pl{0%,100%{opacity:.95}50%{opacity:.45}}
+.flow{stroke-dasharray:6 8;animation:fl 1s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-28}}
+.apptop{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.apptop .back svg{width:24px;height:24px}.apptop .back{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink);text-decoration:none;font-size:22px}
+.tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:14px;flex-grow:1;max-width:420px}
+.tabs a{flex:1;text-align:center;padding:8px 6px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:15px}
+.tabs a[aria-current]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+</style>
+
+</head>
+<body>
+<div class="wrap" dir="rtl">
+<nav class="apptop"><a class="back" href="../" aria-label="رجوع" data-icon="back"></a><div class="tabs"><a href="./" aria-current="page">الصوت والصورة</a><a href="../imara/">العمارة</a></div></nav>
+<header>
+  <div>
+    <h1>كيف يخرج الحرف؟</h1>
+  </div>
+  <p>اختر حرفًا لترى اللسان ينتقل من وضع السكون إلى مخرج الحرف.</p>
+</header>
+
+<div class="main">
+  <div class="stage">
+    <div class="bookview" id="bookView">
+      <img id="bkA" alt="" decoding="async"><img id="bkB" alt="" decoding="async"><video id="bkV" muted playsinline preload="auto" aria-hidden="true"></video>
+      <div class="bkcap"><b id="bkLab"></b><span id="bkPg"></span></div>
+    </div>
+    <svg id="svg" hidden viewBox="18 122 630 566" role="img" aria-label="مقطع جانبي للرأس يتحرك فيه اللسان والشفتان والحنك اللحمي" style="background:#FBF8EF;border-radius:12px">
+      <defs>
+        <pattern id="dots" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="#E4E294"/><circle cx="2" cy="3" r="1" fill="#B9B65A"/><circle cx="6.5" cy="7" r=".8" fill="#C6C26A"/></pattern>
+        <linearGradient id="gNose" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B24456"/><stop offset="1" stop-color="#7C2334"/></linearGradient>
+        <linearGradient id="gAir" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A0E12"/><stop offset=".55" stop-color="#21141C"/><stop offset="1" stop-color="#2A2248"/></linearGradient>
+        <radialGradient id="gTongue" cx=".55" cy=".25" r=".85"><stop offset="0" stop-color="#E06A78"/><stop offset=".6" stop-color="#C4475A"/><stop offset="1" stop-color="#9A2E43"/></radialGradient>
+        <linearGradient id="gWall" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5E1A2B"/><stop offset="1" stop-color="#9B3446"/></linearGradient>
+        <linearGradient id="gSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F5D766"/><stop offset="1" stop-color="#EDC54C"/></linearGradient>
+      </defs>
+      <!-- head -->
+      <path fill="url(#gSkin)" d="M215,120 C190,160 130,200 86,222 Q64,232 72,247 Q80,259 104,256 Q112,266 118,282 L176,296 L184,440 L176,524 C230,540 290,550 318,575 C330,610 334,650 336,690 L660,690 L660,120 Z"/>
+      <!-- nasal cavity (khayshum) -->
+      <path fill="url(#gNose)" stroke="#5A1624" stroke-width="1.5" d="M104,256 C114,238 142,214 182,200 C262,170 420,168 500,182 C560,192 598,214 604,250 L604,264 C560,252 500,247 452,246 C400,244 300,252 228,268 C190,268 140,264 112,262 Z"/>
+      <!-- air: mouth + throat -->
+      <path id="air" fill="url(#gAir)" d="M604,262 L604,690 L570,690 L570,522 C566,512 562,505 558,500 C500,516 380,514 300,497 C252,484 224,458 214,432 L203,378 L150,374 L104,363 L150,352 L196,350 L210,296 L222,298 C246,280 272,271 332,259 C400,256 452,252 470,252 C540,250 590,256 604,262 Z"/>
+      <!-- back wall of the throat -->
+      <path fill="url(#gWall)" stroke="#4A1220" stroke-width="1.2" d="M604,206 C612,240 614,300 612,400 L612,690 L630,690 L630,206 C624,200 610,200 604,206 Z"/>
+      <!-- hard palate + maxilla (bone) -->
+      <path fill="url(#dots)" stroke="#8F8A3A" stroke-width="1.5" d="M112,262 C140,264 190,268 228,268 C300,252 400,244 452,246 L456,260 C400,256 332,259 272,271 C246,280 234,290 222,298 L206,292 C180,290 140,288 118,282 Z"/>
+      <!-- mandible (bone) -->
+      <path fill="url(#dots)" stroke="#8F8A3A" stroke-width="1.5" d="M214,432 C224,458 252,484 300,497 L304,522 C262,530 214,530 190,516 C180,490 184,458 199,434 Z"/>
+      <!-- gums -->
+      <path fill="#E2808B" stroke="#8E3A46" stroke-width="1" d="M204,289 L223,297 L214,318 L201,312 Z"/>
+      <path fill="#E2808B" stroke="#8E3A46" stroke-width="1" d="M198,436 L215,433 L209,410 L196,413 Z"/>
+      <!-- velum -->
+      <path id="velum" fill="#D86B78" stroke="#6E1F2E" stroke-width="1.6"/>
+      <!-- hyoid, epiglottis, vocal folds -->
+      <ellipse cx="546" cy="532" rx="13" ry="7" fill="#EBCB4F" stroke="#8C6E12" stroke-width="1.2"/>
+      <path fill="#EBCB4F" stroke="#8C6E12" stroke-width="1.4" d="M570,526 C571,500 578,478 596,456 C592,482 586,506 582,528 Z"/>
+      <path id="vfF" fill="#E8909A" stroke="#7A2433" stroke-width="1.2"/>
+      <path id="vfB" fill="#E8909A" stroke="#7A2433" stroke-width="1.2"/>
+      <!-- airflow -->
+      <path id="flowMouth" class="flow" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0"/>
+      <path id="flowNose" class="flow" fill="none" stroke="#FFE08A" stroke-width="3" opacity="0" d="M587,600 L587,300 C585,240 560,212 500,204 C400,194 250,196 170,212 C140,220 118,236 102,252"/>
+      <!-- upper side teeth (canine → molars), seen beyond the midline -->
+      <g id="molars" fill="#F3EFE2" stroke="#8C8778" stroke-width="1.2"><path d="M232,295 L245,295 L244,307 Q242,312 238,309 Q235,312 233,307 Z"/><path d="M247,286 L262,286 L261,298 Q258,303 254,300 Q251,303 248,298 Z"/><path d="M264,278 L281,278 L280,290 Q277,295 272,292 Q268,295 265,290 Z"/><path d="M283,273 L300,273 L299,285 Q296,290 292,287 Q287,290 284,285 Z"/><path d="M302,269 L324,269 L323,284 Q318,289 313,286 Q308,289 303,284 Z"/><path d="M326,265 L350,265 L349,280 Q344,285 338,282 Q332,285 327,280 Z"/><path d="M352,263 L376,263 L375,278 Q370,283 364,280 Q358,283 353,278 Z"/></g>
+      <text x="320" y="306" text-anchor="middle" class="lb2" fill="#E9E4D4" style="font-size:10px">الأضراس العليا</text>
+      <!-- tongue -->
+      <path id="tongue" fill="url(#gTongue)" stroke="#6E1F2E" stroke-width="2"/>
+      <g id="tlines" stroke="#F3A3AC" stroke-width="1.3" stroke-linecap="round" opacity=".55" fill="none"></g>
+      <path id="tongueTop" fill="none" stroke="#F6B9C0" stroke-width="2.5" opacity=".7" stroke-linecap="round"/>
+      <!-- teeth -->
+      <path fill="#FFFFFF" stroke="#6E6A5E" stroke-width="1.5" d="M190,296 C188,318 184,340 179,358 Q183,367 193,364 C200,348 212,334 223,322 C224,312 220,302 212,296 C205,293 196,293 190,296 Z"/>
+      <path fill="none" stroke="#C9C3B0" stroke-width="1" d="M199,312 C195,328 191,343 187,356"/>
+      <path id="lowTooth" fill="#FFFFFF" stroke="#6E6A5E" stroke-width="1.5" d="M186,373 Q191,366 199,368 C207,383 214,398 218,414 C214,424 206,428 198,426 C193,410 189,392 186,373 Z"/>
+      <path fill="none" stroke="#C9C3B0" stroke-width="1" d="M194,378 C197,390 200,400 203,410"/>
+      <!-- lips -->
+      <path id="upLip" fill="#F2CF5B" stroke="#3A2A10" stroke-width="1.6"/>
+      <path id="loLip" fill="#F2CF5B" stroke="#3A2A10" stroke-width="1.6"/>
+      <path id="upVer" fill="#D9737F" stroke="#8E3A46" stroke-width="1"/>
+      <path id="loVer" fill="#D9737F" stroke="#8E3A46" stroke-width="1"/>
+      <!-- profile line -->
+      <path fill="none" stroke="#3A2A10" stroke-width="2" d="M215,120 C190,160 130,200 86,222 Q64,232 72,247 Q80,259 104,256 Q112,266 118,282"/>
+      <path fill="none" stroke="#3A2A10" stroke-width="2" d="M176,524 C230,540 290,550 318,575 C330,610 334,650 336,690"/>
+      <path fill="none" stroke="#7A5A10" stroke-width="1.4" opacity=".6" d="M78,238 Q92,244 104,256"/>
+      <!-- sound waves at the lips -->
+      <g id="waves" fill="none" stroke="#2B2B2B" stroke-width="2.4" stroke-linecap="round" opacity="0">
+        <path d="M72,344 Q62,360 72,376"/><path d="M62,336 Q48,360 62,384"/><path d="M52,328 Q34,360 52,392"/>
+      </g>
+      <!-- labels -->
+      <text x="330" y="204" text-anchor="middle" class="lb2" fill="#FFF3F4">الخيشوم</text>
+      <text x="370" y="440" text-anchor="middle" class="lb2" fill="#FFE7EA">اللسان</text>
+      <text x="589" y="640" text-anchor="middle" class="lb2" fill="#E6E2FF" transform="rotate(-90 589 640)">الحلق</text>
+      <!-- parts of the upper palate (front → back), drawn on the roof surface -->
+      <g id="palParts" font-family="IBM Plex Sans Arabic, sans-serif" font-size="10.5" font-weight="700">
+        <path d="M223,301 C230,293 237,286 245,281" fill="none" stroke="#F58FA0" stroke-width="5" stroke-linecap="round"/>
+        <path d="M246,280 C262,273 280,268 300,264" fill="none" stroke="#F2C14E" stroke-width="5" stroke-linecap="round"/>
+        <path d="M252,280 q3,-6 6,0 M266,275 q3,-6 6,0 M280,271 q3,-6 6,0" fill="none" stroke="#8A6A10" stroke-width="1.2"/>
+        <path d="M301,264 C340,257 400,255 438,256" fill="none" stroke="#7FC0E8" stroke-width="5" stroke-linecap="round"/>
+        <path d="M440,256 L460,259" fill="none" stroke="#B9E3A0" stroke-width="5" stroke-linecap="round"/>
+        <g stroke="#FFFFFF" stroke-width="1" opacity=".9">
+          <line x1="236" y1="286" x2="236" y2="266"/><line x1="272" y1="270" x2="284" y2="249"/>
+          <line x1="380" y1="256" x2="380" y2="242"/><line x1="450" y1="257" x2="462" y2="219"/>
+        </g>
+        <text x="236" y="263" text-anchor="middle" fill="#FFD3DA">اللثة</text>
+        <text x="292" y="246" text-anchor="middle" fill="#FFE6A6">الغار (النِّطع)</text>
+        <text x="380" y="238" text-anchor="middle" fill="#CDEBFF">الحنك العظمي (الصلب)</text>
+        <text x="462" y="214" text-anchor="middle" fill="#DDF5CF">منطقة الكاف</text>
+        <text x="528" y="287" text-anchor="middle" fill="#6E1F2E" style="font-size:9.5px">الحنك اللحمي</text>
+        <g id="uvLab"><line id="uvLine" stroke="#FFFFFF" stroke-width="1"/><text id="uvText" text-anchor="start" fill="#FFFFFF">اللهاة</text></g>
+      </g>
+      <!-- lip labels -->
+      <g font-family="IBM Plex Sans Arabic, sans-serif" font-size="10" font-weight="700" fill="#3A2A10">
+        <text x="76" y="316" text-anchor="end" style="font-size:9px">الشفة العليا</text>
+        <text x="76" y="420" text-anchor="end" style="font-size:9px">الشفة السفلى</text>
+        <text x="232" y="352" text-anchor="start" fill="#E9E4D4">الثنايا</text>
+      </g>
+      <path id="band" fill="none" stroke="#36D1FF" stroke-width="9" stroke-linecap="round" opacity="0" d="M268,289 L374,277"/>
+      <!-- contact highlight -->
+      <g id="hit" opacity="0">
+        <circle id="hitS" r="17" fill="none" stroke="#000" stroke-width="7" opacity=".55" class="pulse"/>
+        <circle id="hitC" r="17" fill="none" stroke="#FFFFFF" stroke-width="3.5" class="pulse"/>
+        <circle id="hitD" r="5.5" fill="#36D1FF" stroke="#000" stroke-width="1"/>
+      </g>
+      <!-- glottis inset -->
+      <g id="glot" opacity="0" transform="translate(430 618)">
+        <rect x="-62" y="-46" width="124" height="80" rx="10" fill="#FFFFFF" stroke="#3A2A10"/>
+        <text x="0" y="-28" text-anchor="middle" class="lb2" fill="#3A2A10" style="font-size:12px">الوتران من أعلى</text>
+        <path id="gL" fill="#E8909A" stroke="#7A2433"/>
+        <path id="gR" fill="#E8909A" stroke="#7A2433"/>
+        <text id="gT" x="0" y="28" text-anchor="middle" class="lb2" fill="#3A2A10" style="font-size:12px"></text>
+      </g>
+      <rect x="20" y="124" width="626" height="562" rx="14" fill="none" stroke="#2B2B2B" stroke-width="3"/>
+    </svg>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="طريقة العرض"><button type="button" id="vBook" aria-pressed="true">الصورة</button><button type="button" id="vAnim" aria-pressed="false">رسمة متحرّكة</button></div>
+      <button type="button" class="pill" id="restBtn">وضع السكون</button>
+      <button type="button" class="pill" id="replay">↻ أعد الحركة</button>
+      <button type="button" class="pill" id="auto" aria-pressed="false">▶ عرض تلقائي للمخارج</button>
+      <button type="button" class="pill" id="partsBtn" aria-pressed="true" hidden>أجزاء الحنك</button>
+      <div class="vowels" id="vowels" hidden>
+        <span class="region">حركة الهمزة قبل الراء:</span>
+        <button type="button" class="pill v" data-v="fath" aria-pressed="true">أَرْ</button>
+        <button type="button" class="pill v" data-v="damm" aria-pressed="false">أُرْ</button>
+        <button type="button" class="pill v" data-v="kasr" aria-pressed="false">إِرْ</button>
+      </div>
+      <div class="vowels" id="lams" hidden>
+        <span class="region">اللام:</span>
+        <button type="button" class="pill lv" data-l="thin" aria-pressed="true" style="font-size:15px">مرقّقة</button>
+        <button type="button" class="pill lv" data-l="thick" aria-pressed="false" style="font-size:15px">مفخّمة (في اسم الجلالة)</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="panel" id="panel" aria-live="polite">
+    <div class="top"><span class="region" id="pRegion"></span><span class="num" id="pNum"></span></div>
+    <div class="pname" id="pName"></div>
+    <div class="pletters" id="pLetters"></div>
+    <div class="box"><b>موضع المخرج في سقف الفم والأسنان العليا (منظر من أسفل)</b>
+      <svg id="arch" viewBox="0 0 240 222" style="width:100%;max-width:300px;align-self:center;background:#FBF8EF;border-radius:10px;direction:ltr" role="img" aria-label="سقف الفم والأسنان العليا من أسفل مع موضع المخرج"></svg>
+      <span id="archNote" style="font-size:13px;font-weight:500;color:var(--muted)"></span></div>
+    <div class="box"><b>عضوا النطق</b><span id="pOrgans"></span></div>
+    <div class="box"><b>وضع الأعضاء عند النطق</b><span id="pMove"></span></div>
+    <div class="book" id="pBook"></div>
+    <div class="try" id="pTry"></div>
+    <div class="sound" id="pSound"></div>
+    <a class="vid" id="pShaher" target="_blank" rel="noopener"></a>
+    <a class="vid" id="pVid" target="_blank" rel="noopener"></a>
+    <div class="note" id="pNote"></div>
+  </aside>
+</div>
+
+<div class="groups" id="groups"></div>
+</div>
+
+<script>const AUDIO={}; // يُملأ عند وصول تسجيلات الشيخ</script>
+<script>
+(function(){
+const ar = n => String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+// ---------- shapes ----------
+const REST = {P:[[210,392],[245,366],[300,343],[370,331],[440,333],[498,350],[538,386],[556,432],[562,478]], lips:[92,352,94,363], v:0, g:1};
+function T(over, base){ // build target from rest with point overrides
+  const b = base || REST;
+  const P = b.P.map(p=>p.slice());
+  (over.P||[]).forEach(([i,x,y])=>{P[i]=[x,y];});
+  return {P, lips: over.lips || b.lips.slice(), v: over.v ?? 0, g: over.g ?? 1};
+}
+const LIPS = {neutral:[92,352,94,363], closed:[94,357,95,358], round:[78,352,80,363], spread:[98,350,100,367], open:[90,346,92,382], fa:[94,350,176,361]};
+const BACK_UP = [[3,375,312],[4,445,290],[5,500,298],[6,542,345]]; // istila' of the back of the tongue
+
+// ---------- makharij data ----------
+const C = {jawf:'--jawf',halq:'--halq',lisan:'--lisan',shafa:'--shafa',khay:'--khay'};
+const M = {
+ 1:{n:'الجوف',r:'الجوف',c:'jawf',l:'ا و ي (المدّية)',o:'مخرج مقدّر: هواء الحلق والفم',
+   b:'للجوف ألفٌ وأختاها، وهي حروف مدٍّ للهواء تنتهي.',hit:null},
+ 2:{n:'أقصى الحلق',r:'الحلق',c:'halq',l:'ء هـ',o:'الوتران الصوتيان',
+   b:'أبعده من الفم، وأقربه مما يلي الصدر، ويخرج منه الهمزة والهاء، والهمزة أدخل من الهاء.',hit:[586,601]},
+ 3:{n:'وسط الحلق',r:'الحلق',c:'halq',l:'ع ح',o:'لسان المزمار مع الجدار الخلفي للحلق',
+   b:'يخرج منه العين والحاء المهملتان، والعين أقرب إلى أقصى الحلق من الحاء.',hit:[592,470]},
+ 4:{n:'أدنى الحلق',r:'الحلق',c:'halq',l:'غ خ',o:'جذر اللسان + الحنك اللحمي (مع اللهاة)',
+   b:'أقربه مما يلي الفم، ويخرج منه الغين والخاء المعجمتان، والغين أدخل من الخاء.',hit:[567,318]},
+ 5:{n:'أقصى اللسان · لهوية',r:'اللسان',c:'lisan',l:'ق',o:'أقصى اللسان + الحنك الأعلى اللحمي',
+   b:'تخرج من أقصى اللسان مما يلي الحلق، مع ما يحاذيه من الحنك.',hit:[506,276]},
+ 6:{n:'أقصى اللسان · لهوية',r:'اللسان',c:'lisan',l:'ك',o:'أقصى اللسان + الحنك الصلب',
+   b:'تخرج من أقصى اللسان، تحت مخرج القاف، مع ما يحاذيه من الحنك.',hit:[450,257]},
+ 7:{n:'وسط اللسان · شجرية',r:'اللسان',c:'lisan',l:'ج ش ي',o:'وسط اللسان + الحنك الأعلى',
+   b:'يخرج منه الجيم والشين والياء غير المدّية، مع ما يليه من الحنك.',hit:[362,257]},
+ 8:{n:'حافة اللسان',r:'اللسان',c:'lisan',l:'ض',o:'حافة اللسان + أصول الأضراس العليا',
+   b:'تخرج من إحدى حافتي اللسان، مع أصول الأضراس العليا، من الضاحك حتى الناجذ، وخروجها من الحافة اليسرى أيسر.',hit:[320,283]},
+ 9:{n:'أدنى حافة اللسان · ذلقية',r:'اللسان',c:'lisan',l:'ل',o:'أدنى حافة اللسان إلى منتهى طرفه + لثة الأسنان العليا',
+   b:'تخرج من أدنى إحدى حافتي اللسان إلى منتهى طرفه، مع ما يحاذيه من لثة الأسنان العليا، من الضاحك إلى الثنية.',hit:[236,290]},
+ 10:{n:'طرف اللسان · ذلقية',r:'اللسان',c:'lisan',l:'ن',o:'طرف اللسان + لثة الأسنان العليا',
+   b:'تخرج من طرف اللسان مع لثة الأسنان العليا.',hit:[230,295]},
+ 11:{n:'طرف اللسان مع ظهره · ذلقية',r:'اللسان',c:'lisan',l:'ر',o:'طرف اللسان مع شيء من ظهره + لثة الثنايا العليا',
+   b:'تخرج من طرف اللسان، بُعيد مخرج النون، مائلة إلى ظهر اللسان قليلاً، مع ما يليه من لثة الأسنان العليا.',hit:[242,286]},
+ 12:{n:'نطعية',r:'اللسان',c:'lisan',l:'ط د ت',o:'طرف اللسان + أصول الثنايا العليا',
+   b:'تخرج من طرف اللسان مع أصول الثنايا العليا، ويستعلي مع الطاء أقصى اللسان.',hit:[221,318]},
+ 13:{n:'أسلية · حروف الصفير',r:'اللسان',c:'lisan',l:'ص ز س',o:'طرف اللسان + فُويق الثنايا السفلى',
+   b:'تخرج من طرف اللسان مع فُويق الثنايا السفلى، ويستعلي مع الصاد أقصى اللسان. وصوت الصفير يخرج من الفراغ بين الثنايا العليا والسفلى.',hit:[202,375]},
+ 14:{n:'لثوية',r:'اللسان',c:'lisan',l:'ظ ذ ث',o:'طرف اللسان + أطراف الثنايا العليا',
+   b:'تخرج من طرف اللسان مع أطراف الثنايا العليا، ويستعلي مع الظاء أقصى اللسان.',hit:[185,363]},
+ 15:{n:'باطن الشفة السفلى',r:'الشفتان',c:'shafa',l:'ف',o:'باطن الشفة السفلى + أطراف الثنايا العليا',
+   b:'باطن الشفة السفلى مع أطراف الثنايا العليا: يخرج منها حرف الفاء.',hit:[182,362]},
+ 16:{n:'الشفتان',r:'الشفتان',c:'shafa',l:'ب م و',o:'الشفة العليا + الشفة السفلى',
+   b:'يخرج من الشفتين حال انطباقهما الميم والباء، وحال انضمامهما مع انفراجهما قليلاً الواو غير المدّية.',hit:[96,358]},
+ 17:{n:'الخيشوم',r:'الخيشوم',c:'khay',l:'الغنّة',o:'الخيشوم: الفتحة المتصلة من أعلى الأنف إلى الحلق',
+   b:'الخيشوم هو مخرج الغنّة في النون والميم. والغنّة ليست حرفاً، ولكن لكثرة استعمالها جعلوا لها مخرجاً.',hit:[300,200]}
+};
+
+// per-letter pose, motion text and practice syllable
+const L = {
+ 'ا':{m:1,t:T({P:[[1,248,372],[2,300,358],[3,370,352],[4,440,350],[5,498,362]],lips:LIPS.open}),mv:'اللسان منخفض والفم مفتوح، والصوت يجري في الجوف بلا اعتماد على موضع.',tr:'أَا',flow:'a'},
+ 'و المدّية':{m:1,t:T({P:[[3,370,322],[4,440,305],[5,498,318]],lips:LIPS.round}),mv:'الشفتان مستديرتان، والصوت يجري في الجوف ويخرج من بينهما.',tr:'أُو',flow:'w'},
+ 'ي المدّية':{m:1,t:T({P:[[1,245,340],[2,300,300],[3,370,290],[4,440,310]],lips:LIPS.spread}),mv:'وسط اللسان مرتفع نحو الحنك دون أن يلتصق، والصوت يجري فوقه.',tr:'إِي',flow:'y'},
+ 'ء':{m:2,t:T({}),mv:'اللسان مستقر، والوتران الصوتيان ينطبقان تماماً في الهمزة الساكنة.',tr:'أَأْ',g:0},
+ 'هـ':{m:2,t:T({}),mv:'اللسان مستقر، والوتران منفتحان جزئياً فيجري النَّفَس (همس).',tr:'أَهْ',g:.45},
+ 'ع':{m:3,t:T({P:[[6,556,384],[7,574,432],[5,505,352]]}),mv:'جذر اللسان يرجع قليلاً نحو الجدار الخلفي للحلق في منطقة لسان المزمار.',tr:'أَعْ'},
+ 'ح':{m:3,t:T({P:[[6,554,384],[7,572,432],[5,504,352]]}),mv:'كالعين، مع جريان النَّفَس (همس).',tr:'أَحْ'},
+ 'غ':{m:4,t:T({P:[[4,452,296],[5,524,296],[6,560,323],[7,566,410]]}),mv:'أقصى اللسان وجذره يرتفعان نحو الحنك اللحمي واللهاة، والغين أدخل من الخاء.',tr:'أَغْ'},
+ 'خ':{m:4,t:T({P:[[4,450,300],[5,520,300],[6,558,326],[7,566,412]]}),mv:'كالغين، مع جريان النَّفَس (همس).',tr:'أَخْ'},
+ 'ق':{m:5,t:T({P:[[3,385,310],[4,450,286],[5,506,281],[6,546,330],[7,558,410]]}),mv:'أقصى اللسان مما يلي الحلق يرتفع ويلتصق بالحنك اللحمي.',tr:'أَقْ'},
+ 'ك':{m:6,t:T({P:[[2,305,318],[3,382,284],[4,450,262],[5,502,298],[6,540,360]]}),mv:'أقصى اللسان يلتصق بالحنك أمام مخرج القاف قليلاً (تحته).',tr:'أَكْ'},
+ 'ج':{m:7,t:T({P:[[1,248,318],[2,300,284],[3,362,262],[4,440,284],[5,498,330]]}),mv:'وسط اللسان يرتفع ويلتصق بالحنك الصلب.',tr:'أَجْ'},
+ 'ش':{m:7,t:T({P:[[1,248,322],[2,300,288],[3,362,269],[4,440,288],[5,498,330]]}),mv:'وسط اللسان يقترب من الحنك ويبقى مجرى ينتشر فيه الهواء (التفشّي).',tr:'أَشْ'},
+ 'ي':{m:7,t:T({P:[[1,248,326],[2,300,292],[3,362,271],[4,440,292],[5,498,334]],lips:LIPS.spread}),mv:'وسط اللسان يرتفع نحو الحنك (الياء غير المدّية).',tr:'أَيْ'},
+ 'ض':{m:8,t:T({P:[[0,214,330],[1,248,300],[2,310,276],[3,375,266],[4,445,268],[5,500,292],[6,542,345]]}),mv:'اللسان كله يرتفع وينطبق على الحنك (إطباق واستعلاء)، وحافته تلتقي بأصول الأضراس العليا على الجانب.',tr:'أَضْ',molars:true},
+ 'ل':{m:9,t:T({P:[[0,236,292],[1,266,298],[2,315,316]]}),mv:'طرف اللسان وأدنى حافته يلتصقان بلثة الأسنان العليا، ويجري الصوت من جانبي اللسان.',tr:'أَلْ'},
+ 'ن':{m:10,t:T({P:[[0,230,298],[1,262,304],[2,310,322]],v:1}),mv:'طرف اللسان يلتصق بلثة الأسنان العليا، والحنك اللحمي ينخفض فيجري صوت الغنّة إلى الخيشوم.',tr:'أَنْ',nasal:true},
+ 'ط':{m:12,t:T({P:[[0,221,321],[1,252,318],[2,305,304],[3,375,300],[4,445,282],[5,502,292],[6,542,340]]}),mv:'طرف اللسان يلتصق بأصول الثنايا العليا، ويستعلي أقصى اللسان وينطبق.',tr:'أَطْ'},
+ 'د':{m:12,t:T({P:[[0,221,321],[1,252,324],[2,305,332]]}),mv:'طرف اللسان يلتصق بأصول الثنايا العليا.',tr:'أَدْ'},
+ 'ت':{m:12,t:T({P:[[0,221,321],[1,252,324],[2,305,332]]}),mv:'طرف اللسان يلتصق بأصول الثنايا العليا.',tr:'أَتْ'},
+ 'ص':{m:13,t:T({P:[[0,203,377],[1,233,352],[2,300,316],[3,375,300],[4,445,282],[5,502,292],[6,542,340]]}),mv:'طرف اللسان فويق الثنايا السفلى، ويستعلي أقصى اللسان. الصفير من الفراغ بين الثنايا.',tr:'أَصْ'},
+ 'ز':{m:13,t:T({P:[[0,203,377],[1,233,350],[2,300,330]]}),mv:'طرف اللسان فويق الثنايا السفلى، والصفير من الفراغ بين الثنايا العليا والسفلى.',tr:'أَزْ'},
+ 'س':{m:13,t:T({P:[[0,203,377],[1,233,350],[2,300,330]]}),mv:'طرف اللسان فويق الثنايا السفلى، والصفير من الفراغ بين الثنايا العليا والسفلى.',tr:'أَسْ'},
+ 'ظ':{m:14,t:T({P:[[0,186,366],[1,222,350],[2,300,314],[3,375,300],[4,445,282],[5,502,292],[6,542,340]]}),mv:'طرف اللسان مع أطراف الثنايا العليا، ويستعلي أقصى اللسان.',tr:'أَظْ'},
+ 'ذ':{m:14,t:T({P:[[0,186,366],[1,222,352],[2,300,338]]}),mv:'طرف اللسان مع أطراف الثنايا العليا.',tr:'أَذْ'},
+ 'ث':{m:14,t:T({P:[[0,186,366],[1,222,352],[2,300,338]]}),mv:'طرف اللسان مع أطراف الثنايا العليا.',tr:'أَثْ'},
+ 'ف':{m:15,t:T({lips:LIPS.fa}),mv:'باطن الشفة السفلى يرتفع ويلامس أطراف الثنايا العليا.',tr:'أَفْ'},
+ 'ب':{m:16,t:T({lips:LIPS.closed}),mv:'الشفتان تنطبقان تماماً.',tr:'أَبْ'},
+ 'م':{m:16,t:T({lips:LIPS.closed,v:1}),mv:'الشفتان تنطبقان، والحنك اللحمي ينخفض فيجري صوت الغنّة إلى الخيشوم.',tr:'أَمْ',nasal:true},
+ 'و':{m:16,t:T({P:[[4,445,312],[5,500,325]],lips:LIPS.round}),mv:'الشفتان تنضمّان مع انفراج قليل (الواو غير المدّية).',tr:'أَوْ'},
+ 'الغنّة':{m:17,t:T({P:[[0,230,298],[1,262,304],[2,310,322]],v:1}),mv:'الحنك اللحمي ينخفض، فيجري الصوت من الخيشوم (مثال: نون مشدّدة).',tr:'أَنّ',nasal:true}
+};
+// ر with three vowels
+const R_BASE = [[0,241,288],[1,266,284],[2,312,306]];
+const R = {
+ fath:{t:T({P:R_BASE.concat(BACK_UP.map(p=>[p[0],p[1],p[2]+6]))}),mv:'طرف اللسان مع شيء من ظهره يلامس لثة الثنايا. مع الفتح يرتفع أقصى اللسان نحو الحنك فتُفخَّم الراء.',tr:'رَبَّنَا'},
+ damm:{t:T({P:R_BASE.concat(BACK_UP.map(p=>[p[0],p[1],p[2]+6])),lips:LIPS.round}),mv:'مثل الفتح، مع انضمام الشفتين للضمّة، والراء مفخّمة.',tr:'رُزِقُوا'},
+ kasr:{t:T({P:R_BASE.concat([[3,370,318],[4,440,338],[5,498,356]]),lips:LIPS.spread}),mv:'طرف اللسان على لثة الثنايا، وأقصى اللسان منخفض (استفال)، فتُرقَّق الراء.',tr:'رِزْقًا'}
+};
+
+// ---------- geometry ----------
+const $ = id => document.getElementById(id);
+function crPath(pts){ // closed Catmull-Rom → cubic Bezier
+  const n=pts.length; let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<n;i++){
+    const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6], c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+=` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d+'Z';
+}
+function crOpen(pts){ let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`; const n=pts.length;
+  for(let i=0;i<n-1;i++){ const p0=pts[Math.max(i-1,0)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(i+2,n-1)];
+    d+=` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`; }
+  return d; }
+const lerp=(a,b,t)=>a+(b-a)*t, lp=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t)];
+function tonguePath(P){
+  const F3=[262,480], U0=[P[0][0]+10,Math.min(P[0][1]+20,450)], U1=[lerp(U0[0],F3[0],.5)+12,lerp(U0[1],F3[1],.5)];
+  return crPath([...P,[480,508],[360,505],F3,U1,U0]);
+}
+function velumPath(v){
+  const H1=[446,247],H2=[456,260];
+  const C1=lp([530,236],[505,270],v), E=lp([600,262],[548,326],v), T=lp([574,316],[536,362],v), M=lp([522,284],[498,306],v);
+  return `M${H1} Q${C1} ${E} Q${lp(E,T,.5)[0]+6},${lp(E,T,.5)[1]} ${T} Q${M} ${H2} Z`;
+}
+function lipPaths(l){
+  const [ux,uy,lx,ly]=l;
+  const up=`M118,282 C102,300 ${ux-6},${uy-28} ${ux-4},${uy-10} Q${ux-6},${uy} ${ux},${uy} C${ux+26},${uy+3} 165,${uy-1} 186,${uy-6} L204,292 L170,288 Z`;
+  const lo=`M192,${ly+5} C160,${ly+3} ${lx+26},${ly-1} ${lx},${ly} Q${lx-8},${ly+5} ${lx-6},${ly+18} C${lx-3},${ly+42} 112,422 120,432 C104,446 96,472 112,500 C126,516 150,524 180,524 L192,436 Z`;
+  return [up,lo];
+}
+function glotPaths(g){ // g: 0 closed … 1 open
+  const a=lerp(2,22,g);
+  return [`M-8,-18 L${-2-a*.15},-18 L${-2-a},18 L-40,18 L-40,-18 Z`, `M8,-18 L${2+a*.15},-18 L${2+a},18 L40,18 L40,-18 Z`];
+}
+function draw(s){
+  $('tongue').setAttribute('d',tonguePath(s.P));
+  { // muscle fibres fanning from the floor of the tongue
+    const P=s.P, cx=lerp(P[0][0],P[8][0],.52), cy=486; let d='', top='M'+P[0];
+    for(let i=0;i<8;i++){ for(const t of [0,.5]){ const q=lp(P[i],P[i+1],t); const e=lp([cx,cy],q,.9), st=lp([cx,cy],q,.25); d+=`M${st[0].toFixed(1)},${st[1].toFixed(1)}L${e[0].toFixed(1)},${e[1].toFixed(1)}`; } }
+    for(let i=1;i<7;i++) top+=` L${P[i]}`;
+    $('tlines').innerHTML=`<path d="${d}"/>`;
+    $('tongueTop').setAttribute('d', crOpen(P.slice(0,7).map(q=>[q[0]+3,q[1]+5])));
+  }
+  $('velum').setAttribute('d',velumPath(s.v));
+  const [u,l]=lipPaths(s.lips); $('upLip').setAttribute('d',u); $('loLip').setAttribute('d',l);
+  { const [ux,uy,lx,ly]=s.lips;
+    $('upVer').setAttribute('d',`M${ux},${uy} C${ux+26},${uy+3} 165,${uy-1} 186,${uy-6} L185,${uy-14} C162,${uy-11} ${ux+22},${uy-13} ${ux-3},${uy-10} Q${ux-6},${uy-4} ${ux},${uy} Z`);
+    $('loVer').setAttribute('d',`M${lx},${ly} C${lx+26},${ly-1} 160,${ly+3} 192,${ly+5} L191,${ly+14} C162,${ly+13} ${lx+20},${ly+15} ${lx-6},${ly+16} Q${lx-8},${ly+5} ${lx},${ly} Z`); }
+  { const v=s.v, T=lp([574,316],[536,362],v); $('uvLine').setAttribute('x1',T[0]+2);$('uvLine').setAttribute('y1',T[1]+2);$('uvLine').setAttribute('x2',T[0]+16);$('uvLine').setAttribute('y2',T[1]+26);
+    $('uvText').setAttribute('x',T[0]+12);$('uvText').setAttribute('y',T[1]+38); }
+  const [gl,gr]=glotPaths(s.g); $('gL').setAttribute('d',gl); $('gR').setAttribute('d',gr);
+  const f=lerp(8,0,1-s.g); $('vfF').setAttribute('d',`M570,594 L${582-f*.3},601 L570,608 Z`); $('vfB').setAttribute('d',`M604,594 L${592+f*.3},601 L604,608 Z`);
+}
+function mix(a,b,t){return {P:a.P.map((p,i)=>lp(p,b.P[i],t)),lips:a.lips.map((x,i)=>lerp(x,b.lips[i],t)),v:lerp(a.v,b.v,t),g:lerp(a.g,b.g,t)};}
+const clone=s=>({P:s.P.map(p=>p.slice()),lips:s.lips.slice(),v:s.v,g:s.g});
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cur=clone(REST), raf=0;
+function animate(steps){ // steps: [{to,ms}]
+  cancelAnimationFrame(raf);
+  if(reduce){cur=clone(steps[steps.length-1].to);draw(cur);return;}
+  let i=0,from=clone(cur),t0=performance.now();
+  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  const tick=now=>{
+    const st=steps[i], t=Math.min(1,(now-t0)/st.ms);
+    cur=mix(from,st.to,ease(t)); draw(cur);
+    if(t<1){raf=requestAnimationFrame(tick);return;}
+    i++; if(i<steps.length){from=clone(cur);t0=now;raf=requestAnimationFrame(tick);}
+  };
+  raf=requestAnimationFrame(tick);
+}
+
+// ---------- UI ----------
+const GROUPS=[
+ ['الجوف','jawf',['ا','و المدّية','ي المدّية']],
+ ['الحلق','halq',['ء','هـ','ع','ح','غ','خ']],
+ ['أقصى اللسان ووسطه','lisan',['ق','ك','ج','ش','ي']],
+ ['حافتا اللسان','lisan',['ض','ل']],
+ ['طرف اللسان','lisan',['ن','ر','ط','د','ت','ص','ز','س','ظ','ذ','ث']],
+ ['الشفتان والخيشوم','shafa',['ف','ب','م','و','الغنّة']]
+];
+const gWrap=$('groups');
+GROUPS.forEach(([title,c,ks])=>{
+  const g=document.createElement('section'); g.className='grp'; g.style.setProperty('--gc',`var(${C[c]})`);
+  if(c==='shafa') g.style.setProperty('--gc','var(--shafa)');
+  g.innerHTML=`<h3>${title}</h3><div class="keys"></div>`;
+  ks.forEach(k=>{const b=document.createElement('button');b.type='button';b.className='k'+(k.length>2?' sm':'');b.textContent=k;b.dataset.k=k;b.setAttribute('aria-pressed','false');
+    if(k==='الغنّة') b.style.setProperty('--gc','var(--khay)');
+    b.addEventListener('click',()=>{stopAuto();pick(k);});g.querySelector('.keys').appendChild(b);});
+  gWrap.appendChild(g);
+});
+let key='ر', vowel='fath', lam='thin', view='book';
+// الشيخ شاهر السيدي: «التدريب على نطق حرف … مع الأمثلة (رياضة اللسان)», one short video per letter
+const SHAHER={'ء':'rsZGb89TZKQ','هـ':'kuZX_vENVDY','ع':'jZK-Vs6Bdi0','ح':'y3RI6iwrTHk','غ':'uNEKgK79WRI','خ':'zH4Ocwxp3ZY','ق':'i1jzAj_ptKU','ك':'9Ly54PeyQ8E',
+ 'ج':'qgnb92t6JHg','ش':'gx_EmeTaWwc','ي':'XLeeXAZCf-M','ض':'fZNbF41rQic','ل':'ke3NLRrIxt0','ن':'IHIBLO1hWGI','ر':'dGi19vjCSNI','ط':'vEN9wvOtc1g','د':'0PpYN0ZQyrg','ت':'_e5i9Zv2w8Q',
+ 'ظ':'4VfYFwJnbFc','ذ':'hk4VssZMhi8','ث':'uyhBoAOwgE0','ص':'mbnmQaZ-wzA','ز':'YXItxxmoc64','س':'J9AY6OcKJao','ف':'0l5CY_kn9O0','ب':'FBpuxN_rUF0','م':'Nmp3-3_jL6Q','و':'_Rfx-hnwL_I'};
+// picture for each letter
+const BK={'ا':['m01','الألف المدّية'],'ي المدّية':['m02','الياء المدّية'],'و المدّية':['m03','الواو المدّية'],'ء':['m04','الهمزة والهاء'],'هـ':['m04','الهمزة والهاء'],
+ 'ع':['m05','العين'],'ح':['m06','الحاء'],'غ':['m07','الغين'],'خ':['m08','الخاء'],'ق':['m09','القاف'],'ك':['m10','الكاف'],
+ 'ج':['m11','الجيم'],'ش':['m12','الشين'],'ي':['m13','الياء غير المدّية'],'ض':['m14','الضاد'],'ن':['m17','النون'],
+ 'ط':['m20','الطاء'],'د':['m21','الدال والتاء'],'ت':['m21','الدال والتاء'],'ظ':['m22','الظاء'],'ذ':['m23','الذال والثاء'],'ث':['m23','الذال والثاء'],
+ 'ص':['m24','الصاد'],'س':['m25','السين والزاي'],'ز':['m25','السين والزاي'],'ف':['m26','الفاء'],'م':['m27','الميم'],'ب':['m28','الباء'],'و':['m29','الواو غير المدّية'],
+ 'الغنّة':['m17','الغنّة في النون']};
+function bookOf(k){ if(k==='ر') return vowel==='kasr'?['m18','الراء المرقّقة']:['m19','الراء المفخّمة'];
+  if(k==='ل') return lam==='thick'?['m15','اللام المفخّمة']:['m16','اللام المرقّقة']; return BK[k]; }
+let bkTop=0, bkSrc='';
+function showBook(k,replay){ const b=bookOf(k); if(!b) return; const src='img/'+b[0]+'.webp', A=$('bkA'), B=$('bkB'), V=$('bkV');
+  const changed=bkSrc!==src; bkSrc=src;
+  const still=()=>{ const curEl=bkTop?B:A, nxt=bkTop?A:B; if(curEl.getAttribute('src')===src){curEl.classList.add('on');return;}
+    const go=()=>{ nxt.classList.add('on'); curEl.classList.remove('on'); }; nxt.onload=go; nxt.onerror=go; nxt.setAttribute('src',src); bkTop=bkTop?0:1;
+    nxt.alt='صورة مخرج '+b[1]+': مقطع جانبي للفم والحلق'; curEl.alt=''; };
+  $('bkLab').textContent=b[1]; $('bkPg').textContent='';
+  V.pause(); V.onplaying=V.onended=V.onerror=null;
+  if(!changed&&!replay) return;
+  if(reduce||b[0]==='m28'||view!=='book'){ V.classList.remove('on'); still(); return; }
+  // movement clip: silence position (mouth closed, tongue still) → this letter
+  const done=()=>{ still(); setTimeout(()=>{ if(bkSrc===src&&V.paused) V.classList.remove('on'); },350); };
+  V.onplaying=()=>V.classList.add('on'); V.onended=done; V.onerror=()=>{V.classList.remove('on');still();};
+  V.src='mov/'+b[0]+'.mp4'; const p=V.play(); if(p&&p.catch) p.catch(()=>{V.classList.remove('on');still();});
+}
+function showRest(){ const A=$('bkA'), B=$('bkB'), V=$('bkV'); V.pause(); V.onplaying=V.onended=V.onerror=null; V.classList.remove('on'); stopAuto();
+  if(view!=='book') setView('book'); bkSrc='img/rest.webp'; const curEl=bkTop?B:A, nxt=bkTop?A:B; const go=()=>{ nxt.classList.add('on'); curEl.classList.remove('on'); };
+  nxt.onload=go; nxt.onerror=go; nxt.setAttribute('src',bkSrc); nxt.alt='وضع السكون: الفم مغلق واللسان ساكن'; curEl.alt=''; bkTop=bkTop?0:1;
+  $('bkLab').textContent='وضع السكون'; $('bkPg').textContent='الفم مغلق واللسان ساكن'; }
+function setView(v){ view=v; const bk=v==='book'; $('bookView').hidden=!bk; $('svg').hidden=bk; $('partsBtn').hidden=bk;
+  $('vBook').setAttribute('aria-pressed',bk?'true':'false'); $('vAnim').setAttribute('aria-pressed',bk?'false':'true');
+  $('pNote').textContent=bk?'الحركة من وضع السكون إلى وضع الحرف مركّبة آلياً للتوضيح. مقطع جانبي من المنتصف، فما يحدث على جانبي اللسان (الضاد واللام) لا يظهر كاملاً.':'الرسم المتحرّك تقريبي للتوضيح. مقطع جانبي من المنتصف، فما يحدث على جانبي اللسان (الضاد واللام) لا يظهر كاملاً.'; }
+$('restBtn').addEventListener('click',showRest);
+$('vBook').addEventListener('click',()=>{setView('book');showBook(key,true);});
+$('vAnim').addEventListener('click',()=>{setView('anim');pick(key,{silent:true});});
+document.querySelectorAll('.lv').forEach(b=>b.addEventListener('click',()=>{lam=b.dataset.l;document.querySelectorAll('.lv').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));stopAuto();showBook('ل');}));
+function spec(k){ if(k==='ر') return Object.assign({m:11},R[vowel]); return L[k]; }
+function pick(k,opts={}){
+  key=k; const s=spec(k), m=M[s.m], col=`var(${C[m.c]})`;
+  document.querySelectorAll('.k').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false'));
+  $('vowels').hidden = k!=='ر'; $('lams').hidden = k!=='ل'; showBook(k,true);
+  const p=$('panel'); p.style.setProperty('--c',col);
+  $('pRegion').textContent=m.r; $('pNum').textContent=ar(s.m); $('pName').textContent=m.n;
+  const syl=k==='ر'?{fath:'أَرْ',damm:'أُرْ',kasr:'إِرْ'}[vowel]:s.tr; $('pLetters').textContent=syl;
+  $('pOrgans').textContent=m.o; $('pMove').textContent=s.mv;
+  $('pBook').textContent=m.b;
+  $('pTry').innerHTML = s.m===1 ? `<b>طريقة معرفة المخرج المقدّر</b> قل: «${syl}». تُدخل همزة محرّكة بالفتح قبل الألف، وبالضم قبل الواو، وبالكسر قبل الياء. ومكان جريان الصوت هو المخرج المقدّر.` : k==='الغنّة' ? `<b>جرّب</b> قل: «${syl}» وأطل الغنّة، ثم أغلق أنفك: ينقطع صوتها لأنها من الخيشوم.` : `<b>طريقة معرفة المخرج المحقّق</b> قل: «${syl}». يُسكَّن الحرف أو يُشدَّد، وتُدخل عليه همزة قطع متحرّكة بأي حركة. وعند انقطاع الصوت يكون المخرج.`;
+  renderSound(k, !opts.silent);
+  drawArch(k);
+  // د. أيمن سويد، «شرح كتاب التجويد المصوّر»: episode, video id, start second of this makhraj's chapter
+  const E3='Es_a0IGHofc',E4='2BFpfzbBBVo',E5='vwaWWcV0Z5M',E6='8zIZQkaySyQ';
+  const SW={1:['٣',E3,36],2:['٤',E4,36],3:['٤',E4,406],4:['٤',E4,648],5:['٥',E5,36],6:['٥',E5,36],7:['٥',E5,447],8:['٥',E5,744],9:['٥',E5,1404],10:['٥',E5,1767],11:['٥',E5,1969],
+    12:['٦',E6,36],13:['٦',E6,0],14:['٦',E6,221],15:['٦',E6,460],16:['٦',E6,460]}[s.m];
+  const va=$('pVid'), mmss=t=>ar(Math.floor(t/60))+':'+ar(String(t%60).padStart(2,'0'));
+  if(SW){ va.href='https://www.youtube.com/watch?v='+SW[1]+(SW[2]?'&t='+SW[2]+'s':''); va.textContent='▶ شرح د. أيمن سويد لهذا المخرج (التجويد المصوّر، الحلقة '+SW[0]+(SW[2]?'، يبدأ من الدقيقة '+mmss(SW[2]):'')+')'; }
+  else { va.href='https://www.youtube.com/watch?v=aR7NHefeFBo'; va.textContent='▶ شرح د. أيمن سويد: مخرج الخيشوم'; }
+  const sh=$('pShaher'), sid=SHAHER[k];
+  if(sid){ sh.href='https://www.youtube.com/watch?v='+sid; sh.textContent='▶ تدريب نطق الحرف مع الأمثلة بصوت الشيخ شاهر السيدي (رياضة اللسان، نصف دقيقة)'; }
+  else { sh.href='https://www.youtube.com/watch?v=cJdmkmPO_eA'; sh.textContent='▶ رياضة اللسان: التدريب على نطق حروف الهجاء كاملة بصوت الشيخ شاهر السيدي (١٥ دقيقة)'; }
+  // highlight
+  const hit=$('hit');
+  hit.setAttribute('opacity','0'); $('band').setAttribute('opacity','0');
+  $('glot').setAttribute('opacity', s.m===2?'1':'0'); $('gT').textContent = k==='ء'?'منطبقان':(k==='هـ'?'انفتاح جزئي':'');
+  $('flowMouth').setAttribute('opacity','0'); $('flowNose').setAttribute('opacity','0'); $('waves').setAttribute('opacity','0');
+  const target=clone(s.t); if(s.g!==undefined) target.g=s.g;
+  const restish=clone(REST);
+  animate(opts.direct?[{to:target,ms:650}]:[{to:restish,ms:260},{to:target,ms:700}]);
+  clearTimeout(pick._t);
+  pick._t=setTimeout(()=>{
+    if(m.hit){ $('hitC').setAttribute('cx',m.hit[0]);$('hitC').setAttribute('cy',m.hit[1]);$('hitD').setAttribute('cx',m.hit[0]);$('hitD').setAttribute('cy',m.hit[1]);
+      $('hitS').setAttribute('cx',m.hit[0]);$('hitS').setAttribute('cy',m.hit[1]);hit.setAttribute('opacity','1'); }
+    if(s.m===8) $('band').setAttribute('opacity','.75');
+    if(s.flow){ const fm={a:'M587,600 L587,420 C584,380 560,365 500,368 C420,372 300,368 230,372 L95,374',w:'M587,600 L587,420 C584,370 560,345 500,345 C420,350 300,362 230,368 L80,358',y:'M587,600 L587,420 C584,370 560,350 500,330 C430,300 330,302 260,322 L100,358'}[s.flow];
+      $('flowMouth').setAttribute('d',fm); $('flowMouth').setAttribute('opacity','.85'); }
+    if(s.nasal) $('flowNose').setAttribute('opacity','.85');
+    if(s.m===15||s.m===16||s.m===1) $('waves').setAttribute('opacity','.85');
+  }, reduce?0:(opts.direct?650:960));
+}
+document.querySelectorAll('.v').forEach(b=>b.addEventListener('click',()=>{vowel=b.dataset.v;document.querySelectorAll('.v').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));stopAuto();pick('ر',{direct:true});}));
+$('replay').addEventListener('click',()=>{stopAuto();pick(key);});
+// auto tour: one letter per makhraj
+const TOUR=['ا','ء','ع','غ','ق','ك','ج','ض','ل','ن','ر','ت','س','ث','ف','ب','الغنّة'];
+let tourI=0, tourT=0;
+function stopAuto(){clearInterval(tourT);tourT=0;$('auto').setAttribute('aria-pressed','false');$('auto').textContent='▶ عرض تلقائي للمخارج';}
+$('auto').addEventListener('click',()=>{
+  if(tourT){stopAuto();return;}
+  $('auto').setAttribute('aria-pressed','true');$('auto').textContent='■ إيقاف العرض';
+  if(key==='ر'){vowel='fath';}
+  tourI=0; pick(TOUR[0]); tourT=setInterval(()=>{tourI=(tourI+1)%TOUR.length; pick(TOUR[tourI]);},2600);
+});
+// ---------- sound ----------
+// Web Audio (no media element, so it is not subject to media-src); unlocked on the first tap
+let actx=null, cur_src=null, autoSound=true; const bufs={};
+function ctx(){ if(!actx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) actx=new AC(); } if(actx&&actx.state==='suspended') actx.resume().catch(()=>{}); return actx; }
+document.addEventListener('pointerdown',()=>ctx(),{capture:true});
+document.addEventListener('keydown',()=>ctx(),{capture:true});
+function b64buf(u){ const b=atob(u.split(',')[1]); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i); return a.buffer; }
+function stopSound(){ try{cur_src&&cur_src.stop();}catch(e){} cur_src=null; document.querySelectorAll('.sound .pill').forEach(b=>b.setAttribute('aria-pressed','false')); }
+async function play(src,btn){
+  stopSound(); const c=ctx();
+  if(btn) btn.setAttribute('aria-pressed','true');
+  try{
+    if(!c) throw new Error('no ctx');
+    if(!bufs[src]) bufs[src]=await new Promise((res,rej)=>c.decodeAudioData(b64buf(src),res,rej));
+    const n=c.createBufferSource(); n.buffer=bufs[src]; n.connect(c.destination);
+    n.onended=()=>{ if(cur_src===n){cur_src=null; if(btn)btn.setAttribute('aria-pressed','false');} };
+    cur_src=n; n.start();
+  }catch(e){ // fallback: audio element from a blob URL
+    try{ const url=URL.createObjectURL(new Blob([b64buf(src)],{type:'audio/mpeg'})); const el=new Audio(url); el.onended=()=>btn&&btn.setAttribute('aria-pressed','false'); await el.play(); }
+    catch(e2){ if(btn)btn.setAttribute('aria-pressed','false'); const m=$('sndErr'); if(m) m.hidden=false; }
+  }
+}
+function renderSound(k,auto){
+  const box=$('pSound'); const a=(typeof AUDIO!=='undefined')&&AUDIO[k];
+  stopSound(); document.querySelectorAll('video.lesson').forEach(v=>v.pause());
+  if(!a){ box.className='sound empty'; box.textContent='تسجيل صوت الحرف قادم قريبًا. استمع إليه الآن من رابط الشيخ شاهر السيدي في الأسفل.'; return; }
+  box.className='sound';
+  box.innerHTML='<b>صوت الشيخ</b>';
+  const b1=document.createElement('button');b1.type='button';b1.className='pill';b1.setAttribute('aria-pressed','false');b1.textContent='🔊 '+a.syl;
+  b1.addEventListener('click',()=>play(a.clip,b1));
+  let b2=null;
+  if(a.video){ b2=document.createElement('video'); b2.className='lesson'; b2.controls=true; b2.preload='metadata'; b2.setAttribute('playsinline',''); b2.src=a.video;
+    b2.addEventListener('play',()=>stopSound());
+    b2.addEventListener('error',()=>{ const m=$('sndErr'); if(m){m.textContent='تعذّر تشغيل فيديو الدرس.'; m.hidden=false;} }); }
+  const src=document.createElement('span');src.className='src';src.textContent='إذا لم يظهر الصوت على الآيفون، تأكد أن زر الصامت مطفأ.';
+  const er=document.createElement('span');er.className='src';er.id='sndErr';er.hidden=true;er.textContent='تعذّر تشغيل الصوت. جرّب متصفحًا آخر.';
+  box.append(b1); if(b2){ const cap=document.createElement('span'); cap.className='src'; cap.textContent='درس الحرف مع الحركات والأمثلة (فيديو قصير):'; box.append(cap,b2); } box.append(src,er);
+  if(auto&&autoSound&&!tourT) setTimeout(()=>{ if(key===k) play(a.clip,b1); }, reduce?0:960);
+}
+
+// ---------- upper arch inset (view from below, front at top) ----------
+const ZONE = {'ق':'soft','ك':'kaf','ج':'hard','ش':'hard','ي':'hard','ض':'molars','ل':'lam','ن':'gumN','ر':'gumR','ط':'roots','د':'roots','ت':'roots','ظ':'edges','ذ':'edges','ث':'edges','ف':'lip','ص':'lower','ز':'lower','س':'lower','غ':'uvula','خ':'uvula'};
+const ZNOTE = {soft:'أقصى اللسان مع الحنك اللحمي، قبل اللهاة.',kaf:'تحت مخرج القاف قليلاً، في المنطقة الناعمة بين الحنك اللحمي والحنك العظمي.',hard:'وسط اللسان مع وسط الحنك العظمي (الصلب).',
+ molars:'إحدى حافتي اللسان مع أصول الأضراس العليا، من الضاحك حتى الناجذ. وخروجها من الحافة اليسرى أيسر.',lam:'أدنى حافة اللسان إلى منتهى طرفه مع لثة الأسنان العليا، من الضاحك إلى الثنية. وخروجها من الحافة اليمنى أيسر.',
+ gumN:'طرف اللسان مع لثة الثنايا العليا.',gumR:'بُعيد مخرج النون إلى الداخل قليلاً، مع شيء من ظهر اللسان.',roots:'طرف اللسان مع أصول الثنايا العليا: ملتقى السن باللثة.',
+ edges:'طرف اللسان مع أطراف الثنايا العليا.',lip:'باطن الشفة السفلى مع أطراف الثنايا العليا.',lower:'المخرج فُويق الثنايا السفلى، لا في سقف الفم. والصفير يخرج من الفراغ بين الثنايا العليا والسفلى.',
+ uvula:'أدنى الحلق: جذر اللسان مع الحنك اللحمي واللهاة.',none:'هذا المخرج ليس في سقف الفم.'};
+const TEETH=[['ثنية',7.6],['رباعية',6.2],['ناب',6.8],['ضاحك',7.2],['طاحن',9],['طاحن',9],['طاحن',9.2],['ناجذ',8.4]];
+const ARCH=(()=>{ // sample the outer arch: quarter ellipse then straight
+  const cx=120,cy=150,rx=84,ry=118, pts=[]; let d=0, prev=[cx,cy-ry];
+  for(let a=-Math.PI/2;a<=0;a+=0.004){ const q=[cx+rx*Math.cos(a),cy+ry*Math.sin(a)]; d+=Math.hypot(q[0]-prev[0],q[1]-prev[1]); pts.push([d,q,a]); prev=q; }
+  for(let y=cy;y<=200;y+=0.5){ const q=[cx+rx,y]; d+=Math.hypot(q[0]-prev[0],q[1]-prev[1]); pts.push([d,q,0]); prev=q; }
+  const at=dist=>{ for(const p of pts) if(p[0]>=dist) return p; return pts[pts.length-1]; };
+  const teeth=[]; let dist=0;
+  TEETH.forEach(([n,r],i)=>{ dist+= (i?TEETH[i-1][1]:0)+r+0.8; const p=at(dist); teeth.push({n,r,x:p[1][0],y:p[1][1],a:p[2]}); });
+  return {cx,cy,rx,ry,teeth};
+})();
+function drawArch(k){
+  const z=ZONE[k]||'none', {cx,cy,rx,ry,teeth}=ARCH, HL='#36D1FF', HS='#0A6E8F';
+  const arc=(r1,r2,a1,a2)=>{ let d=''; for(let a=a1;a<=a2+1e-9;a+=(a2-a1)/24){ const x=cx+r1*Math.cos(a),y=cy+r2*Math.sin(a); d+=(d?'L':'M')+x.toFixed(1)+','+y.toFixed(1);} return d; };
+  const deg=x=>x*Math.PI/180;
+  let g='';
+  // soft palate + uvula (behind the molars)
+  g+=`<path d="M${cx-rx+18},166 L${cx+rx-18},166 L${cx+rx-22},190 Q${cx},204 ${cx-rx+22},190 Z" fill="${z==='soft'||z==='uvula'?'#9FE3FF':'#E9B3BA'}" stroke="#B9707A"/>`;
+  g+=`<ellipse cx="${cx}" cy="204" rx="6" ry="9" fill="${z==='uvula'?HL:'#D98C96'}" stroke="${z==='uvula'?HS:'#9E4E58'}"/>`;
+  // hard palate (inside the arch)
+  g+=`<path d="${arc(rx-18,ry-18,deg(-180),0)} L${cx+rx-18},166 L${cx-rx+18},166 Z" fill="#F2C9CE" stroke="#C98A93"/>`;
+  // kaf band
+  g+=`<rect x="${cx-rx+18}" y="152" width="${2*(rx-18)}" height="14" fill="${z==='kaf'?HL:'#DCEFD0'}" opacity="${z==='kaf'?1:.9}"/>`;
+  // rugae (al-ghar / nit')
+  for(let i=0;i<4;i++){ const y=64+i*9; g+=`<path d="M${cx-22+i*2},${y} q6,-5 11,0 q5,5 11,0 q5,-5 11,0" fill="none" stroke="#B9707A" stroke-width="1.3"/>`; }
+  if(z==='hard') g+=`<ellipse cx="${cx}" cy="118" rx="30" ry="28" fill="${HL}" opacity=".85" stroke="${HS}"/>`;
+  // gums (inner band of the teeth)
+  g+=`<path d="${arc(rx-9,ry-9,deg(-180),0)}" fill="none" stroke="#EE8F9B" stroke-width="7"/>`;
+  const t3=teeth[3].a;
+  if(z==='lam') g+=`<path d="${arc(rx-9,ry-9,deg(-180)-t3-0.1,t3+0.1)}" fill="none" stroke="${HL}" stroke-width="7"/>`;
+  if(z==='gumN') g+=`<path d="${arc(rx-9,ry-9,deg(-98),deg(-82))}" fill="none" stroke="${HL}" stroke-width="7"/>`;
+  if(z==='gumR') g+=`<path d="${arc(rx-17,ry-17,deg(-98),deg(-82))}" fill="none" stroke="${HL}" stroke-width="7"/>`;
+  // teeth both sides
+  teeth.forEach((t,i)=>{ [1,-1].forEach(sd=>{ const x=cx+sd*(t.x-cx); const on=(z==='molars'&&i>=3)||((z==='edges'||z==='lip'||z==='roots')&&i===0);
+    g+=`<circle cx="${x.toFixed(1)}" cy="${t.y.toFixed(1)}" r="${t.r}" fill="${on&&z==='molars'?HL:'#FFFFFF'}" stroke="${on?HS:'#9A9584'}" stroke-width="${on?2:1}"/>`; }); });
+  if(z==='molars') [1,-1].forEach(sd=>{ const a1=teeth[3].a,a2=0; let d=''; for(let a=a1;a<=a2;a+=(a2-a1)/16){ const x=cx+sd*((rx-11)*Math.cos(a)), y=cy+(ry-11)*Math.sin(a); d+=(d?'L':'M')+x.toFixed(1)+','+y.toFixed(1);} d+=`L${(cx+sd*(rx-11)).toFixed(1)},${teeth[7].y.toFixed(1)}`; g+=`<path d="${d}" fill="none" stroke="${HL}" stroke-width="6" stroke-linecap="round"/>`; });
+  if(z==='roots') g+=`<path d="${arc(rx-4,ry-4,deg(-97),deg(-83))}" fill="none" stroke="${HL}" stroke-width="4" stroke-linecap="round"/>`;
+  if(z==='edges'||z==='lip') g+=`<path d="${arc(rx+7,ry+7,deg(-97),deg(-83))}" fill="none" stroke="${HL}" stroke-width="4" stroke-linecap="round"/>`;
+  // labels
+  const L=(x,y,t,a='middle')=>`<text x="${x}" y="${y}" text-anchor="${a}" font-family="IBM Plex Sans Arabic, sans-serif" font-size="8.5" font-weight="700" fill="#4A3A2A">${t}</text>`;
+  g+=L(cx,12,'الثنايا')+L(cx,58,'اللثة')+L(cx,104,'الغار (النِّطع)')+L(cx,128,'الحنك العظمي')+L(cx,162,'منطقة الكاف')+L(cx,184,'الحنك اللحمي');
+  g+=L(cx+10,214,'اللهاة','start');
+  g+=L(teeth[3].x+12, teeth[3].y+3,'الضاحك','start')+L(teeth[7].x+11, teeth[7].y+3,'الناجذ','start');
+  $('arch').innerHTML=g;
+  $('archNote').textContent=ZNOTE[z];
+}
+$('partsBtn').addEventListener('click',()=>{ const on=$('partsBtn').getAttribute('aria-pressed')!=='true'; $('partsBtn').setAttribute('aria-pressed',on?'true':'false'); $('palParts').setAttribute('opacity',on?'1':'0'); });
+draw(cur);
+setView('book');
+{ const h=decodeURIComponent(location.hash.slice(1)); pick(h&&spec(h)?h:'ر',{silent:true}); if(h&&spec(h)) setTimeout(()=>{ const e=document.querySelector('.stage'); e&&e.scrollIntoView({block:'start'}); },60); }
+addEventListener('hashchange',()=>{ const h=decodeURIComponent(location.hash.slice(1)); if(spec(h)) pick(h); });
+})();
+</script>
+
+</body></html>
