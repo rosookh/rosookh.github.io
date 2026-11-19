@@ -144,10 +144,38 @@ button.vw{border-bottom:2px dotted var(--line-strong);border-radius:6px;margin:2
   @keyframes pop{from{transform:translateY(6px);opacity:.4}to{transform:none;opacity:1}}
   @keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
 }
+/* exam readiness */
+.ex-head{margin-top:-6px}.ex-total{font-size:18px;color:var(--primary)}
+.ex-sec{gap:12px}.ex-n{color:var(--muted);font-weight:700;margin-inline-end:4px}
+.ex-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;line-height:1.7}
+.ex-row.good,.ex-rule.good,.ex-f.good{background:var(--good-soft)}.ex-row.bad,.ex-rule.bad,.ex-f.bad{background:var(--bad-soft)}
+.ex-row .grow{flex-grow:1}.ex-tfb{display:flex;gap:6px;flex-shrink:0}.ex-tf{min-width:46px;padding:0 10px;font-size:18px}
+.ex-fix{font-size:14px;color:var(--ink);background:var(--accent-soft);border-radius:10px;padding:6px 10px;line-height:1.7}
+.ex-q{display:flex;flex-direction:column;gap:8px;line-height:1.8}.ex-opts{display:flex;flex-direction:column;gap:6px}
+.ex-opts .opt{min-height:48px;padding:8px 14px;font-weight:500}.ex-l{color:var(--muted);font-weight:700}
+.ex-txt{width:100%;box-sizing:border-box;border:1px solid var(--line-strong);border-radius:12px;padding:10px;font:inherit;background:var(--surface);color:var(--ink);resize:vertical}
+.ex-model{background:var(--sage-soft);border-radius:12px;padding:8px 12px;line-height:1.9}.ex-mine{color:var(--muted);font-size:14px}
+.ex-self{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.ex-self .rz-chip{min-height:38px;padding:0 14px}
+.ex-pass{font-family:var(--f-q);font-size:24px;line-height:2.4;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:justify}
+.ex-w{font:inherit;background:none;border:none;color:inherit;padding:0 2px;border-radius:8px;cursor:pointer}
+.ex-w.on{background:var(--primary-soft);color:var(--primary)}.ex-w sup{font-family:var(--f-ui);font-size:11px;color:var(--primary)}
+.ex-rules{display:flex;flex-direction:column;gap:6px}
+.ex-rule{display:flex;align-items:center;gap:8px;text-align:start;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-height:46px;cursor:pointer}
+.ex-rule .grow{flex-grow:1}.ex-rule b{font-family:var(--f-q);font-size:20px;font-weight:400}.ex-rule.act{border:2px solid var(--primary);background:var(--primary-soft)}
+.ex-ana{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.ex-word{font-family:var(--f-q);font-size:28px}.ex-f{display:flex;flex-direction:column;gap:4px;border-radius:10px;padding:4px}
+.ex-fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px}.ex-fg .rz-select{min-height:44px;font-size:15px}
+.ex-cur{position:sticky;top:0;z-index:2;font-family:var(--f-ui);font-size:14px;line-height:1.6;background:var(--primary);color:var(--primary-ink,#fff);border-radius:10px;padding:6px 10px;margin-bottom:6px}
+.wh{display:flex;justify-content:center}.wh-svg{width:min(320px,86vw);height:auto;font-family:var(--f-ui)}
+.ex-res{align-items:center;text-align:center}.ex-big{font-size:44px;font-weight:700;color:var(--primary)}.ex-big small{font-size:18px;color:var(--muted)}
+.ex-foot{display:flex;flex-direction:column;gap:8px}.ex-foot.two{flex-direction:row}.ex-foot.two>*{flex:1}
+#paper{display:none}
+@media print{body.printing>*:not(#paper){display:none!important}body.printing #paper{display:block!important}.rz-nav,.rz-top a,.ex-foot,.ex-self,.rz-action{display:none!important}body{background:#fff}.rz-card{break-inside:avoid;border:1px solid #ccc}.ex-txt{border:1px solid #999;min-height:80px}}
 </style>
 </head><body data-nav="tests">
 <main class="rz-main" id="app"><p class="rz-empty">جاري التحميل…</p></main>
 <script src="data.js"></script>
 <script src="riddles.js"></script>
+<script src="exam.js"></script>
 <script src="engine.js"></script>
 </body></html>

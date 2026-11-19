@@ -15,8 +15,13 @@
 .scaler{width:1080px;transform-origin:top right}
 .hint{font:14px "IBM Plex Sans Arabic",sans-serif;color:#4A5260;margin:0 0 12px}
 .hint{color:var(--muted)}
+.mtabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:14px;flex-grow:1;max-width:420px}
+.mtabs a{flex:1;text-align:center;padding:8px 6px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:15px}
+.mtabs a[aria-current]{background:var(--surface);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+a.hl{color:inherit;text-decoration:none;border-bottom:3px dotted currentColor;padding:0 2px;cursor:pointer}
+a.hl:active{opacity:.6}
 </style>
-<div class="stage"><div class="rz-top" style="margin:0 -8px 8px"><a class="rz-icon" href="../" aria-label="رجوع" data-icon="back"></a><h1 class="rz-title">عمارة المخارج</h1></div><p class="hint">قرّب الشاشة بإصبعين لرؤية التفاصيل.</p><div class="box" id="box"><div class="scaler" id="sc">
+<div class="stage"><div class="rz-top" style="margin:0 -8px 8px"><a class="rz-icon" href="../" aria-label="رجوع" data-icon="back"></a><div class="mtabs"><a href="../makharij/">الصوت والصورة</a><a aria-current="page" href="./">العمارة</a></div></div><p class="hint">اضغط على أي حرف لترى كيف يخرج. قرّب الشاشة بإصبعين لرؤية التفاصيل.</p><div class="box" id="box"><div class="scaler" id="sc">
 <div dir="rtl" style="width: 1080px; height: 1640px; box-sizing: border-box; padding: 48px 48px 40px; background: #F5EFE3; color: #1F2733; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px;">
 
   <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;">
@@ -263,5 +268,18 @@
 <script>
 function fit(){const sc=document.getElementById('sc'),box=document.getElementById('box');const w=box.clientWidth||document.documentElement.clientWidth-32;const k=Math.min(1,w/1080);sc.style.transform='scale('+k+')';box.style.height=(sc.offsetHeight*k)+'px'}
 addEventListener('resize',fit);document.fonts&&document.fonts.ready.then(fit);fit();
+</script>
+<script>
+(function(){ // clickable map: every letter opens its makhraj animation
+  const OK = 'ءأهعحغخقكجشيضلنرطدتظذثصزسفوبما';
+  const walker = document.createTreeWalker(document.getElementById('box') || document.body, NodeFilter.SHOW_TEXT);
+  const hits = []; let n;
+  while(n = walker.nextNode()){ const t = n.nodeValue.trim(); if(t && /^[\u0621-\u064A ـ]+$/.test(t) && t.replace(/[ ـ]/g,'').length <= 3 && [...t.replace(/[ ـ]/g,'')].every(c => OK.includes(c))) hits.push(n); }
+  hits.forEach(node => {
+    const parts = node.nodeValue.split(/(\s+)/), frag = document.createDocumentFragment();
+    parts.forEach(p => { const k = p.replace('ـ',''); if(k && OK.includes(k) && k.length === 1){ const a = document.createElement('a'); a.className = 'hl'; a.textContent = p; a.href = '../makharij/#' + encodeURIComponent(k === 'أ' ? 'ء' : k === 'ه' ? 'هـ' : k); a.setAttribute('aria-label', 'مخرج حرف ' + k); frag.append(a); } else frag.append(p); });
+    node.parentNode.replaceChild(frag, node);
+  });
+})();
 </script>
 </body></html>

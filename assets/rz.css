@@ -199,3 +199,5 @@ body.rz-quiz .rz-toast{bottom:calc(var(--act-h,120px) + 16px)}
 .rz-bdg .e{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--line);filter:grayscale(1);opacity:.55}
 .rz-bdg.on{color:var(--ink)} .rz-bdg.on .e{background:var(--accent-soft);filter:none;opacity:1}
 .rz-bdg b{font-size:13px}
+.rz-list-btn .chev{width:20px;height:20px;color:var(--muted);display:flex;flex-shrink:0}.rz-list-btn .chev svg{width:20px;height:20px}
+.rz-list-btn .rz-ic svg{width:22px;height:22px}

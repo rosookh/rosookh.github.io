@@ -77,7 +77,7 @@ function toOrder(q){ const items = q.a.split('، ').map(s => s.replace(/^ثم\s+
 function toMatch(qs){ return { ch: qs[0].ch, les: qs[0].les, src: 'm:' + qs.map(q => q.id).join('+'), type:'match', d:2, pairs:qs.map(q => ({ q:q.q + (q.big || (q.ctx && q.ctx.hit) ? ' ' + ctxShort(q) : ''), a:q.a })), q:'صِل كل سؤال بجوابه', ans:qs.map(q => q.a).join(' · '), e:'' }; }
 function toSpecial(s){
   const b = base(s);
-  if(s.t === 'pick') return { ...b, type:'pick', d:2, q:s.p, v:s.v, g:s.g, ref:s.ref, ans:s.g.map(g => g.map(i => s.v[i]).join(' ')).join('، '), e:s.e };
+  if(s.t === 'pick') return { ...b, type:'pick', d:2, q:s.p, v:s.v, g:s.g, x:s.x || [], ref:s.ref, ans:s.g.map(g => g.map(i => s.v[i]).join(' ')).join('، '), e:s.e };
   if(s.t === 'hunt') return { ...b, type:'hunt', d:s.d || 2, q:s.p, v:s.v, g:s.g, x:s.x || [], ref:s.ref, ans:s.g.map(i => s.v[i]).join('، '), e:s.e };
   if(s.t === 'multi') return { ...b, type:'multi', d:3, q:s.p, v:s.v, hl:s.hl, parts:s.parts, ref:s.ref, opts:s.opts, set:s.ans, ans:s.ans.join(' أو ') + ' حركات', e:s.e };
   if(s.t === 'mcq') return s.v ? { ...b, type:'vmcq', d:s.d || 2, q:s.q, v:s.v, hl:s.hl, ref:s.ref, opts:shuffle([s.a, ...s.w]), ans:s.a, e:s.e }
@@ -104,6 +104,16 @@ function toSpecial(s){
   }
 }
 const NQ = 10, MIX = { 1:3, 2:4, 3:3 };
+function akind(a){
+  const t = a.replace(/[\u064B-\u0652\u0670]/g, '');
+  if(/^(لأن|لأنه|لأنها|ل[اأ]ن|بسبب|لوقوع|لكثرة|لاتحاد|لقرب|لتقارب|لبعد|للتخلص|لمنع)/.test(t)) return 'why';
+  if(/[0-9٠-٩]|^(واحد|اثن|ثلاث|أربع|خمس|ست|سبع|ثمان|تسع|عشر|حركتان|حركتين)/.test(t)) return 'num';
+  if(/^(صغرى|وسطى|كبرى|عليا|دنيا|الأولى|الثانية|الثالثة|الرابعة|الخامسة|مرتبة|أعلى|أدنى|أقوى|أضعف)/.test(t)) return 'rank';
+  if(/^(من |أقصى|وسط|أدنى|طرف|حافة|الشفت|بين الشفت|الخيشوم|الجوف|الحلق|اللسان|باطن)/.test(t)) return 'place';
+  if(/^(إظهار|الإظهار|إدغام|الإدغام|إخفاء|الإخفاء|إقلاب|الإقلاب|مد|المد|قلقلة|القلقلة|تفخيم|التفخيم|ترقيق|الترقيق|يجوز|الوجهان|غنة|الغنة|متماثل|متجانس|متقارب|متباعد|همس|جهر|شدة|رخاوة|استعلاء|استفال)/.test(t)) return 'rule';
+  if(t.length <= 12) return 'short';
+  return 'text';
+}
 function build(pool, spec){ // easy → hard, mixed types
   const by = { 1:[], 2:[], 3:[] }; const baseQ = pool.filter(q => !isOrderQ(q));
   shuffle(baseQ).forEach(q => by[q.d]?.push(q));
@@ -115,14 +125,16 @@ function build(pool, spec){ // easy → hard, mixed types
   const tfAt = hasSp ? [1, 6, 8] : [1, 4, 6, 8];
   tfAt.forEach(i => { if(out[i] && out[i].a.length <= 70) Q[i] = toTF(out[i]); });
   const sh = shuffle(pool.filter(q => shortQ(q) && !used.has(q)));
-  const groups = []; let g = []; const seenA = new Set();
-  for(const q of sh){ if(!seenA.has(q.a)){ g.push(q); seenA.add(q.a); } if(g.length === 4){ groups.push(g); g = []; } if(groups.length === 2) break; }
+  // match items: four questions from the same chapter whose answers are of the same kind, so no answer gives itself away
+  const groups = [], buckets = {}, seenA = new Set();
+  for(const q of sh){ if(seenA.has(q.a)) continue; const k = q.ch + '|' + akind(q.a); (buckets[k] = buckets[k] || []).push(q); seenA.add(q.a);
+    if(buckets[k].length === 4){ groups.push(buckets[k]); buckets[k] = []; } if(groups.length === 2) break; }
   if(groups[0] && Q.length > 3) Q[3] = toMatch(groups[0]);
   if(groups[1] && !hasSp && Q.length > 9) Q[9] = toMatch(groups[1]);
   const ord = shuffle(pool.filter(isOrderQ));
   if(ord.length && RAND() < .7 && Q.length > 8) Q[8] = toOrder(ord[0]);
   const rec = shuffle(pool.filter(q => /^(ما تعريف|ما معنى|لماذا)/.test(q.q) && !used.has(q) && q.a.length > 12));
-  if(rec[0] && Q.length > 7) Q[7] = { ...base(rec[0]), type:'open', d:rec[0].d, q:(/^لماذا/.test(rec[0].q) ? 'علّل: ' : '') + rec[0].q, a:rec[0].a + (rec[0].e ? '. ' + rec[0].e : ''), ans:rec[0].a, e:'' };
+  if(rec[0] && Q.length > 7) Q[7] = { ...base(rec[0]), type:'open', d:rec[0].d, big:rec[0].big, ctx:rec[0].ctx, q:(/^لماذا/.test(rec[0].q) ? 'علّل: ' : '') + rec[0].q, a:rec[0].a + (rec[0].e ? '. ' + rec[0].e : ''), ans:rec[0].a, e:'' };
   if(hasSp){
     const sp = shuffle(spec); const types = new Set(); const chosen = [];
     for(const s of sp){ const k = s.t + (s.lab || '') + (s.src || ''); if(!types.has(k)){ types.add(k); chosen.push(s); } if(chosen.length === 4) break; }
@@ -208,6 +220,215 @@ function nbRight(q){ // answered right while reviewing
 function nbDue(){ const now = Date.now(); return Object.entries(nbAll()).filter(([, e]) => e.due <= now).sort((a, b) => a[1].due - b[1].due); }
 function revive(k, e){ const q = JSON.parse(JSON.stringify(e.q)); q.nb = k; if(q.opts && q.type !== 'tf') q.opts = shuffle(q.opts); if(q.type === 'match') q.pairs = shuffle(q.pairs); if(q.type === 'sort') q.it = shuffle(q.it); return q; }
 
+/* «اختبر استعدادك للامتحان»: a full level exam out of 100, built like the real level exams.
+   Q1 صح أم خطأ (20) · Q2 اختر (20) · Q3 عرّف (10, self-marked) · Q4 أجب (20, self-marked) · Q5 تطبيقي (30).
+   Loaded before engine.js; uses its helpers (el, app, shuffle, topBar, BANK, LEVELS…) at call time. */
+const EX_KEY = 'rz-exam';
+const exAR = n => { const r = Math.round(n * 2) / 2; return RZ.AR(String(r).replace('.', '٫')); };
+
+function examUI(arg){
+  if(arg && EXAM.levels[arg]) return examPaper(arg);
+  app.innerHTML = '';
+  const best = ls.get('rz-exam-best', {});
+  app.append(topBar('اختبر استعدادك', '../'),
+    el('p', { class:'rz-meta', style:'margin:0' }, 'امتحان كامل من ١٠٠ بأسلوب امتحانات المستويات. أسئلة الاختيار تُصحَّح تلقائيًا، والأسئلة المكتوبة تقارنها بالجواب النموذجي.'));
+  const saved = ls.get(EX_KEY, null);
+  if(saved && !saved.done) app.append(el('a', { class:'rz-list-btn', style:'border:2px solid var(--ocean)', href:'#/exam/' + saved.lv },
+    el('span', { class:'rz-ic', html:icon('resume') }), el('span', { class:'grow' }, el('b', {}, 'أكمل امتحانك'), el('span', { class:'rz-meta' }, EXAM.levels[saved.lv].name))));
+  Object.entries(EXAM.levels).forEach(([k, L]) => {
+    app.append(el('button', { type:'button', class:'rz-tile c-' + ['green', 'ocean', 'sand'][k - 1], style:'min-height:0;text-align:start;width:100%', on:{ click:() => { ls.set(EX_KEY, null); go('#/exam/' + k); } } },
+      el('span', { html:icon('timer') }), el('b', {}, L.name), el('span', { class:'rz-meta' }, L.topics),
+      el('span', { class:'rz-meta' }, best[k] != null ? 'أفضل علامة: ' + exAR(best[k]) + ' من ١٠٠' : 'نحو ٤٥ دقيقة')));
+  });
+  app.append(el('div', { class:'rz-note' }, el('span', {}, 'يتغيّر الامتحان في كل مرة. ورقة الحفظ («اكتب من … إلى …») تجدها في مساعد الحفظ، تبويب «التسميع الكتابي».')));
+}
+
+/* ---------- build ---------- */
+function bankMcq(lv){ // extra 4-option items from the level's chapters
+  const L = LEVELS.find(x => String(x.n) === String(lv)); if(!L) return [];
+  return L.ids.flatMap(id => BANK[id].questions).filter(q => q.w && q.w.length >= 3 && !q.big && q.q.length < 140)
+    .map(q => [q.q, [q.a, ...q.w.slice(0, 3)], 0, q.e || '']);
+}
+function examBuild(lv){
+  const L = EXAM.levels[lv], pick = (a, n) => shuffle(a).slice(0, n);
+  const mcq = pick(L.mcq, 7).concat(pick(bankMcq(lv), 10 - Math.min(7, L.mcq.length))).slice(0, 10)
+    .map(([q, o, a, e]) => { const ord = o.some(t => / \+ /.test(t)) ? o.map((_, i) => i) : shuffle([0, 1, 2, 3].slice(0, o.length)); // keep combo options ("أ + ب", "جميع…") last
+      const fixed = o.map((t, i) => /^[أب] \+ |^[بج] \+ |جميع ما|لا شيء مما/.test(t)); const free = ord.filter(i => !fixed[i]), keep = o.map((_, i) => i).filter(i => fixed[i]);
+      const order = free.concat(keep); return { q, o: order.map(i => o[i]), a: order.indexOf(a), e }; });
+  const P = { lv, at: Date.now(), done:false,
+    tf: pick(L.tf, 10).map(([s, ok, fix]) => ({ s, ok, fix })),
+    mcq,
+    defs: pick(L.defs, 5).map(([t, m]) => ({ t, m })),
+    open: pick(L.open, 4).map(([q, m]) => ({ q, m })),
+    prac: [] };
+  if(lv === '1'){ const x = pick(L.ext, 1)[0]; P.prac.push({ k:'ext', x, r: pick(x.r, 10), m:30 }); }
+  else if(lv === '2'){ const x = pick(L.ext, 1)[0]; P.prac.push({ k:'ext', x, r: pick(x.r, 5), m:15 });
+    const madd = L.ana.filter(a => a.f[0][0] === 'نوع المد'), ra = L.ana.filter(a => a.f[0][0] !== 'نوع المد');
+    P.prac.push({ k:'ana', t:'بيّن نوع المد وحكمه ومقداره', items: pick(madd, 3), m:9 }, { k:'ana', t:'ما حكم الراء؟ مع التعليل', items: pick(ra, 3), m:6 }); }
+  else P.prac.push({ k:'ana', t:'بيّن نوع اللام وحكمها', items: pick(L.ana, 6), m:30 });
+  P.ans = { tf:{}, mcq:{}, self:{}, ext:{}, ana:{} };
+  return P;
+}
+
+/* ---------- paper ---------- */
+function examPaper(lv){
+  let P = ls.get(EX_KEY, null);
+  if(!P || P.lv !== lv){ P = examBuild(lv); ls.set(EX_KEY, P); }
+  const save = () => ls.set(EX_KEY, P), A = P.ans, L = EXAM.levels[lv], graded = P.done;
+  app.innerHTML = '';
+  const total = el('b', { class:'ex-total' });
+  app.append(topBar('امتحان ' + L.name, '#/exam'), el('div', { class:'rz-between ex-head' }, el('span', { class:'rz-meta' }, L.topics), total));
+  const sec = (n, title, marks) => { const s = el('section', { class:'rz-card ex-sec' }, el('div', { class:'rz-between' }, el('b', {}, `السؤال ${n}: ${title}`), el('span', { class:'rz-badge plain' }, exAR(marks) + ' علامة'))); app.append(s); return s; };
+  const selfBtns = (key, max) => { const row = el('div', { class:'ex-self' }, el('span', { class:'rz-meta' }, 'قارن جوابك ثم ضع علامتك:'));
+    [[max, 'كاملة'], [max / 2, 'نصفها'], [0, 'لم أُصب']].forEach(([v, t]) => row.append(el('button', { type:'button', class:'rz-chip', 'aria-pressed': String(A.self[key] === v), on:{ click:() => { A.self[key] = v; save(); examPaper(lv); } } }, t)));
+    return row; };
+  const model = m => el('div', { class:'ex-model' }, el('b', {}, 'الجواب النموذجي: '), m);
+  let score = 0, pending = 0;
+
+  // Q1 true/false
+  const s1 = sec('الأول', 'ضع (✓) أمام العبارة الصحيحة و(✗) أمام الخاطئة، وصحّح الخطأ', 20);
+  P.tf.forEach((t, i) => { const v = A.tf[i];
+    const row = el('div', { class:'ex-row' }, el('span', { class:'ex-n' }, RZ.AR(i + 1) + '.'), el('span', { class:'grow' }, t.s));
+    const b = (val, lab) => el('button', { type:'button', class:'rz-chip ex-tf', 'aria-pressed': String(v === val), disabled: graded, on:{ click:() => { A.tf[i] = val; save(); examPaper(lv); } } }, lab);
+    row.append(el('span', { class:'ex-tfb' }, b(1, '✓'), b(0, '✗')));
+    s1.append(row);
+    if(graded){ const ok = v === t.ok; if(ok) score += 2; row.classList.add(ok ? 'good' : 'bad');
+      if(!t.ok || !ok) s1.append(el('div', { class:'ex-fix' }, (t.ok ? 'العبارة صحيحة. ' : 'العبارة خاطئة. ') + (t.fix || ''))); }
+  });
+  // Q2 mcq
+  const s2 = sec('الثاني', 'اختر الإجابة الصحيحة', 20);
+  P.mcq.forEach((q, i) => { const v = A.mcq[i];
+    const box = el('div', { class:'ex-q' }, el('div', {}, el('span', { class:'ex-n' }, RZ.AR(i + 1) + '. '), q.q));
+    const opts = el('div', { class:'ex-opts' });
+    q.o.forEach((o, k) => { const b = el('button', { type:'button', class:'opt', 'aria-pressed': String(v === k), disabled: graded, on:{ click:() => { A.mcq[i] = k; save(); examPaper(lv); } } }, el('span', { class:'ex-l' }, 'أبجد'[k] + ')'), ' ', o);
+      if(graded){ if(k === q.a) b.classList.add('right'); else if(v === k) b.classList.add('wrong'); }
+      opts.append(b); });
+    box.append(opts); if(graded){ if(v === q.a) score += 2; if(q.e && v !== q.a) box.append(el('div', { class:'ex-fix' }, q.e)); }
+    s2.append(box); });
+  // Q3 definitions
+  const s3 = sec('الثالث', 'عرّف اصطلاحًا', 10);
+  P.defs.forEach((d, i) => { const key = 'd' + i;
+    s3.append(el('div', { class:'ex-q' }, el('b', {}, RZ.AR(i + 1) + '. ' + d.t),
+      graded ? '' : el('textarea', { class:'ex-txt', rows:2, placeholder:'اكتب التعريف…', on:{ input:e => { A['t' + key] = e.target.value; save(); } } }, A['t' + key] || ''),
+      graded && A['t' + key] ? el('div', { class:'ex-mine' }, 'جوابك: ' + A['t' + key]) : '',
+      graded ? model(d.m) : '', graded ? selfBtns(key, 2) : ''));
+    if(graded){ if(A.self[key] != null) score += A.self[key]; else pending++; } });
+  // Q4 open
+  const s4 = sec('الرابع', 'أجب عما يأتي', 20);
+  P.open.forEach((d, i) => { const key = 'o' + i;
+    s4.append(el('div', { class:'ex-q' }, el('b', {}, RZ.AR(i + 1) + '. ' + d.q),
+      graded ? '' : el('textarea', { class:'ex-txt', rows:3, placeholder:'اكتب جوابك…', on:{ input:e => { A['t' + key] = e.target.value; save(); } } }, A['t' + key] || ''),
+      graded && A['t' + key] ? el('div', { class:'ex-mine' }, 'جوابك: ' + A['t' + key]) : '',
+      graded ? model(d.m) : '', graded ? selfBtns(key, 5) : ''));
+    if(graded){ if(A.self[key] != null) score += A.self[key]; else pending++; } });
+  // Q5 practical
+  const s5 = sec('الخامس', 'سؤال تطبيقي', 30);
+  P.prac.forEach((p, pi) => {
+    if(p.k === 'ext'){
+      const per = p.m / p.r.length, mine = A.ext[pi] || (A.ext[pi] = {}); let act = A['act' + pi] ?? 0;
+      s5.append(el('p', { style:'margin:0' }, `استخرج من الآيات الكريمة (${p.x.ref}) مثالًا واحدًا على كل حكم. اضغط الحكم ثم اضغط الكلمة.` + (lv === '2' ? ' (المد العارض عند الوقف على رؤوس الآيات.)' : ''), P.prac.length > 1 ? el('span', { class:'rz-badge plain', style:'margin-inline-start:6px' }, exAR(p.m)) : ''));
+      const pass = el('div', { class:'ex-pass' });
+      p.x.w.forEach((w, wi) => { const used = Object.entries(mine).filter(([, x]) => x === wi).map(([r]) => +r);
+        pass.append(el('button', { type:'button', class:'ex-w' + (used.length ? ' on' : ''), disabled: graded, on:{ click:() => { mine[act] = wi; A['act' + pi] = Math.min(act + 1, p.r.length - 1); save(); examPaper(lv); } } },
+          w, used.length ? el('sup', {}, used.map(r => RZ.AR(r + 1)).join('،')) : ''), ' '); });
+      if(!graded) pass.prepend(el('div', { class:'ex-cur' }, 'الحكم الآن: ', el('b', {}, p.r[act][0])));
+      s5.append(pass);
+      const list = el('div', { class:'ex-rules' });
+      p.r.forEach(([rule, ok], ri) => { const wi = mine[ri];
+        const row = el('button', { type:'button', class:'ex-rule' + (ri === act && !graded ? ' act' : ''), disabled: graded, on:{ click:() => { if(ri === act && wi != null){ delete mine[ri]; } A['act' + pi] = ri; save(); examPaper(lv); } } },
+          el('span', { class:'ex-n' }, RZ.AR(ri + 1) + '.'), el('span', { class:'grow' }, rule), el('b', {}, wi != null ? p.x.w[wi] : '…'));
+        if(graded){ const good = wi != null && ok.includes(wi); if(good) score += per; row.classList.add(good ? 'good' : 'bad');
+          list.append(row); if(!good) list.append(el('div', { class:'ex-fix' }, 'من أمثلته في المقطع: ' + [...new Set(ok.map(i => p.x.w[i]))].slice(0, 3).join('، '))); }
+        else list.append(row); });
+      s5.append(list);
+    } else {
+      const per = p.m / p.items.length, mine = A.ana[pi] || (A.ana[pi] = {});
+      s5.append(el('p', { style:'margin:0' }, p.t + ' فيما يأتي:', el('span', { class:'rz-badge plain', style:'margin-inline-start:6px' }, exAR(p.m))));
+      p.items.forEach((it, ii) => { const got = mine[ii] || (mine[ii] = {});
+        const box = el('div', { class:'ex-ana' }, el('div', { class:'rz-between' }, el('span', { class:'ex-word' }, it.w), el('span', { class:'rz-meta' }, it.ctx || '')));
+        let ok = 0; const grid = el('div', { class:'ex-fg' }); box.append(grid);
+        it.f.forEach(([lab, opts, ans], fi) => { const s = el('select', { class:'rz-select', disabled: graded, 'aria-label': lab, on:{ change:e => { got[fi] = e.target.value === '' ? null : +e.target.value; save(); } } });
+          s.append(el('option', { value:'' }, lab + '…')); opts.forEach((o, k) => { const op = el('option', { value:k }, o); if(got[fi] === k) op.selected = true; s.append(op); });
+          const wrap = el('label', { class:'ex-f' }, el('span', { class:'rz-meta' }, lab), s);
+          if(graded){ const g = got[fi] === ans; if(g) ok++; wrap.classList.add(g ? 'good' : 'bad'); if(!g) wrap.append(el('span', { class:'ex-fix' }, 'الصواب: ' + opts[ans])); }
+          grid.append(wrap); });
+        if(graded){ score += per * ok / it.f.length; if(it.e) box.append(el('div', { class:'rz-meta' }, it.e)); }
+        s5.append(box); });
+    }
+  });
+
+  // footer
+  if(!graded){
+    const n = Object.keys(A.tf).length + Object.keys(A.mcq).length;
+    app.append(el('div', { class:'ex-foot' }, el('span', { class:'rz-meta' }, `أجبت ${RZ.AR(n)} من ٢٠ في السؤالين الأول والثاني`),
+      el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => { if(n < 20 && !confirm('بقيت أسئلة بلا إجابة. هل تسلّم الورقة؟')) return; P.done = true; save(); examPaper(lv); scrollTo(0, 0); } } }, 'سلّم الورقة وصحّحها')));
+    total.textContent = '';
+  } else {
+    score = Math.round(score * 2) / 2;
+    total.textContent = exAR(score) + ' / ١٠٠' + (pending ? ' (+' + RZ.AR(pending) + ' بانتظار علامتك)' : '');
+    if(!pending){ const best = ls.get('rz-exam-best', {}); if(best[lv] == null || score > best[lv]){ best[lv] = score; ls.set('rz-exam-best', best); } }
+    const msg = pending ? 'ضع علامتك لأسئلة التعريف والأسئلة المكتوبة لتكتمل النتيجة.' : score >= 90 ? 'ممتاز، أنت مستعد للامتحان بإذن الله.' : score >= 75 ? 'جيد جدًّا، راجع الأسئلة التي أخطأت فيها.' : score >= 50 ? 'ناجح، لكن تحتاج إلى مراجعة قبل الامتحان.' : 'تحتاج إلى مراجعة الأبواب قبل الامتحان.';
+    app.insertBefore(el('section', { class:'rz-card ex-res' }, el('div', { class:'ex-big' }, exAR(score), el('small', {}, ' / ١٠٠')), el('span', {}, msg)), app.children[2]);
+    app.append(el('div', { class:'ex-foot two' },
+      el('button', { type:'button', class:'rz-btn', on:{ click:() => print() } }, 'اطبع الورقة (PDF)'),
+      el('button', { type:'button', class:'rz-btn pri', on:{ click:() => { ls.set(EX_KEY, null); examPaper(lv); scrollTo(0, 0); } } }, 'امتحان جديد')));
+  }
+}
+
+/* ---------- «من أنا؟» from letter traits, and the tajweed wheel ---------- */
+const TRAIT_MK = { 'ء':'أقصى الحلق','ه':'أقصى الحلق','ع':'وسط الحلق','ح':'وسط الحلق','غ':'أدنى الحلق','خ':'أدنى الحلق','ق':'أقصى اللسان','ك':'أقصى اللسان','ج':'وسط اللسان','ش':'وسط اللسان','ي':'وسط اللسان',
+  'ض':'حافة اللسان','ل':'حافة اللسان','ن':'طرف اللسان','ر':'طرف اللسان','ط':'طرف اللسان','د':'طرف اللسان','ت':'طرف اللسان','ظ':'طرف اللسان','ذ':'طرف اللسان','ث':'طرف اللسان','ص':'طرف اللسان','ز':'طرف اللسان','س':'طرف اللسان',
+  'ف':'الشفتين','و':'الشفتين','ب':'الشفتين','م':'الشفتين' };
+const TRAIT_NAME = { 'ء':'الهمزة','ه':'الهاء','ع':'العين','ح':'الحاء','غ':'الغين','خ':'الخاء','ق':'القاف','ك':'الكاف','ج':'الجيم','ش':'الشين','ي':'الياء','ض':'الضاد','ل':'اللام','ن':'النون','ر':'الراء','ط':'الطاء','د':'الدال','ت':'التاء','ظ':'الظاء','ذ':'الذال','ث':'الثاء','ص':'الصاد','ز':'الزاي','س':'السين','ف':'الفاء','و':'الواو','ب':'الباء','م':'الميم' };
+function letterTraits(c){
+  const t = [];
+  t.push('فحثه شخص سكت'.includes(c) ? 'الهمس' : 'الجهر');
+  t.push('ءجدقطبكت'.includes(c) ? 'الشدة' : 'لنعمر'.includes(c) ? 'التوسط' : 'الرخاوة');
+  t.push('خصضغطقظ'.includes(c) ? 'الاستعلاء' : 'الاستفال');
+  t.push('صضطظ'.includes(c) ? 'الإطباق' : 'الانفتاح');
+  t.push('فرمنلب'.includes(c) ? 'الإذلاق' : 'الإصمات');
+  if('صزس'.includes(c)) t.push('الصفير'); if('قطبجد'.includes(c)) t.push('القلقلة'); if('لر'.includes(c)) t.push('الانحراف');
+  if(c === 'ر') t.push('التكرير'); if(c === 'ش') t.push('التفشي'); if(c === 'ض') t.push('الاستطالة'); if('نم'.includes(c)) t.push('الغنة');
+  return t;
+}
+function traitRiddles(){
+  const L = Object.keys(TRAIT_MK), T = {}; L.forEach(c => T[c] = letterTraits(c));
+  const dist = (a, b) => T[a].filter(x => !T[b].includes(x)).length + T[b].filter(x => !T[a].includes(x)).length + (TRAIT_MK[a] === TRAIT_MK[b] ? 0 : 1);
+  return L.map(c => { const w = L.filter(x => x !== c).sort((x, y) => dist(c, x) - dist(c, y)).slice(0, 3).map(x => TRAIT_NAME[x]);
+    return { ch:'l2c2', les:'l2c2:0', id:'tr:' + c, type:'mcq', q:'من أنا؟ أخرج من ' + TRAIT_MK[c] + '، وصفاتي: ' + T[c].join('، ') + '.', opts:shuffle([TRAIT_NAME[c], ...w]), ans:TRAIT_NAME[c],
+      e:TRAIT_NAME[c] + ': ' + T[c].join('، ') + '. وأقرب الحروف إليه في الصفات: ' + w.join('، ') + '.', d:2 }; });
+}
+function wheel(){
+  app.innerHTML = '';
+  const lv = String(RZ.level ? (ls.get('rz-wheel-lv', '') || '') : '');
+  const L = LEVELS.find(x => String(x.n) === lv) || null;
+  const ids = L ? L.ids : LEVELS.flatMap(x => x.ids);
+  const segs = ids.map(id => ({ id, t:short(BANK[id].title) })).concat([{ id:'who', t:'من أنا؟' }]);
+  const N = segs.length, R = 150, cx = 160, cy = 160, cols = ['#2F5D50', '#6E2E3A', '#C9AE8E', '#2D5B73', '#8A9A7B'];
+  let svg = `<svg viewBox="0 0 320 320" class="wh-svg" aria-hidden="true"><g id="whg">`;
+  segs.forEach((g, i) => { const a0 = 2 * Math.PI * i / N - Math.PI / 2, a1 = 2 * Math.PI * (i + 1) / N - Math.PI / 2, am = (a0 + a1) / 2;
+    const p = a => [cx + R * Math.cos(a), cy + R * Math.sin(a)]; const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${R},${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${g.id === 'who' ? '#B8862E' : cols[i % cols.length]}" stroke="#F4EDE0" stroke-width="2"/>`;
+    const tx = cx + R * .62 * Math.cos(am), ty = cy + R * .62 * Math.sin(am), deg = am * 180 / Math.PI + (Math.cos(am) < 0 ? 180 : 0);
+    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${deg.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-size="${N > 10 ? 9 : 11}" font-weight="700" fill="${i % cols.length === 2 && g.id !== 'who' ? '#2E2214' : '#FFF'}">${g.t.length > 16 ? g.t.slice(0, 15) + '…' : g.t}</text>`; });
+  svg += `</g><circle cx="${cx}" cy="${cy}" r="22" fill="#F4EDE0" stroke="#2F5D50" stroke-width="3"/><path d="M${cx - 12},6 L${cx + 12},6 L${cx},30 Z" fill="#B4443A"/></svg>`;
+  const box = el('div', { class:'wh', html:svg });
+  const res = el('div', { class:'rz-meta', style:'text-align:center;min-height:24px', 'aria-live':'polite' });
+  let turn = ls.get('rz-wheel-rot', 0), busy = false;
+  const spin = el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => {
+    if(busy) return; busy = true; const k = Math.floor(Math.random() * N);
+    const target = 360 * 5 + (360 - (k + .5) * 360 / N); turn = turn - (turn % 360) + target; ls.set('rz-wheel-rot', turn % 360);
+    const g = box.querySelector('#whg'); g.style.transition = 'transform 3.2s cubic-bezier(.17,.67,.2,1)'; g.style.transform = `rotate(${turn}deg)`;
+    setTimeout(() => { busy = false; const sg = segs[k]; res.textContent = 'وقف الدولاب على: ' + sg.t;
+      setTimeout(() => { if(sg.id === 'who') start({ id:'who', kind:'wheel', title:'من أنا؟ صفات الحروف', back:'#/wheel', make:() => shuffle(traitRiddles()).slice(0, 5) });
+        else start({ id:'wh:' + sg.id, kind:'wheel', title:'الدولاب · ' + sg.t, back:'#/wheel', make:() => { const p = chapterPool(sg.id); return buildN(p.pool, p.spec, 3, 'mix'); } }); }, 900); }, 3300);
+  } } }, 'أدِر الدولاب');
+  const lvRow = el('div', { class:'rz-wrap', role:'group', 'aria-label':'المستوى' });
+  [['', 'الكل'], ...LEVELS.map(x => [String(x.n), x.name.replace('المستوى ', '')])].forEach(([k, t]) => lvRow.append(el('button', { type:'button', class:'rz-chip', 'aria-pressed':String(k === lv), on:{ click:() => { ls.set('rz-wheel-lv', k); wheel(); } } }, t)));
+  app.append(topBar('دولاب التجويد', '../'), el('p', { class:'rz-meta', style:'margin:0' }, 'أدِر الدولاب، فيختار لك بابًا وأسئلة سريعة منه. وفيه خانة «من أنا؟» لحروف تعرفها من صفاتها.'), lvRow, box, res, spin);
+  requestAnimationFrame(() => { const g = box.querySelector('#whg'); g.style.transformOrigin = '160px 160px'; g.style.transform = `rotate(${turn % 360}deg)`; });
+}
+
 /* ---------- routing ---------- */
 let S = null; // running quiz
 function go(h){ if(location.hash === h) route(); else location.hash = h; }
@@ -220,7 +441,7 @@ function route(){
   S = null;
   ({ '': home, builder, share, mistakes, mastery, daily, path, speed, riddle, resume,
      s: () => sharedIntro(arg), q: () => singleQ(decodeURIComponent(arg || '')), strengthen: () => strengthen(arg),
-     lesson: () => lessonQuiz(decodeURIComponent(arg || '')) }[r] || home)();
+     lesson: () => lessonQuiz(decodeURIComponent(arg || '')), exam: () => examUI(arg), wheel, who: () => start({ id:'who', kind:'single', title:'من أنا؟ صفات الحروف', back:'../', make:() => shuffle(traitRiddles()).slice(0, 5) }) }[r] || home)();
   scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
@@ -231,7 +452,7 @@ function start(T){
   const make = () => T.make();
   const qs = T.seed != null ? withSeed(T.seed, make) : make();
   if(!qs.length){ app.innerHTML = ''; app.append(topBar(T.title, T.back || '#/'), el('div', { class:'rz-card rz-empty' }, 'لا توجد أسئلة كافية لهذا الاختيار. جرّب مستوى صعوبة آخر أو أضف دروسًا.')); return; }
-  S = { T, qs, i:0, score:0, right:0, streak:0, best:0, res:[], nbOut:0, xp:0, weak:[], hearts: T.hearts ? 3 : null };
+  S = { T, qs, t0:Date.now(), i:0, score:0, right:0, streak:0, best:0, res:[], nbOut:0, xp:0, weak:[], hearts: T.hearts ? 3 : null };
   saveResume();
   if(T.replace){ history.replaceState(null, '', '#/quiz'); route(); } else go('#/quiz');
 }
@@ -471,34 +692,36 @@ function heartsToggle(inline){
 }
 
 /* ---------- library home ---------- */
+// before a chapter/level test: difficulty + hearts in a small sheet
+function startSheet(title, go){
+  RZ.sheet((box, close) => {
+    box.append(el('b', { style:'font-size:20px' }, title), el('span', { class:'rz-meta' }, 'مستوى الصعوبة'),
+      ...lvChips(PREF.lvl, k => { PREF.lvl = k; psave(); }), heartsToggle(true),
+      el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => { close(); go(); } } }, 'ابدأ'));
+  });
+}
 function home(){
   app.innerHTML = '';
-  app.append(el('header', { style:'display:flex;flex-direction:column;gap:4px' },
-    el('h1', { class:'rz-title' }, 'مكتبة الاختبارات'),
-    el('p', { class:'rz-meta', style:'margin:0' }, `اختبار لكل باب من المستوى الأول حتى متطلب الإجازة، من بنك يضم ${AR(TOTAL)} سؤالًا تتغيّر في كل مرة.`)));
-  const lvCard = el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'مستوى الصعوبة لاختبارات الأبواب'),
-    ...lvChips(PREF.lvl, k => { PREF.lvl = k; psave(); }), heartsToggle(true));
-  app.append(resumeCard(),
-    el('div', { class:'rz-grid' },
-      el('a', { class:'rz-tile c-wine', href:'#/path' }, el('span', { html:icon('path') }), el('b', {}, 'مسار الدروس'), el('span', { class:'rz-meta' }, 'درسًا بعد درس، واختبار ختام لكل باب')),
-      el('a', { class:'rz-tile c-ocean', href:'#/speed' }, el('span', { html:icon('bolt') }), el('b', {}, 'جولة سريعة'), el('span', { class:'rz-meta' }, 'أكبر عدد في ٦٠ ثانية'))),
-
-    el('a', { class:'rz-list-btn', href:'#/builder' }, el('span', { class:'rz-ic', html:icon('sliders') }), el('span', { class:'grow' }, el('b', {}, 'صمّم اختبارك'), el('span', { class:'rz-meta' }, CUS.sel.length ? `محفوظ: ${plural(CUS.sel.length, ['درس واحد', 'درسان', 'دروس', 'درسًا'])}` : 'اختر الدروس التي وصلت إليها، واختبر نفسك فيها فقط.')), el('span', { class:'chev', html:icon('chev') })),
-    lvCard);
+  app.append(el('header', { class:'rz-between' }, el('h1', { class:'rz-title' }, 'مكتبة الاختبارات'),
+    el('a', { class:'rz-link', href:'#/path' }, 'مسار الدروس ←')), resumeCard());
   LEVELS.forEach(L => {
     const sec = el('section', { class:'lvl' });
+    const lvTitle = `اختبار شامل: ${L.name}`;
     sec.append(el('div', { class:'rz-between' }, el('h2', { class:'rz-h', style:'margin:0' }, L.name + (L.sub ? ' · ' + L.sub : '')),
-      el('button', { type:'button', class:'rz-link', on:{ click:() => start({ id:'L' + L.n, kind:'chapter', title:`اختبار شامل: ${L.name}`, lvl:PREF.lvl, hearts:PREF.hearts, make:() => buildN(L.ids.flatMap(id => BANK[id].questions), L.ids.flatMap(id => SPEC[id] || []), 10, PREF.lvl) }) } }, 'اختبار شامل')));
+      el('button', { type:'button', class:'rz-link', on:{ click:() => startSheet(lvTitle, () => start({ id:'L' + L.n, kind:'chapter', title:lvTitle, lvl:PREF.lvl, hearts:PREF.hearts, make:() => buildN(L.ids.flatMap(id => BANK[id].questions), L.ids.flatMap(id => SPEC[id] || []), 10, PREF.lvl) })) } }, 'اختبار شامل')));
     const grid = el('div', { class:'rz-grid' });
     L.ids.forEach(id => { const b = BANK[id]; const best = save.best[id];
-      grid.append(el('button', { type:'button', class:'rz-tile chap c-' + ['green', 'ocean', 'sand', 'wine'][(L.n || 1) - 1] + (save.gold[id] ? ' gold' : ''), on:{ click:() => start({ id, kind:'chapter', title:short(b.title), lvl:PREF.lvl, hearts:PREF.hearts, make:() => { const p = chapterPool(id); return buildN(p.pool, p.spec, 10, PREF.lvl); } }) } },
+      grid.append(el('button', { type:'button', class:'rz-tile chap c-' + ['green', 'ocean', 'sand', 'wine'][(L.n || 1) - 1] + (save.gold[id] ? ' gold' : ''), on:{ click:() => startSheet(short(b.title), () => start({ id, kind:'chapter', title:short(b.title), lvl:PREF.lvl, hearts:PREF.hearts, make:() => { const p = chapterPool(id); return buildN(p.pool, p.spec, 10, PREF.lvl); } })) } },
         el('span', { class:'rz-meta' }, bab(b.title)), el('b', {}, short(b.title)),
-        el('span', { class:'rz-meta' }, best != null ? `أفضل نتيجة: ${AR(best)} من ${AR(NQ)}` : `${plural(b.questions.length + (SPEC[id] || []).length, RZ.Q_FORMS)} في البنك`),
-        el('div', { class:'rz-between', style:'margin-top:auto' }, starStr(save.stars[id] || 0), save.gold[id] ? el('span', { title:'باب ذهبي' }, '🥇') : '')));
+        el('div', { class:'rz-between', style:'margin-top:auto' }, starStr(save.stars[id] || 0), best != null ? el('span', { class:'rz-meta' }, `${AR(best)}/${AR(NQ)}`) : '', save.gold[id] ? el('span', { title:'باب ذهبي' }, '🥇') : '')));
     });
     sec.append(grid); app.append(sec);
   });
-  app.append(el('div', { class:'rz-note' }, el('span', {}, 'كل اختبار عشرة أسئلة متنوعة. اختر إجابتك ثم اضغط «تحقّق» لترى الصواب والشرح. الأسئلة التي تخطئ فيها تُحفظ في «دفتر أخطائي» لتعود إليك.')));
+  app.append(el('h2', { class:'rz-h' }, 'أدوات أخرى'),
+    el('a', { class:'rz-list-btn', href:'#/wheel' }, el('span', { class:'rz-ic', html:icon('puzzle') }), el('span', { class:'grow' }, el('b', {}, 'دولاب التجويد'), el('span', { class:'rz-meta' }, 'أدِره واختبر نفسك في الباب الذي يقف عليه')), el('span', { class:'chev', html:icon('chev') })),
+    el('a', { class:'rz-list-btn', href:'#/builder' }, el('span', { class:'rz-ic', html:icon('sliders') }), el('span', { class:'grow' }, el('b', {}, 'صمّم اختبارك'), el('span', { class:'rz-meta' }, CUS.sel.length ? `محفوظ: ${plural(CUS.sel.length, ['درس واحد', 'درسان', 'دروس', 'درسًا'])}` : 'من الدروس التي وصلت إليها')), el('span', { class:'chev', html:icon('chev') })),
+    el('a', { class:'rz-list-btn', href:'#/share' }, el('span', { class:'rz-ic', html:icon('share') }), el('span', { class:'grow' }, el('b', {}, 'للمعلّم: شارك اختبارًا'), el('span', { class:'rz-meta' }, 'رابط بالأسئلة نفسها للجميع')), el('span', { class:'chev', html:icon('chev') })),
+    el('a', { class:'rz-list-btn', href:'#/mastery' }, el('span', { class:'rz-ic', html:icon('grid') }), el('span', { class:'grow' }, el('b', {}, 'خريطة إتقاني'), el('span', { class:'rz-meta' }, 'أين وصلت في كل درس')), el('span', { class:'chev', html:icon('chev') })));
 }
 
 /* ---------- صمّم اختبارك ---------- */
@@ -533,8 +756,60 @@ function decodeSel(str){
 }
 function shareUrl(cfg){
   const qp = new URLSearchParams({ l:cfg.lvl, n:String(cfg.n), r:String(cfg.seed), d:encodeSel(cfg.sel) }); if(cfg.name) qp.set('t', cfg.name);
-  if(cfg.sc != null){ qp.set('sc', String(cfg.sc)); if(cfg.by) qp.set('by', cfg.by.slice(0, 30)); }
+  if(cfg.sc != null){ qp.set('sc', String(cfg.sc)); if(cfg.by) qp.set('by', cfg.by.slice(0, 30)); if(cfg.pt != null){ qp.set('pt', String(cfg.pt)); qp.set('tm', String(cfg.tm)); } }
+  if(cfg.cq && cfg.cq.length) qp.set('cq', cqEnc(cfg.cq));
   return location.origin + location.pathname + '#/s/' + qp.toString();
+}
+/* ---------- teacher's own questions in a share link + paper/Word export ---------- */
+function cqEnc(cq){ const b = new TextEncoder().encode(JSON.stringify(cq)); let t = ''; b.forEach(x => t += String.fromCharCode(x)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function cqDec(str){ if(!str) return []; try{ const t = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const a = JSON.parse(new TextDecoder().decode(Uint8Array.from(t, c => c.charCodeAt(0))));
+  return Array.isArray(a) ? a.slice(0, 10).filter(x => Array.isArray(x) && typeof x[0] === 'string' && typeof x[1] === 'string' && Array.isArray(x[2]) && x[2].length).map(x => [x[0].slice(0, 300), x[1].slice(0, 150), x[2].slice(0, 3).map(w => String(w).slice(0, 150)), String(x[3] || '').slice(0, 300)]) : []; }catch(e){ return []; } }
+const cqQ = cq => cq.map((c, i) => toQ({ id:'cq' + i, q:c[0], a:c[1], w:c[2], e:c[3] || '' }));
+function sharedQs(keys, n, lvl, cq){ const own = cqQ(cq || []); if(!keys.length) return own; const { pool, spec } = poolFor(keys); return own.concat(buildN(pool, spec, n, lvl)); }
+function paperQs(cfg){ // printable version: the teacher's questions, then multiple-choice questions from the same lessons
+  return withSeed(cfg.seed, () => { const own = cqQ(cfg.cq || []); const { pool } = poolFor(cfg.sel || []);
+    return own.concat(shuffle(pool.filter(q => q.w && q.w.length >= 2)).slice(0, cfg.n).map(toQ)); }); }
+function paperHTML(cfg, title){
+  const qs = paperQs(cfg), L = 'أبجده';
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const body = qs.map((q, i) => { const c = ctxText(q);
+    return `<div class="pq"><p><b>${AR(i + 1)}.</b> ${esc(q.q)}</p>${c ? `<p class="v">${esc(c)}</p>` : ''}<div class="po">${q.opts.map((o, k) => `<p>${L[k]}) ${esc(o)}</p>`).join('')}</div></div>`; }).join('');
+  const key = qs.map((q, i) => `<p>${AR(i + 1)}: ${L[q.opts.indexOf(q.ans)]}) ${esc(q.ans)}${q.e ? ' <small>— ' + esc(q.e) + '</small>' : ''}</p>`).join('');
+  return { qs, html:`<h1>${esc(title)}</h1><p class="meta">الاسم: ........................ &nbsp; التاريخ: ............ &nbsp; العلامة: ...... من ${AR(qs.length)}</p>${body}<h2 class="brk">مفتاح الإجابات</h2><div class="key">${key}</div>` };
+}
+const PAPER_CSS = 'body{font-family:"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl;font-size:13pt;line-height:1.7}h1{font-size:18pt;margin:0 0 4pt}.meta{color:#555;border-bottom:1px solid #999;padding-bottom:6pt}.pq{break-inside:avoid;margin:8pt 0}.pq p{margin:2pt 0}.v{font-family:"Amiri Quran","Amiri",serif;font-size:15pt}.po{margin:2pt 0;padding-right:18pt}.po p{margin:1pt 0}.key p{margin:2pt 0}.brk{break-before:page;page-break-before:always;font-size:15pt}';
+function paperPrint(cfg, title){
+  const { html } = paperHTML(cfg, title); let area = document.getElementById('paper'); if(!area){ area = el('div', { id:'paper' }); document.body.append(area); }
+  area.innerHTML = `<style>${PAPER_CSS.replace(/body\{/, '#paper{')}</style>` + html; document.body.classList.add('printing');
+  const done = () => { document.body.classList.remove('printing'); removeEventListener('afterprint', done); }; addEventListener('afterprint', done); print(); setTimeout(done, 60000);
+}
+function paperWord(cfg, title){
+  const { html } = paperHTML(cfg, title);
+  const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${title}</title><style>${PAPER_CSS}</style></head><body dir="rtl">${html}</body></html>`;
+  const a = el('a', { href:URL.createObjectURL(new Blob(['﻿' + doc], { type:'application/msword' })), download:(title || 'اختبار').replace(/[\\/:*?"<>|]/g, '') + '.doc' }); document.body.append(a); a.click(); a.remove();
+}
+function cqSheet(SH, after){
+  RZ.sheet((box, close) => {
+    let tf = false;
+    const q = el('textarea', { class:'ex-txt', rows:3, placeholder:'نص السؤال' });
+    const a = el('input', { class:'rz-select', type:'text', placeholder:'الإجابة الصحيحة' });
+    const ws = [0, 1, 2].map(i => el('input', { class:'rz-select', type:'text', placeholder:'إجابة خاطئة ' + ['أولى', 'ثانية (اختياري)', 'ثالثة (اختياري)'][i] }));
+    const tfSel = el('select', { class:'rz-select', hidden:true }, el('option', { value:'1' }, 'العبارة صحيحة'), el('option', { value:'0' }, 'العبارة خاطئة'));
+    const e = el('input', { class:'rz-select', type:'text', placeholder:'شرح يظهر بعد الإجابة (اختياري)' });
+    const mcqBox = el('div', { style:'display:flex;flex-direction:column;gap:8px' }, a, ...ws);
+    const seg = el('div', { class:'rz-seg', style:'grid-template-columns:1fr 1fr' });
+    const setT = v => { tf = v; seg.querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === (v ? 1 : 0)))); mcqBox.hidden = v; tfSel.hidden = !v; q.placeholder = v ? 'العبارة' : 'نص السؤال'; };
+    seg.append(el('button', { type:'button', class:'rz-chip', on:{ click:() => setT(false) } }, 'اختيار من متعدد'), el('button', { type:'button', class:'rz-chip', on:{ click:() => setT(true) } }, 'صح أم خطأ'));
+    const err = el('span', { class:'rz-meta', style:'color:var(--bad)' });
+    box.append(el('b', { style:'font-size:20px' }, 'أضف سؤالك'), seg, q, mcqBox, tfSel, e, err,
+      el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => {
+        const qt = q.value.trim(); if(!qt){ err.textContent = 'اكتب السؤال.'; return; }
+        let item;
+        if(tf){ const ok = tfSel.value === '1'; item = [qt, ok ? 'صحيحة' : 'خاطئة', [ok ? 'خاطئة' : 'صحيحة'], e.value.trim()]; }
+        else { const wr = ws.map(x => x.value.trim()).filter(Boolean); if(!a.value.trim() || !wr.length){ err.textContent = 'اكتب الإجابة الصحيحة وإجابة خاطئة واحدة على الأقل.'; return; } item = [qt, a.value.trim(), wr, e.value.trim()]; }
+        SH.cq = (SH.cq || []).concat([item]).slice(0, 10); close(); after(); } } }, 'أضف السؤال'));
+    setT(false);
+  });
 }
 function share(){
   app.innerHTML = '';
@@ -546,9 +821,13 @@ function share(){
   const out = el('section', { class:'rz-card', hidden:true });
   const count = el('span', { class:'rz-meta', style:'text-align:center' });
   const make = el('button', { type:'button', class:'rz-btn pri block' }, 'أنشئ رابط الاختبار');
-  const refresh = () => { keep(); const { pool } = poolFor(SH.sel); count.textContent = SH.sel.length ? 'كل من يفتح الرابط يحصل على الأسئلة نفسها بالترتيب نفسه.' : 'اختر الدروس أولًا'; make.disabled = pool.length < 4; out.hidden = true; fitAction(); };
+  const ownBox = el('div', { style:'display:flex;flex-direction:column;gap:6px' });
+  const paintOwn = () => { ownBox.innerHTML = ''; (SH.cq || []).forEach((c, i) => ownBox.append(el('div', { class:'rz-between', style:'gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px 12px' },
+      el('span', {}, AR(i + 1) + '. ' + c[0]), el('button', { type:'button', class:'rz-link', style:'color:var(--bad)', on:{ click:() => { SH.cq.splice(i, 1); keep(); paintOwn(); refresh(); } } }, 'حذف'))));
+    if((SH.cq || []).length < 10) ownBox.append(el('button', { type:'button', class:'rz-btn block', on:{ click:() => cqSheet(SH, () => { keep(); paintOwn(); refresh(); }) } }, '+ أضف سؤالًا من عندك')); };
+  const refresh = () => { keep(); const { pool } = poolFor(SH.sel); const own = (SH.cq || []).length; count.textContent = SH.sel.length || own ? 'كل من يفتح الرابط يحصل على الأسئلة نفسها بالترتيب نفسه.' : 'اختر الدروس أولًا'; make.disabled = pool.length < 4 && !own; out.hidden = true; fitAction(); };
   make.addEventListener('click', () => {
-    const cfg = { sel:SH.sel, n:SH.n, lvl:SH.lvl, name:SH.name, seed:1 + Math.floor(Math.random() * 1e9) };
+    const cfg = { sel:SH.sel, n:SH.n, lvl:SH.lvl, name:SH.name, cq:SH.cq || [], seed:1 + Math.floor(Math.random() * 1e9) };
     const url = shareUrl(cfg);
     const text = (cfg.name ? '«' + cfg.name + '»: ' : '') + 'اختبار تجويد في تطبيق رسوخ، ' + plural(cfg.n, RZ.Q_FORMS) + '.';
     out.innerHTML = '';
@@ -559,37 +838,42 @@ function share(){
         el('button', { type:'button', class:'rz-btn pri', on:{ click:async () => { try{ if(navigator.share){ await navigator.share({ title:'رسوخ', text, url }); return; } }catch(e){ return; } copy(); } } }, 'مشاركة'),
         el('button', { type:'button', class:'rz-btn', on:{ click:copy } }, 'نسخ الرابط')),
       copied,
-      el('a', { class:'rz-link', href:url.slice(url.indexOf('#')) }, 'جرّب الاختبار بنفسك'));
+      el('a', { class:'rz-link', href:url.slice(url.indexOf('#')) }, 'جرّب الاختبار بنفسك'),
+      el('span', { class:'rz-meta' }, 'نسخة ورقية مع مفتاح الإجابات:'),
+      el('div', { class:'rz-seg', style:'grid-template-columns:repeat(2,minmax(0,1fr))' },
+        el('button', { type:'button', class:'rz-btn', on:{ click:() => paperPrint(cfg, cfg.name || 'اختبار تجويد') } }, 'اطبع / PDF'),
+        el('button', { type:'button', class:'rz-btn', on:{ click:() => paperWord(cfg, cfg.name || 'اختبار تجويد') } }, 'ملف Word')));
     function copy(){ field.select(); (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => copied.textContent = 'تم نسخ الرابط.', () => { document.execCommand && document.execCommand('copy'); copied.textContent = 'تم تحديد الرابط، انسخه.'; }); }
     out.hidden = false; out.scrollIntoView({ behavior:'smooth', block:'center' });
   });
   app.append(topBar('شارك اختبارًا'),
-    el('p', { class:'rz-meta', style:'margin:0' }, 'للمعلمات والمجموعات: اختر الدروس والمستوى وعدد الأسئلة، فيتكوّن رابط واحد. كل من يفتحه يحلّ الأسئلة نفسها بالترتيب نفسه، ويعمل بلا تسجيل.'),
+    el('p', { class:'rz-meta', style:'margin:0' }, 'للمعلمين والمجموعات: اختر الدروس والمستوى وعدد الأسئلة، فيتكوّن رابط واحد. كل من يفتحه يحلّ الأسئلة نفسها بالترتيب نفسه، ويعمل بلا تسجيل.'),
     el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'اسم الاختبار (اختياري)'), name),
     el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'الدروس'), lessonPicker(sel, refresh)),
     el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'مستوى الصعوبة'), ...lvChips(SH.lvl, k => { SH.lvl = k; keep(); out.hidden = true; })),
     el('section', { class:'rz-card' }, el('span', { class:'rz-meta' }, 'عدد الأسئلة'), countSeg(SH.n, n => { SH.n = n; keep(); out.hidden = true; }, [10, 20, 30])),
+    el('section', { class:'rz-card' }, el('b', {}, 'أسئلتك الخاصة (اختياري)'), el('span', { class:'rz-meta' }, 'تظهر في أول الاختبار، قبل أسئلة البنك. حتى ١٠ أسئلة.'), ownBox),
     out, actionBar(count, make));
   document.body.classList.add('rz-quiz');
-  refresh(); fitAction();
+  paintOwn(); refresh(); fitAction();
 }
 function sharedIntro(arg){
   const qp = new URLSearchParams(arg || '');
   const keys = decodeSel(qp.get('d')); const n = Math.min(30, Math.max(5, +qp.get('n') || 10)); const lvl = LV.some(x => x.k === qp.get('l')) ? qp.get('l') : 'mix';
   const seed = +qp.get('r') || 1; const name = (qp.get('t') || '').slice(0, 60);
-  const vs = qp.get('sc') != null ? +qp.get('sc') : null, by = (qp.get('by') || '').slice(0, 30);
+  const vs = qp.get('sc') != null ? +qp.get('sc') : null, by = (qp.get('by') || '').slice(0, 30), vp = qp.get('pt') != null ? +qp.get('pt') : null, vt = +qp.get('tm') || 0, cq = cqDec(qp.get('cq'));
   app.innerHTML = '';
-  if(!keys.length){ app.append(topBar('اختبار مشترك'), el('p', { class:'rz-empty' }, 'الرابط غير مكتمل. اطلب الرابط مرة أخرى.')); return; }
+  if(!keys.length && !cq.length){ app.append(topBar('اختبار مشترك'), el('p', { class:'rz-empty' }, 'الرابط غير مكتمل. اطلب الرابط مرة أخرى.')); return; }
   const L = LV.find(x => x.k === lvl);
-  const chs = [...new Set(keys.map(k => k.split(':')[0]))].map(id => short(BANK[id].title));
+  const chs = [...new Set(keys.map(k => k.split(':')[0]))].map(id => short(BANK[id].title)); if(cq.length) chs.unshift('أسئلة من المعلّم (' + AR(cq.length) + ')');
   app.append(topBar('اختبار مشترك'),
     el('section', { class:'rz-card' },
       el('span', { class:'rz-meta' }, vs != null ? 'وصلك تحدٍّ' + (by ? ' من ' + by : '') : 'وصلك هذا الاختبار برابط مشترك'),
-      vs != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, `🏆 ${by || 'صاحب التحدّي'} حصل على ${AR(vs)} من ${AR(n)}. هل تتفوق؟`) : '',
+      vs != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, `🏆 ${by || 'صاحب التحدّي'} حصل على ${AR(vs)} من ${AR((keys.length ? n : 0) + cq.length)}` + (vp != null ? ` (${AR(vp)} نقطة في ${AR(vt)} ثانية)` : '') + '. هل تتفوق؟ النقاط للصواب والسرعة معًا.') : '',
       el('b', { style:'font-size:22px' }, name || 'اختبار تجويد'),
-      el('div', { class:'rz-wrap' }, el('span', { class:'rz-badge plain' }, plural(n, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالًا'])), el('span', { class:'rz-badge' }, L.t), el('span', { class:'rz-badge plain' }, plural(keys.length, ['درس واحد', 'درسان', 'دروس', 'درسًا']))),
+      el('div', { class:'rz-wrap' }, el('span', { class:'rz-badge plain' }, plural((keys.length ? n : 0) + cq.length, ['سؤال واحد', 'سؤالان', 'أسئلة', 'سؤالًا'])), el('span', { class:'rz-badge' }, L.t), el('span', { class:'rz-badge plain' }, plural(keys.length, ['درس واحد', 'درسان', 'دروس', 'درسًا']))),
       el('span', { class:'rz-meta' }, 'الأبواب: ' + chs.join('، ')),
-      el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => start({ id:'shared', kind:'shared', title:name || 'اختبار مشترك', lvl, seed, vs, by, cfg:{ sel:keys, n, lvl, seed, name }, make:() => { const { pool, spec } = poolFor(keys); return buildN(pool, spec, n, lvl); } }) } }, 'ابدأ')));
+      el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => start({ id:'shared', kind:'shared', title:name || 'اختبار مشترك', lvl, seed, vs, vp, vt, by, cfg:{ sel:keys, n, lvl, seed, name, cq }, make:() => sharedQs(keys, n, lvl, cq) }) } }, 'ابدأ')));
 }
 
 /* ---------- دفتر أخطائي ---------- */
@@ -727,7 +1011,7 @@ const R = {
   },
   stmt(q, card){ card.append(el('div', { class:'q' }, q.q)); return twoStage(card, q.ok, q.opts, q.fix, ['✓ صحيحة', '✗ خاطئة'], 'أحسنت، العبارة خاطئة. فما الصواب؟'); },
   open(q, card){
-    card.append(el('div', { class:'q' }, q.q), el('div', { class:'kind', style:'font-weight:500' }, 'فكّر في الإجابة أو اكتبها على ورقة، ثم اكشفها وقيّم نفسك بصدق.'));
+    card.append(el('div', { class:'q' }, q.q)); bigBox(q, card); card.append(el('div', { class:'kind', style:'font-weight:500' }, 'فكّر في الإجابة أو اكتبها على ورقة، ثم اكشفها وقيّم نفسك بصدق.'));
     const ans = el('div', { class:'prop', hidden:true }, el('small', {}, 'الإجابة النموذجية'), el('b', {}, q.a));
     card.append(ans); let shown = false, self = null;
     const row = el('div', { class:'opts tf', hidden:true });
@@ -770,8 +1054,8 @@ const R = {
     const box = verseBox(q, (i, b) => { if(S.done) return; sel.has(i) ? sel.delete(i) : sel.add(i); b.classList.toggle('on'); S.ui.update(); });
     card.append(box, el('div', { class:'kind', style:'font-weight:500' }, 'اضغط مرة أخرى لإلغاء الاختيار. الحكم الواحد بين كلمتين يكفي فيه اختيار إحداهما.'));
     return { ready: () => sel.size > 0,
-      check(){ const all = new Set(q.g.flat()); const ok = q.g.every(g => g.some(i => sel.has(i))) && [...sel].every(i => all.has(i));
-        [...box.querySelectorAll('.vw')].forEach((b, i) => { b.disabled = true; if(all.has(i)) b.classList.add(sel.has(i) ? 'right' : 'missed'); else if(sel.has(i)) b.classList.add('wrong'); });
+      check(){ const all = new Set(q.g.flat()), extra = new Set(q.x || []); const ok = q.g.every(g => g.some(i => sel.has(i))) && [...sel].every(i => all.has(i) || extra.has(i));
+        [...box.querySelectorAll('.vw')].forEach((b, i) => { b.disabled = true; if(all.has(i)) b.classList.add(sel.has(i) ? 'right' : 'missed'); else if(sel.has(i) && !extra.has(i)) b.classList.add('wrong'); });
         return { ok, sel:[...sel].map(i => q.v[i]).join('، ') }; } };
   },
   hunt(q, card){
@@ -913,6 +1197,7 @@ function end(){
     ls.set('rz-riddle', st); if(ok){ RZ.game.riddles = (RZ.game.riddles || 0) + 1; RZ.gsave(); } RZ.taskEvent('riddle'); RZ.quizDone({ kind:'riddle', n:1, wrong:ok ? 0 : 1 });
     S = null; history.replaceState(null, '', '#/riddle'); return riddleDone(st);
   }
+  const secs = Math.max(1, Math.round((Date.now() - (S.t0 || Date.now())) / 1000)), n0 = S.qs.length, pts = S.right * 10 + (S.right ? Math.max(0, Math.round((n0 * 20 - secs) / 2)) : 0);
   const n = S.qs.length, done = S.res.length, r = S.right, f = r / n, stars = f >= 1 ? 3 : f >= .9 ? 2 : f >= .7 ? 1 : 0, id = S.T.id, T = S.T;
   const wrong = S.res.filter(x => !x.ok);
   if(T.kind === 'chapter' && n >= 10){ save.best[id] = Math.max(save.best[id] || 0, r); save.stars[id] = Math.max(save.stars[id] || 0, stars); persist(); }
@@ -933,12 +1218,13 @@ function end(){
   if(canAgain) btns.append(el('button', { type:'button', class:'rz-btn' + (S.heartsOut ? '' : ' pri'), on:{ click:again } }, T.kind === 'shared' ? 'أعد الاختبار نفسه' : T.kind === 'final' || T.kind === 'jump' ? 'حاول مرة أخرى' : 'اختبار جديد'));
   if(T.kind === 'custom') btns.append(el('a', { class:'rz-btn', href:'#/builder' }, 'تعديل الدروس'));
   if(['lesson', 'jump', 'final'].includes(T.kind)) btns.append(el('a', { class:'rz-btn', href:'#/path' }, 'مسار الدروس'));
+  if(T.kind === 'wheel') btns.append(el('a', { class:'rz-btn pri', href:'#/wheel' }, 'أدِر الدولاب مرة أخرى'));
   if(T.kind === 'single' && T.les && LES_NAME[T.les]) btns.append(el('button', { type:'button', class:'rz-btn pri', on:{ click:() => lessonQuiz(T.les, true) } }, 'جرّب اختبارًا في الدرس نفسه'));
   // challenge a friend with exactly the same questions
   const shareCfg = T.kind === 'shared' ? T.cfg : (T.kind === 'custom' || T.kind === 'lesson') && T.seed != null ? { sel:T.keys, n, lvl:T.lvl || 'mix', seed:T.seed, name:T.kind === 'lesson' ? T.title : '' } : null;
   if(shareCfg && shareCfg.sel && shareCfg.sel.length) btns.append(el('button', { type:'button', class:'rz-btn', on:{ click:async () => {
-    const url = shareUrl(Object.assign({}, shareCfg, { sc:r, by:RZ.settings().name || '' }));
-    const text = `حصلت على ${AR(r)} من ${AR(n)} في «${T.title}» على تطبيق رسوخ. هل تتفوق عليّ؟ الأسئلة نفسها في هذا الرابط:`;
+    const url = shareUrl(Object.assign({}, shareCfg, { sc:r, pt:pts, tm:secs, by:RZ.settings().name || '' }));
+    const text = `حصلت على ${AR(r)} من ${AR(n)} في «${T.title}» (${AR(pts)} نقطة في ${AR(secs)} ثانية) على تطبيق رسوخ. هل تتفوق عليّ؟ الأسئلة نفسها في هذا الرابط:`;
     try{ if(navigator.share){ await navigator.share({ title:'تحدٍّ في رسوخ', text, url }); return; } }catch(e){ return; }
     try{ await navigator.clipboard.writeText(text + '\n' + url); RZ.toast('نُسخ رابط التحدّي'); }catch(e){}
   } } }, 'تحدَّ صديقًا'));
@@ -947,7 +1233,8 @@ function end(){
   if(passed === true) msg = T.kind === 'final' ? '🥇 نجحت في اختبار الختام، وصار هذا الباب ذهبيًا!' : 'نجحت في اختبار القفز، وفُتحت الدروس حتى هذا الدرس.';
   if(passed === false) msg = 'تحتاج ' + AR(Math.ceil(n * .8)) + ' إجابات صحيحة على الأقل للنجاح. راجع الدروس ثم حاول مرة أخرى.';
   if(S.heartsOut) msg = 'انتهت القلوب الثلاثة. يمكنك إكمال الأسئلة الباقية للتعلّم بلا قلوب.';
-  const vs = T.vs != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, r > T.vs ? `🏆 تفوقت على ${T.by || 'صاحب التحدّي'} (${AR(T.vs)} من ${AR(n)})` : r === T.vs ? `تعادلت مع ${T.by || 'صاحب التحدّي'}` : `${T.by || 'صاحب التحدّي'} حصل على ${AR(T.vs)} من ${AR(n)}. جرّب مرة أخرى!`) : '';
+  const vsP = T.vp != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, `نقاطك: ${AR(pts)} (${AR(r)} صحيحة في ${AR(secs)} ثانية) · ${T.by || 'صاحب التحدّي'}: ${AR(T.vp)} نقطة. ` + (pts > T.vp ? '🏆 تفوقت!' : pts === T.vp ? 'تعادلتما.' : 'حاول مرة أخرى لتتفوق.')) : null;
+  const vs = vsP ? vsP : T.vs != null ? el('div', { class:'rz-note', style:'font-weight:600;color:var(--ink)' }, r > T.vs ? `🏆 تفوقت على ${T.by || 'صاحب التحدّي'} (${AR(T.vs)} من ${AR(n)})` : r === T.vs ? `تعادلت مع ${T.by || 'صاحب التحدّي'}` : `${T.by || 'صاحب التحدّي'} حصل على ${AR(T.vs)} من ${AR(n)}. جرّب مرة أخرى!`) : '';
   app.append(el('section', { class:'rz-card pop end' },
     el('span', { class:'rz-meta' }, T.title),
     el('div', { class:'score' }, `${AR(r)} من ${AR(S.heartsOut ? done : n)}`),
@@ -1077,7 +1364,9 @@ function runSpeed(){
 /* ---------- حزورة اليوم: one riddle a day, the same for everyone ---------- */
 function riddleOfDay(){
   const list = []; Object.values(SPEC).forEach(l => l.forEach(s => { if((s.t === 'riddle' && s.d !== 1) || (s.t === 'img' && s.m === 'makh')) list.push(s); }));
-  const r = RZ.seeded(RZ.daySeed() * 31 + 7); return withSeed(RZ.daySeed(), () => toSpecial(list[Math.floor(r() * list.length)]));
+  const r = RZ.seeded(RZ.daySeed() * 31 + 7);
+  if(RZ.daySeed() % 3 === 0) return withSeed(RZ.daySeed(), () => { const t = traitRiddles(); return t[Math.floor(r() * t.length)]; });
+  return withSeed(RZ.daySeed(), () => toSpecial(list[Math.floor(r() * list.length)]));
 }
 function riddle(){
   const st = ls.get('rz-riddle', {});

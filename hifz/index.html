@@ -91,6 +91,8 @@ select{font:inherit;color:var(--ink);background:var(--page);border:1px solid var
 .fb{font-size:14px;padding:8px 12px;border-radius:10px;background:var(--soft)}
 .score{font-family:var(--f-d);font-size:40px;color:var(--acc)}
 .muted{color:var(--muted)}
+.wr-ta{width:100%;box-sizing:border-box;font-family:var(--f-q,serif);font-size:22px;line-height:2;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--page);color:inherit;resize:vertical}
+.wr-txt{font-family:var(--f-q,serif);font-size:23px;line-height:2.2}.wr-txt .ok{color:var(--good-ink,#2E6B3F)}.wr-txt .miss{color:var(--bad,#B4443A);text-decoration:underline wavy}.wr-n{font-size:16px;color:var(--muted)}
 .rv-item{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--page)}
 .rv-item.ok{border-color:var(--good);background:var(--good-soft)}
 .rv-done{color:var(--good-ink);font-weight:700}
@@ -111,6 +113,7 @@ select{font:inherit;color:var(--ink);background:var(--page);border:1px solid var
     <button class="tab" role="tab" data-t="mt" aria-selected="true">المتشابهات</button>
     <button class="tab" role="tab" data-t="ba" aria-selected="false">ما قبلها وما بعدها</button>
     <button class="tab" role="tab" data-t="quiz" aria-selected="false">اختبارات الحفظ</button>
+    <button class="tab" role="tab" data-t="wr" aria-selected="false">التسميع الكتابي</button>
     <button class="tab" role="tab" data-t="rv" aria-selected="false">مراجعة محفوظي</button>
   </div>
   <main id="view"><p class="muted">جاري التحميل…</p></main>
@@ -124,7 +127,8 @@ const rnd=n=>Math.floor(Math.random()*n), shuffle=a=>{a=a.slice();for(let i=a.le
 let D=null; const ST={lv:'2',tab:'mt',surah:{},mtS:{},hide:false,baD:'1'};
 try{Object.assign(ST,JSON.parse(localStorage.getItem('hifz-ui')||'{}'))}catch(e){}
 if(location.hash==='#review') ST.tab='rv';
-if(!['mt','ba','quiz','rv'].includes(ST.tab)) ST.tab='mt';
+if(location.hash==='#write') ST.tab='wr';
+if(!['mt','ba','quiz','wr','rv'].includes(ST.tab)) ST.tab='mt';
 const save=()=>{try{localStorage.setItem('hifz-ui',JSON.stringify({lv:ST.lv,tab:ST.tab,surah:ST.surah,mtS:ST.mtS,baD:ST.baD}))}catch(e){}};
 let BEST={};try{BEST=JSON.parse(localStorage.getItem('hifz-best')||'{}')}catch(e){}
 const LVC={1:'--l1',2:'--l2',3:'--l3'};
@@ -413,6 +417,46 @@ function hz(ok,n){ // points for hifz answers; mistakes push a memorised surah u
   if(!ok&&n&&window.RZ){const h=RZ.hifzData();if(h.sel.includes(n)){h.miss[n]=(h.miss[n]||0)+1;RZ.ls.set('hifz-review',h)}}
 }
 function levelOf(n){return Object.keys(D.levels).find(k=>D.levels[k].surahs.includes(n))||ST.lv}
+
+/* ---------- التسميع الكتابي: «اكتب من قوله تعالى … إلى …» (as in the level exams) ---------- */
+const WR_P={1:[[96,1,19],[98,1,6],[78,23,37],[100,1,11],[85,9,19],[90,1,14],[82,5,18],[92,8,21],[98,2,7],[99,1,8],[81,1,12],[82,4,19],[83,9,20],[92,1,21],[79,13,31],[89,9,20],[84,7,15],[90,8,20],[80,16,27],[78,31,40],[102,1,8],[104,1,9],[88,1,16],[91,1,15],[86,1,17]],
+ 2:[[64,3,7],[62,1,4],[67,18,22],[74,32,48],[89,19,30]]};
+WR_P[3]=WR_P[2];
+let WR=null;
+const wrN=w=>w.replace(/ٰ/g,'ا').replace(/[ً-ٟۖ-ۭـࣰ-ࣿ]/g,'').replace(/[ٱأإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ؤئ]/g,'ء').replace(/[اء]/g,'').replace(/[^ء-ي]/g,'');
+const wrHead=(n,a,b)=>'من قوله تعالى ﴿'+V(n,a).slice(0,3).join(' ')+'﴾ إلى قوله ﴿'+V(n,b).slice(-3).join(' ')+'﴾';
+function wrRandom(){const ss=levelSurahs();for(let k=0;k<50;k++){const n=ss[rnd(ss.length)],L=S(n).ayat,len=Math.min(L,4+rnd(5)),a=1+rnd(L-len+1);if(len>=3)return[n,a,a+len-1]}return[ss[0],1,3]}
+function renderWr(v){
+  if(!WR){
+    v.append($('p',{class:'muted',style:'margin:0'},'كما في ورقة الحفظ في الامتحان: اكتب المقطع من حفظك، ثم صحّحه. لا يُشترط الرسم العثماني ولا التشكيل.'));
+    const gr=$('div',{class:'grid2'});
+    gr.append($('button',{class:'scope',style:'border-color:var(--acc)',on:{click:()=>{WR={p:wrRandom()};render()}}},$('b',{},'مقطع عشوائي'),$('small',{},'من محفوظ '+D.levels[ST.lv].name)));
+    (WR_P[ST.lv]||[]).forEach(p=>{const[n,a,b]=p;gr.append($('button',{class:'scope',on:{click:()=>{WR={p};render()}}},$('b',{},'سورة '+S(n).name+(a===1&&b===S(n).ayat?' كاملة':'')),$('small',{},wrHead(n,a,b))))});
+    v.append(gr);return;
+  }
+  const[n,a,b]=WR.p,box=$('div',{class:'card qz'});
+  box.append($('div',{class:'tools',style:'justify-content:space-between'},$('b',{},'سورة '+S(n).name),$('span',{class:'muted'},'الآيات '+AR(a)+'–'+AR(b))),
+    $('div',{class:'prompt'},'اكتب '+wrHead(n,a,b)));
+  if(WR.res==null){
+    const ta=$('textarea',{class:'wr-ta',rows:9,placeholder:'اكتب الآيات هنا…',dir:'rtl'});ta.value=WR.txt||'';ta.addEventListener('input',()=>WR.txt=ta.value);
+    box.append(ta,$('div',{class:'tools'},$('button',{class:'btn pri',on:{click:()=>{WR.txt=ta.value;WR.res=1;render()}}},'صحّح'),
+      $('button',{class:'btn',on:{click:()=>{WR.txt='';WR.res=0;render()}}},'اكشف النص (للتسميع الشفوي)'),$('button',{class:'btn',on:{click:()=>{WR=null;render()}}},'مقطع آخر')));
+  }else{
+    const exp=[];for(let k=a;k<=b;k++)V(n,k).forEach((w,i,arr)=>exp.push({w,k,end:i===arr.length-1}));
+    const got=(WR.txt||'').split(/\s+/).map(wrN).filter(Boolean),E=exp.map(x=>wrN(x.w));
+    // LCS alignment
+    const m=E.length,q=got.length,T=Array.from({length:m+1},()=>new Uint16Array(q+1));
+    for(let i=m-1;i>=0;i--)for(let j=q-1;j>=0;j--)T[i][j]=E[i]===got[j]?T[i+1][j+1]+1:Math.max(T[i+1][j],T[i][j+1]);
+    const hit=new Set();let i=0,j=0;while(i<m&&j<q){if(E[i]===got[j]){hit.add(i);i++;j++}else if(T[i+1][j]>=T[i][j+1])i++;else j++}
+    const txt=$('div',{class:'wr-txt'});
+    exp.forEach((x,ix)=>{txt.append($('span',{class:WR.res?(hit.has(ix)?'ok':'miss'):''},x.w),' ');if(x.end)txt.append($('span',{class:'wr-n'},'﴿'+AR(x.k)+'﴾'),' ')});
+    if(WR.res){const pct=Math.round(100*hit.size/m),extra=q-hit.size;
+      box.append($('div',{class:'score',style:'text-align:center'},AR(pct)+'٪'),
+        $('div',{class:'muted',style:'text-align:center'},'كتبت '+AR(hit.size)+' كلمة صحيحة من '+AR(m)+(extra>0?' · '+AR(extra)+' كلمة زائدة أو مختلفة':'')+'. الكلمات الحمراء نقصت أو اختلفت.'));}
+    box.append(txt,$('div',{class:'tools'},$('button',{class:'btn pri',on:{click:()=>{WR={p:WR.p};render()}}},'أعد المحاولة'),$('button',{class:'btn',on:{click:()=>{WR=null;render()}}},'مقطع آخر')));
+  }
+  v.append(box);
+}
 function renderRv(v){
   const {list,h}=RZ.hifzToday();
   if(h.sel.length){
@@ -447,7 +491,7 @@ function render(){
   const v=document.getElementById('view');v.innerHTML='';
   if(QZ&&QZ.lv&&QZ.lv!==ST.lv)QZ=null;
   document.getElementById('levels').hidden=ST.tab==='rv';
-  ({mt:renderMt,ba:renderBA,quiz:renderQuiz,rv:renderRv})[ST.tab](v);
+  ({mt:renderMt,ba:renderBA,quiz:renderQuiz,wr:renderWr,rv:renderRv})[ST.tab](v);
 }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{ST.tab=t.dataset.t;save();render()}));
 fetch('data.json').then(r=>r.json()).then(d=>{D=d;render()}).catch(()=>{document.getElementById('view').innerHTML='<p class="muted">تعذّر تحميل البيانات. حدّث الصفحة.</p>'});

@@ -140,10 +140,15 @@
     { id:'hifz', e:'📖', t:'مراجع المحفوظ', s:'راجعت محفوظك ١٠ أيام', ok: () => G.hifzDays >= 10 },
     { id:'month', e:'🗓️', t:'وسام الشهر', s:'أتممت مهام ٢٠ يومًا في شهر واحد', ok: () => Object.values(G.taskMonths).some(n => n >= 20) }
   ];
+  /* a title per chapter: earned with 3 stars in that chapter's test */
+  const TITLES = [['l1c1','📜','عارف المقدمات'],['l1c2','🏅','فارس النون الساكنة'],['l1c3','🎵','حارس الغنة'],['l1c4','🌊','محترف المدود'],
+    ['l2c1','🎯','خبير المخارج'],['l2c2','💎','سيد الصفات والقلقلة'],['l2c3','⚖️','ميزان التفخيم والترقيق'],['l2c4','🔗','ضابط الإدغام'],['l2c5','🪝','صاحب اللامات'],
+    ['l3c1','🚪','مُحكِم البدء'],['l3c2','🛑','أمير الوقف'],['l3c3','✂️','حافظ المقطوع والموصول'],['l3c4','🎀','دقيق التاءات'],['l3c5','🖋️','متقن الإثبات والحذف']]
+    .map(([ch, e, t]) => ({ id:'t_' + ch, ch, e, t, ok: () => ((ls.get('tajweed-library-v1', {}).stars || {})[ch] || 0) >= 3 }));
   function checkBadges(){
     const fresh = [];
-    BADGES.forEach(b => { if(!G.badges['got_' + b.id] && b.ok()){ G.badges['got_' + b.id] = today(); fresh.push(b); } });
-    if(fresh.length){ gsave(); fresh.forEach((b, k) => setTimeout(() => toast(b.e + ' وسام جديد: ' + b.t), 600 + k * 2600)); }
+    BADGES.concat(TITLES).forEach(b => { if(!G.badges['got_' + b.id] && b.ok()){ G.badges['got_' + b.id] = today(); fresh.push(b); } });
+    if(fresh.length){ gsave(); fresh.forEach((b, k) => setTimeout(() => toast(b.e + (b.ch ? ' لقب جديد: ' : ' وسام جديد: ') + b.t), 600 + k * 2600)); }
     return fresh;
   }
   function flag(k){ if(!G.badges[k]){ G.badges[k] = today(); gsave(); checkBadges(); } }
@@ -351,7 +356,7 @@
   if('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register(base + 'sw.js').catch(() => {}));
   window.RZ = { ls, AR, count, Q_FORMS, DAY_FORMS, PT_FORMS, today, addDays, diffDays, dateAR, seeded, daySeed, base, icon, report, EMAIL,
     mistakes, mistakesDue, streak, markDailyDone, setVacation,
-    game: G, gsave, addXP, hifzData, hifzToday, hifzDone, level, XP_AT, TIERS, goal, GOALS, dayLog, answer, quizDone, tasks, taskEvent, BADGES, checkBadges, flag,
+    game: G, gsave, addXP, hifzData, hifzToday, hifzDone, level, XP_AT, TIERS, goal, GOALS, dayLog, answer, quizDone, tasks, taskEvent, BADGES, TITLES, checkBadges, flag,
     pattern, toast, sheet, enableNotif, disableNotif, DUA_OPEN, DUA_CLOSE, backupData, restoreData, syncState,
     settings: () => Object.assign({}, st), setSettings(p){ Object.assign(st, p); ls.set(ST_KEY, st); apply(); syncState(); } };
 })();
