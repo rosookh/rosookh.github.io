@@ -47,7 +47,9 @@ function specNeeds(id, s){
   return [];
 }
 DATA.forEach(b => b.questions.forEach((q, i) => { q.id = 'b:' + b.id + ':' + i; q.ch = b.id; q.les = b.id + ':' + LESSONS[b.id].t[i]; }));
+const B5 = SPEC.l2c1 ? SPEC.l2c1.filter(s => s.b5) : []; if(SPEC.l2c1) SPEC.l2c1 = SPEC.l2c1.filter(s => !s.b5); // batch-5 items go after the riddles so older ids stay the same
 if(window.RIDDLES && SPEC.l2c1){ RIDDLES.forEach(r => [1, 2, 3].forEach(d => SPEC.l2c1.push({ t:'riddle', i:r.i, d, les:1, r }))); }
+if(SPEC.l2c1) SPEC.l2c1.push(...B5);
 Object.entries(SPEC).forEach(([ch, list]) => list.forEach((s, i) => { s.id = 's:' + ch + ':' + i; s.ch = ch; s.needs = specNeeds(ch, s); s.les = ch + ':' + (s.needs[0] ?? 0); }));
 /* hidden sources stay in the data (ids keep their positions) but are left out of every pool */
 const HIDDEN_SRC = new Set(['tuhfa']); const SPEC_BY_ID = {};
@@ -61,10 +63,11 @@ const MAKH = { jawf:'الجوف', aqsa_halq:'أقصى الحلق', wasat_halq:'�
   ra:'طرف اللسان مع ظهره، قريبًا من مخرج النون', nat:'طرف اللسان مع أصول الثنايا العليا', lith:'طرف اللسان مع أطراف الثنايا العليا',
   safir:'طرف اللسان مع ما فوق الثنايا السفلى', fa:'بطن الشفة السفلى مع أطراف الثنايا العليا', shaf:'الشفتان' };
 const NEAR = [['nat','lith','safir'], ['lam','ra','nun'], ['shaf','fa','nun'], ['qaf','kaf']];
+const LAQAB = { jawf:'جوفية (هوائية)', aqsa_halq:'حلقية', wasat_halq:'حلقية', adna_halq:'حلقية', qaf:'لهوية', kaf:'لهوية', wasat:'شجرية', lam:'ذلقية', nun:'ذلقية', ra:'ذلقية', nat:'نطعية', lith:'لثوية', safir:'أسلية', fa:'شفوية', shaf:'شفوية' };
 const near = (a, b) => a === b || NEAR.some(s => s.includes(a) && s.includes(b));
 
 /* ---------- question building ---------- */
-const KIND = { fill:'أكمل الفراغ', stmt:'ضع إشارة ✓ أو ✗', open:'أجب ثم اكشف الإجابة', mcq:'اختر إجابة واحدة', tf:'صح أم خطأ؟', match:'صِل كل سؤال بجوابه', order:'رتّب حسب المطلوب', pick:'استخرج من الآية', multi:'اختر كل ما ينطبق', sort:'صنّف الكلمات', vmcq:'اختر إجابة واحدة', hunt:'صيد الأحكام', img:'سؤال على صورة', riddle:'من أنا؟' };
+const KIND = { imgpick:'اختر الرسمة', dglow:'ما اسم الجزء المضيء؟', dplace:'انقل الاسم إلى مكانه', fill:'أكمل الفراغ', stmt:'ضع إشارة ✓ أو ✗', open:'أجب ثم اكشف الإجابة', mcq:'اختر إجابة واحدة', tf:'صح أم خطأ؟', match:'صِل كل سؤال بجوابه', order:'رتّب حسب المطلوب', pick:'استخرج من الآية', multi:'اختر كل ما ينطبق', sort:'صنّف الكلمات', vmcq:'اختر إجابة واحدة', hunt:'صيد الأحكام', img:'سؤال على صورة', riddle:'من أنا؟' };
 const DL = { 1:'سهل', 2:'متوسط', 3:'صعب' };
 const isOrderQ = q => /الترتيب الصحيح/.test(q.q) && q.a.split('، ').length >= 4;
 const shortQ = q => q.a.length <= 34 && q.q.length <= 95 && !isOrderQ(q);
@@ -92,12 +95,30 @@ function toSpecial(s){
     const text = s.d === 1 ? r.mk + '. ' + who : s.d === 2 ? r.sf.replace(/^./, c => c) + '. ' + who : r.mk + '، و' + r.sf.replace(/،\s*(وأخرج|وأنا)[^،]*$/, '') + '. ' + who;
     return { ...b, type:'riddle', d:s.d, f:im.f, showImg: s.d !== 3, q:text, opts:shuffle([im.lab, ...r.w]), ans:im.lab, e:im.lab + ': ' + r.mk.replace(/^(أخرج|نخرج|نحن حرفان نخرج)\s*/, 'يخرج ') + '. ' + r.sf.replace(/صفاتي|صفاتنا/, 'صفاته') + '.' };
   }
+  if(s.t === 'dg' && window.RZ_DIAG){
+    const D = RZ_DIAG[s.dg], names = Object.keys(D.parts);
+    if(s.m === 'glow'){ const wr = shuffle(names.filter(n => n !== s.part)).slice(0, 3);
+      return { ...b, type:'dglow', d:s.d || 2, dg:s.dg, part:s.part, q:'ما اسم الجزء المضيء في رسمة ' + D.title + '؟', opts:shuffle([s.part, ...wr]), ans:s.part, e:s.e || '' }; }
+    if(s.m === 'count'){ const n = D.parts[s.part].n, wr = shuffle([2, 4, 6, 8, 12, 16].filter(x => x !== n)).slice(0, 3);
+      return { ...b, type:'dglow', d:s.d || 2, dg:s.dg, part:s.part, q:'كم عدد الأسنان المضيئة في الفم كله (العليا والسفلى)؟', opts:shuffle([n, ...wr].map(x => RZ.AR(x))), ans:RZ.AR(n), e:'هذه ' + s.part + '، وعددها ' + RZ.AR(n) + '.' }; }
+    return { ...b, type:'dplace', d:s.d || 3, dg:s.dg, parts:s.parts, q:'انقل كل اسم إلى مكانه في رسمة ' + D.title, ans:s.parts.join('، '), e:s.e || '' };
+  }
   if(s.t === 'img'){
     const im = IMGS[s.i];
     if(s.m === 'letter'){
       const seen = new Set([im.g]); const wr = [];
       for(const o of shuffle(IMGS)){ if(seen.has(o.g) || near(o.g, im.g)) continue; seen.add(o.g); wr.push(o.lab); if(wr.length === 3) break; }
-      return { ...b, type:'img', d:2, f:im.f, q:'أيّ الحروف يخرج من المخرج المبيّن في الصورة؟', opts:shuffle([im.lab, ...wr]), ans:im.lab, e:im.lab + ': ' + MAKH[im.g] + '.' };
+      return { ...b, type:'img', d:2, f:im.f, q:/ و/.test(im.lab) ? 'من نحن؟' : 'من أنا؟', opts:shuffle([im.lab, ...wr]), ans:im.lab, e:im.lab + ': ' + MAKH[im.g] + '.' };
+    }
+    if(s.m === 'both' && LAQAB[im.g]){ // makhraj and laqab together, from the drawing
+      const pair = g => MAKH[g] + ' · ' + LAQAB[g]; const seen = new Set([LAQAB[im.g]]), wr = [];
+      for(const g of shuffle(Object.keys(LAQAB))){ if(near(g, im.g) || seen.has(LAQAB[g])) continue; seen.add(LAQAB[g]); wr.push(pair(g)); if(wr.length === 3) break; }
+      return { ...b, type:'img', d:3, f:im.f, q:'ما مخرج الحرف في الصورة، وما لقبه؟', opts:shuffle([pair(im.g), ...wr]), ans:pair(im.g), e:im.lab + ': ' + MAKH[im.g] + '، ولقبه: ' + LAQAB[im.g] + '.' };
+    }
+    if(s.m === 'rev'){ // which drawing is the letter's? four drawings, never two from one makhraj
+      const seen = new Set([im.g]); const wr = [];
+      for(const o of shuffle(IMGS)){ if(seen.has(o.g) || near(o.g, im.g)) continue; seen.add(o.g); wr.push(o.f); if(wr.length === 3) break; }
+      return { ...b, type:'imgpick', d:2, q:'أيّ رسمة هي رسمة ' + im.lab + '؟', opts:shuffle([im.f, ...wr]), ans:im.f, ansT:im.lab, e:im.lab + ': ' + MAKH[im.g] + '.' };
     }
     const wr = shuffle(Object.keys(MAKH).filter(g => !near(g, im.g))).slice(0, 3).map(g => MAKH[g]);
     return { ...b, type:'img', d:3, f:im.f, q:'ما مخرج الحرف المبيّن في الصورة؟', opts:shuffle([MAKH[im.g], ...wr]), ans:MAKH[im.g], e:'الحرف في الصورة: ' + im.lab + '.' };
@@ -129,8 +150,7 @@ function build(pool, spec){ // easy → hard, mixed types
   const groups = [], buckets = {}, seenA = new Set();
   for(const q of sh){ if(seenA.has(q.a)) continue; const k = q.ch + '|' + akind(q.a); (buckets[k] = buckets[k] || []).push(q); seenA.add(q.a);
     if(buckets[k].length === 4){ groups.push(buckets[k]); buckets[k] = []; } if(groups.length === 2) break; }
-  if(groups[0] && Q.length > 3) Q[3] = toMatch(groups[0]);
-  if(groups[1] && !hasSp && Q.length > 9) Q[9] = toMatch(groups[1]);
+  // auto «صِل كل سؤال بجوابه» from unrelated questions removed (batch 5): only the hand-made matching sets (one kind of pair each) remain
   const ord = shuffle(pool.filter(isOrderQ));
   if(ord.length && RAND() < .7 && Q.length > 8) Q[8] = toOrder(ord[0]);
   const rec = shuffle(pool.filter(q => /^(ما تعريف|ما معنى|لماذا)/.test(q.q) && !used.has(q) && q.a.length > 12));
@@ -165,7 +185,7 @@ function byLevel(pool, lvl){
 }
 function specByLevel(spec, lvl){
   if(!lvl || lvl === 'mix') return spec;
-  if(lvl === '1') return spec.filter(s => specD(s) <= 2 && ['fill', 'stmt', 'sort', 'match', 'img', 'riddle'].includes(s.t));
+  if(lvl === '1') return spec.filter(s => specD(s) <= 2 && ['fill', 'stmt', 'sort', 'match', 'img', 'riddle', 'dg'].includes(s.t));
   if(lvl === '2') return spec.filter(s => specD(s) <= 2);
   return spec.filter(s => specD(s) >= 2);
 }
@@ -197,7 +217,7 @@ const psave = () => ls.set('rz-lib-pref', PREF);
 // mastery: last 10 results per lesson
 const MAS = ls.get('rz-mastery', {});
 function masRecord(les, ok){ if(!les) return; const a = MAS[les] || (MAS[les] = []); a.push(ok ? 1 : 0); if(a.length > 10) a.shift(); ls.set('rz-mastery', MAS); }
-function masState(les){ const a = MAS[les]; if(!a || !a.length) return { s:'none' }; const p = a.reduce((x, y) => x + y, 0) / a.length; return { s: a.length >= 4 && p >= .8 ? 'good' : 'review', p, n:a.length }; }
+function masState(les){ const a = MAS[les]; if(!a || !a.length) return { s:'none' }; const p = a.reduce((x, y) => x + y, 0) / a.length; return { s: p >= .8 ? 'good' : p >= .5 ? 'mid' : 'review', p, n:a.length, few:a.length < 4 }; }
 // mistakes notebook (spaced review)
 const DAY = 864e5;
 const nbKey = q => (q.src || '') + '|' + q.type + '|' + (q.type === 'tf' ? q.prop : '');
@@ -218,7 +238,14 @@ function nbRight(q){ // answered right while reviewing
   e.due = Date.now() + [3, 7, 14][Math.min(e.lapses - 1, 2)] * DAY; nbSave(m); return 'later';
 }
 function nbDue(){ const now = Date.now(); return Object.entries(nbAll()).filter(([, e]) => e.due <= now).sort((a, b) => a[1].due - b[1].due); }
-function revive(k, e){ const q = JSON.parse(JSON.stringify(e.q)); q.nb = k; if(q.opts && q.type !== 'tf') q.opts = shuffle(q.opts); if(q.type === 'match') q.pairs = shuffle(q.pairs); if(q.type === 'sort') q.it = shuffle(q.it); return q; }
+// notebook entries saved by older versions: drop questions that were removed or hidden, refresh special questions from today's data
+(function nbClean(){ const m = nbAll(); let ch = false;
+  Object.keys(m).forEach(k => { const src = m[k] && m[k].q && m[k].q.src || '';
+    if(/^m:/.test(src) || (/^s:/.test(src) && (!SPEC_BY_ID[src] || HIDDEN_SRC.has(SPEC_BY_ID[src].src))) || /تحفة الأطفال/.test(JSON.stringify(m[k].q))){ delete m[k]; ch = true; } });
+  if(ch) nbSave(m);
+  try{ const r = localStorage.getItem('rz-resume'); if(r && (/تحفة الأطفال/.test(r) || /"src":"m:/.test(r))) localStorage.removeItem('rz-resume'); }catch(e){} })();
+function revive(k, e){ const fresh = /^s:/.test(e.q.src || '') && SPEC_BY_ID[e.q.src] ? toSpecial(SPEC_BY_ID[e.q.src]) : null;
+  const q = fresh && fresh.type === e.q.type ? fresh : JSON.parse(JSON.stringify(e.q)); q.nb = k; if(q.opts && q.type !== 'tf') q.opts = shuffle(q.opts); if(q.type === 'match') q.pairs = shuffle(q.pairs); if(q.type === 'sort') q.it = shuffle(q.it); return q; }
 
 /* «اختبر استعدادك للامتحان»: a full level exam out of 100, built like the real level exams.
    Q1 صح أم خطأ (20) · Q2 اختر (20) · Q3 عرّف (10, self-marked) · Q4 أجب (20, self-marked) · Q5 تطبيقي (30).
@@ -237,37 +264,67 @@ function examUI(arg){
     el('span', { class:'rz-ic', html:icon('resume') }), el('span', { class:'grow' }, el('b', {}, 'أكمل امتحانك'), el('span', { class:'rz-meta' }, EXAM.levels[saved.lv].name))));
   Object.entries(EXAM.levels).forEach(([k, L]) => {
     app.append(el('button', { type:'button', class:'rz-tile c-' + ['green', 'ocean', 'sand'][k - 1], style:'min-height:0;text-align:start;width:100%', on:{ click:() => { ls.set(EX_KEY, null); go('#/exam/' + k); } } },
-      el('span', { html:icon('timer') }), el('b', {}, L.name), el('span', { class:'rz-meta' }, L.topics),
+      el('span', { html:icon('timer') }), el('b', {}, L.name), el('span', { class:'rz-meta' }, L.topics + (k > 1 ? ' · ويشمل مادة ' + (k == 2 ? 'المستوى الأول' : 'المستويين الأول والثاني') : '')),
       el('span', { class:'rz-meta' }, best[k] != null ? 'أفضل علامة: ' + exAR(best[k]) + ' من ١٠٠' : 'نحو ٤٥ دقيقة')));
   });
   app.append(el('div', { class:'rz-note' }, el('span', {}, 'يتغيّر الامتحان في كل مرة. ورقة الحفظ («اكتب من … إلى …») تجدها في مساعد الحفظ، تبويب «التسميع الكتابي».')));
 }
 
 /* ---------- build ---------- */
-function bankMcq(lv){ // extra 4-option items from the level's chapters
-  const L = LEVELS.find(x => String(x.n) === String(lv)); if(!L) return [];
-  return L.ids.flatMap(id => BANK[id].questions).filter(q => q.w && q.w.length >= 3 && !q.big && q.q.length < 140)
+function bankMcq(lv){ // extra 4-option items from the chapters of this level and every level before it (exams are cumulative)
+  return LEVELS.filter(x => +x.n <= +lv && +x.n <= 3).flatMap(x => x.ids).flatMap(id => BANK[id].questions).filter(q => q.w && q.w.length >= 3 && !q.big && q.q.length < 140 && q.src !== 'tuhfa')
     .map(q => [q.q, [q.a, ...q.w.slice(0, 3)], 0, q.e || '']);
+}
+/* cumulative pick: about half from the level itself, the rest from the levels before it */
+function cumPick(lv, part, n){
+  const own = shuffle((EXAM.levels[lv][part] || []).slice()), prev = shuffle(Object.keys(EXAM.levels).filter(k => +k < +lv).flatMap(k => EXAM.levels[k][part] || []));
+  if(!prev.length) return own.slice(0, n);
+  const a = Math.min(own.length, Math.ceil(n / 2)); return shuffle(own.slice(0, a).concat(prev.slice(0, n - a))).concat(own.slice(a)).slice(0, n);
 }
 function examBuild(lv){
   const L = EXAM.levels[lv], pick = (a, n) => shuffle(a).slice(0, n);
-  const mcq = pick(L.mcq, 7).concat(pick(bankMcq(lv), 10 - Math.min(7, L.mcq.length))).slice(0, 10)
+  const mcq = cumPick(lv, 'mcq', 7).concat(pick(bankMcq(lv), 3)).slice(0, 10)
     .map(([q, o, a, e]) => { const ord = o.some(t => / \+ /.test(t)) ? o.map((_, i) => i) : shuffle([0, 1, 2, 3].slice(0, o.length)); // keep combo options ("أ + ب", "جميع…") last
       const fixed = o.map((t, i) => /^[أب] \+ |^[بج] \+ |جميع ما|لا شيء مما/.test(t)); const free = ord.filter(i => !fixed[i]), keep = o.map((_, i) => i).filter(i => fixed[i]);
       const order = free.concat(keep); return { q, o: order.map(i => o[i]), a: order.indexOf(a), e }; });
   const P = { lv, at: Date.now(), done:false,
-    tf: pick(L.tf, 10).map(([s, ok, fix]) => ({ s, ok, fix })),
+    tf: cumPick(lv, 'tf', 10).map(([s, ok, fix]) => ({ s, ok, fix })),
     mcq,
-    defs: pick(L.defs, 5).map(([t, m]) => ({ t, m })),
-    open: pick(L.open, 4).map(([q, m]) => ({ q, m })),
+    defs: cumPick(lv, 'defs', 5).map(([t, m, k]) => ({ t, m, k })),
+    open: cumPick(lv, 'open', 4).map(([q, m, k]) => ({ q, m, k })),
     prac: [] };
   if(lv === '1'){ const x = pick(L.ext, 1)[0]; P.prac.push({ k:'ext', x, r: pick(x.r, 10), m:30 }); }
-  else if(lv === '2'){ const x = pick(L.ext, 1)[0]; P.prac.push({ k:'ext', x, r: pick(x.r, 5), m:15 });
+  else if(lv === '2'){ const x = pick(L.ext.concat(EXAM.levels[1].ext), 1)[0]; P.prac.push({ k:'ext', x, r: pick(x.r, 5), m:15 });
     const madd = L.ana.filter(a => a.f[0][0] === 'نوع المد'), ra = L.ana.filter(a => a.f[0][0] !== 'نوع المد');
     P.prac.push({ k:'ana', t:'بيّن نوع المد وحكمه ومقداره', items: pick(madd, 3), m:9 }, { k:'ana', t:'ما حكم الراء؟ مع التعليل', items: pick(ra, 3), m:6 }); }
-  else P.prac.push({ k:'ana', t:'بيّن نوع اللام وحكمها', items: pick(L.ana, 6), m:30 });
+  else { const x = pick(EXAM.levels[2].ext.concat(EXAM.levels[1].ext), 1)[0];
+    P.prac.push({ k:'ana', t:'بيّن نوع اللام وحكمها', items: pick(L.ana, 4), m:16 }, { k:'ext', x, r: pick(x.r, 7), m:14 }); }
   P.ans = { tf:{}, mcq:{}, self:{}, ext:{}, ana:{} };
   return P;
+}
+
+
+/* ---------- lenient keyword check for written answers (offline, on the device) ----------
+   Both texts are normalised: no diacritics/tatweel, every hamza form and bare alif the same, ى=ي, ة=ه, no «ال», no punctuation.
+   Keywords come from the model answer; a word counts if a light stem of it appears in the learner's answer. */
+const KW_STOP = new Set('في من علي عن الي ان او ثم مع ما لا هو هي هذا هذه ذلك التي الذي اذا كان كل بين عند غير دون قد له لها به بها فيه فيها اي وهو وهي ويكون يكون تكون مثل نحو كما بعد قبل حتي لان سواء اما سبب بسبب واحد واحده ليس بل غالبا دايما ايضا'.split(' '));
+const kwNorm = t => String(t || '').replace(/﴿[^﴾]*﴾/g, ' ').replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g, '').replace(/[أإآٱءؤئ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[^ء-ي0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+// light stem → consonant skeleton (no ال, no و/ف/ب/ل prefix, no common suffixes, no weak letters ا و ي ه)
+const kwStem = w => { w = w.replace(/^(و|ف|ب|ل|ك)(?=ال)/, '').replace(/^ال/, ''); if(w.length > 4) w = w.replace(/^(و|ف|ب|ل)/, '');
+  if(w.length > 4) w = w.replace(/(هما|ات|ان|ين|ون|يه|ها|هم)$/, ''); const k = w.replace(/^[يتنا](?=...)/, '').replace(/[اويه]/g, ''); return k.length >= 2 ? k : w; };
+const kwWords = t => kwNorm(t).split(' ').filter(w => w.length >= 3 && !KW_STOP.has(w) && !KW_STOP.has(w.replace(/^ال/, '')));
+const kwHit = (st, have) => have.some(h => h === st || (Math.min(h.length, st.length) >= 3 && (h.startsWith(st) || st.startsWith(h))));
+function kwPoints(model){ // one point per «·» part; examples after «مثل» dropped
+  return String(model).split(/\s*·\s*/).map(pt => { const core = pt.replace(/[،,]?\s*(مثل|كـ|نحو)\s.*$/, ''); const seen = new Set(), ks = [];
+    core.replace(/﴿[^﴾]*﴾/g, ' ').split(/\s+/).forEach(o => { const n = kwNorm(o); if(n.length < 3 || n.includes(' ') || KW_STOP.has(n) || KW_STOP.has(n.replace(/^ال/, ''))) return; const st = kwStem(n); if(!seen.has(st)){ seen.add(st); ks.push({ w:o.replace(/[^\u0621-\u0652\u0670ـ]/g, ''), st }); } }); return ks.slice(0, 6); }).filter(p => p.length);
+}
+function kwGrade(answer, model, max){
+  const have = kwWords(answer).map(kwStem), pts = kwPoints(model);
+  const found = [], miss = []; let got = 0;
+  pts.forEach(p => { const f = p.filter(k => kwHit(k.st, have)); f.forEach(k => found.push(k.w)); p.filter(k => !kwHit(k.st, have)).forEach(k => miss.push(k.w));
+    got += Math.min(1, f.length / Math.max(1, Math.ceil(p.length * (pts.length > 1 ? .4 : .5)))); });
+  const r = pts.length ? got / pts.length : 0, mark = r >= .75 ? max : r >= .4 ? max / 2 : 0;
+  return { r, mark, found, miss };
 }
 
 /* ---------- paper ---------- */
@@ -279,10 +336,15 @@ function examPaper(lv){
   const total = el('b', { class:'ex-total' });
   app.append(topBar('امتحان ' + L.name, '#/exam'), el('div', { class:'rz-between ex-head' }, el('span', { class:'rz-meta' }, L.topics), total));
   const sec = (n, title, marks) => { const s = el('section', { class:'rz-card ex-sec' }, el('div', { class:'rz-between' }, el('b', {}, `السؤال ${n}: ${title}`), el('span', { class:'rz-badge plain' }, exAR(marks) + ' علامة'))); app.append(s); return s; };
-  const selfBtns = (key, max) => { const row = el('div', { class:'ex-self' }, el('span', { class:'rz-meta' }, 'قارن جوابك ثم ضع علامتك:'));
+  const selfBtns = (key, max) => { const row = el('div', { class:'ex-self' }, el('span', { class:'rz-meta' }, 'علامتك:'));
     [[max, 'كاملة'], [max / 2, 'نصفها'], [0, 'لم أُصب']].forEach(([v, t]) => row.append(el('button', { type:'button', class:'rz-chip', 'aria-pressed': String(A.self[key] === v), on:{ click:() => { A.self[key] = v; save(); examPaper(lv); } } }, t)));
     return row; };
   const model = m => el('div', { class:'ex-model' }, el('b', {}, 'الجواب النموذجي: '), m);
+  const auto = (key, ans, m, max) => { if(!ans || !ans.trim()){ if(A.self[key] == null){ A.self[key] = 0; save(); } return el('div', { class:'ex-kw' }, 'لم تكتب جوابًا.'); }
+    const g = kwGrade(ans, m, max); if(A.self[key] == null){ A.self[key] = g.mark; save(); }
+    return el('div', { class:'ex-kw' }, el('b', {}, 'التصحيح التلقائي: ' + exAR(g.mark) + ' من ' + exAR(max)),
+      g.found.length ? el('span', {}, '✓ وجدنا: ' + [...new Set(g.found)].join('، ')) : '', g.miss.length ? el('span', {}, '✗ لم نجد: ' + [...new Set(g.miss)].join('، ')) : '',
+      el('span', { class:'rz-meta' }, 'إن كتبت المعنى بكلمات أخرى فغيّر علامتك من الأزرار.')); };
   let score = 0, pending = 0;
 
   // Q1 true/false
@@ -311,7 +373,7 @@ function examPaper(lv){
     s3.append(el('div', { class:'ex-q' }, el('b', {}, RZ.AR(i + 1) + '. ' + d.t),
       graded ? '' : el('textarea', { class:'ex-txt', rows:2, placeholder:'اكتب التعريف…', on:{ input:e => { A['t' + key] = e.target.value; save(); } } }, A['t' + key] || ''),
       graded && A['t' + key] ? el('div', { class:'ex-mine' }, 'جوابك: ' + A['t' + key]) : '',
-      graded ? model(d.m) : '', graded ? selfBtns(key, 2) : ''));
+      graded ? auto(key, A['t' + key], d.m, 2) : '', graded ? model(d.m) : '', graded ? selfBtns(key, 2) : ''));
     if(graded){ if(A.self[key] != null) score += A.self[key]; else pending++; } });
   // Q4 open
   const s4 = sec('الرابع', 'أجب عما يأتي', 20);
@@ -319,14 +381,14 @@ function examPaper(lv){
     s4.append(el('div', { class:'ex-q' }, el('b', {}, RZ.AR(i + 1) + '. ' + d.q),
       graded ? '' : el('textarea', { class:'ex-txt', rows:3, placeholder:'اكتب جوابك…', on:{ input:e => { A['t' + key] = e.target.value; save(); } } }, A['t' + key] || ''),
       graded && A['t' + key] ? el('div', { class:'ex-mine' }, 'جوابك: ' + A['t' + key]) : '',
-      graded ? model(d.m) : '', graded ? selfBtns(key, 5) : ''));
+      graded ? auto(key, A['t' + key], d.m, 5) : '', graded ? model(d.m) : '', graded ? selfBtns(key, 5) : ''));
     if(graded){ if(A.self[key] != null) score += A.self[key]; else pending++; } });
   // Q5 practical
   const s5 = sec('الخامس', 'سؤال تطبيقي', 30);
   P.prac.forEach((p, pi) => {
     if(p.k === 'ext'){
       const per = p.m / p.r.length, mine = A.ext[pi] || (A.ext[pi] = {}); let act = A['act' + pi] ?? 0;
-      s5.append(el('p', { style:'margin:0' }, `استخرج من الآيات الكريمة (${p.x.ref}) مثالًا واحدًا على كل حكم. اضغط الحكم ثم اضغط الكلمة.` + (lv === '2' ? ' (المد العارض عند الوقف على رؤوس الآيات.)' : ''), P.prac.length > 1 ? el('span', { class:'rz-badge plain', style:'margin-inline-start:6px' }, exAR(p.m)) : ''));
+      s5.append(el('p', { style:'margin:0' }, `استخرج من الآيات الكريمة (${p.x.ref}) مثالًا واحدًا على كل حكم. اضغط الحكم ثم اضغط الكلمة.` + (lv !== '1' ? ' (المد العارض عند الوقف على رؤوس الآيات.)' : ''), P.prac.length > 1 ? el('span', { class:'rz-badge plain', style:'margin-inline-start:6px' }, exAR(p.m)) : ''));
       const pass = el('div', { class:'ex-pass' });
       p.x.w.forEach((w, wi) => { const used = Object.entries(mine).filter(([, x]) => x === wi).map(([r]) => +r);
         pass.append(el('button', { type:'button', class:'ex-w' + (used.length ? ' on' : ''), disabled: graded, on:{ click:() => { mine[act] = wi; A['act' + pi] = Math.min(act + 1, p.r.length - 1); save(); examPaper(lv); } } },
@@ -377,7 +439,7 @@ function examPaper(lv){
 
 /* ---------- «من أنا؟» from letter traits, and the tajweed wheel ---------- */
 const TRAIT_MK = { 'ء':'أقصى الحلق','ه':'أقصى الحلق','ع':'وسط الحلق','ح':'وسط الحلق','غ':'أدنى الحلق','خ':'أدنى الحلق','ق':'أقصى اللسان','ك':'أقصى اللسان','ج':'وسط اللسان','ش':'وسط اللسان','ي':'وسط اللسان',
-  'ض':'حافة اللسان','ل':'حافة اللسان','ن':'طرف اللسان','ر':'طرف اللسان','ط':'طرف اللسان','د':'طرف اللسان','ت':'طرف اللسان','ظ':'طرف اللسان','ذ':'طرف اللسان','ث':'طرف اللسان','ص':'طرف اللسان','ز':'طرف اللسان','س':'طرف اللسان',
+  'ض':'إحدى حافتي اللسان مع الأضراس العليا','ل':'أدنى حافة اللسان إلى منتهى طرفه','ن':'طرف اللسان','ر':'طرف اللسان','ط':'طرف اللسان','د':'طرف اللسان','ت':'طرف اللسان','ظ':'طرف اللسان','ذ':'طرف اللسان','ث':'طرف اللسان','ص':'طرف اللسان','ز':'طرف اللسان','س':'طرف اللسان',
   'ف':'الشفتين','و':'الشفتين','ب':'الشفتين','م':'الشفتين' };
 const TRAIT_NAME = { 'ء':'الهمزة','ه':'الهاء','ع':'العين','ح':'الحاء','غ':'الغين','خ':'الخاء','ق':'القاف','ك':'الكاف','ج':'الجيم','ش':'الشين','ي':'الياء','ض':'الضاد','ل':'اللام','ن':'النون','ر':'الراء','ط':'الطاء','د':'الدال','ت':'التاء','ظ':'الظاء','ذ':'الذال','ث':'الثاء','ص':'الصاد','ز':'الزاي','س':'السين','ف':'الفاء','و':'الواو','ب':'الباء','م':'الميم' };
 function letterTraits(c){
@@ -394,39 +456,67 @@ function letterTraits(c){
 function traitRiddles(){
   const L = Object.keys(TRAIT_MK), T = {}; L.forEach(c => T[c] = letterTraits(c));
   const dist = (a, b) => T[a].filter(x => !T[b].includes(x)).length + T[b].filter(x => !T[a].includes(x)).length + (TRAIT_MK[a] === TRAIT_MK[b] ? 0 : 1);
-  return L.map(c => { const w = L.filter(x => x !== c).sort((x, y) => dist(c, x) - dist(c, y)).slice(0, 3).map(x => TRAIT_NAME[x]);
+  const sup = (a, b) => T[a].every(x => T[b].includes(x)); // b has every trait of a → b also fits the riddle of a
+  return L.map(c => { const w = L.filter(x => x !== c && !sup(c, x)).sort((x, y) => dist(c, x) - dist(c, y)).slice(0, 3).map(x => TRAIT_NAME[x]);
     return { ch:'l2c2', les:'l2c2:0', id:'tr:' + c, type:'mcq', q:'من أنا؟ أخرج من ' + TRAIT_MK[c] + '، وصفاتي: ' + T[c].join('، ') + '.', opts:shuffle([TRAIT_NAME[c], ...w]), ans:TRAIT_NAME[c],
       e:TRAIT_NAME[c] + ': ' + T[c].join('، ') + '. وأقرب الحروف إليه في الصفات: ' + w.join('، ') + '.', d:2 }; });
 }
+/* what the learner has reached: «وصلت مع أستاذي إلى» (settings / tour), else lessons already practised, else level 1 */
+const ALL_IDS = LEVELS.flatMap(x => x.ids);
+function reachedIds(){
+  const sel = (ls.get('tajweed-library-custom-v1', {}).sel || []);
+  let have = new Set(sel.map(k => k.split(':')[0]));
+  if(!have.size) have = new Set(Object.keys(MAS).map(k => k.split(':')[0]));
+  if(!have.size) return LEVELS[0].ids.slice();
+  let last = -1; ALL_IDS.forEach((id, i) => { if(have.has(id)) last = i; });
+  return ALL_IDS.slice(0, last + 1);
+}
+const reached = id => reachedIds().includes(id);
+const WH_NAME = { l1c1:'مدخل إلى التجويد', l1c2:'النون الساكنة والتنوين', l1c3:'الميم الساكنة والغنة', l1c4:'المد', l2c1:'المخارج', l2c2:'الصفات', l2c3:'التفخيم والترقيق', l2c4:'الإظهار والإدغام', l2c5:'اللامات الساكنة', l3c1:'البدء بالكلمة', l3c2:'الوقف والابتداء', l3c3:'المقطوع والموصول', l3c4:'هاء وتاء التأنيث', l3c5:'الإثبات والحذف' };
+function wLines(t){ if(t.length <= 11) return [t]; const w = t.split(' '); let a = '', b = ''; w.forEach(x => { if(!b && (a + ' ' + x).trim().length <= 12) a = (a + ' ' + x).trim(); else b = (b + ' ' + x).trim(); }); return b ? [a, b] : [a]; }
 function wheel(){
   app.innerHTML = '';
-  const lv = String(RZ.level ? (ls.get('rz-wheel-lv', '') || '') : '');
+  const R0 = reachedIds();
+  const myLv = String((LEVELS.find(x => x.ids.includes(R0[R0.length - 1])) || LEVELS[0]).n);
+  const saved = ls.get('rz-wheel-lv', null);
+  const lvs = LEVELS.filter(x => x.ids.some(id => R0.includes(id)));
+  const lv = saved === '' || lvs.some(x => String(x.n) === saved) ? saved : myLv;
   const L = LEVELS.find(x => String(x.n) === lv) || null;
-  const ids = L ? L.ids : LEVELS.flatMap(x => x.ids);
-  const segs = ids.map(id => ({ id, t:short(BANK[id].title) })).concat([{ id:'who', t:'من أنا؟' }]);
+  const ids = (L ? L.ids : ALL_IDS).filter(id => R0.includes(id));
+  const segs = ids.map(id => ({ id, t:WH_NAME[id] || short(BANK[id].title) }));
+  if(ids.includes('l2c1')) segs.push({ id:'g-imara', t:'لعبة: أرجع السكان', go:'../games/sukkan.html' });
+  if(ids.includes('l2c2')) segs.push({ id:'who', t:'من أنا؟' }, { id:'g-sifat', t:'لعبة: اوصفني', go:'../games/sifni.html' });
   const N = segs.length, R = 150, cx = 160, cy = 160, cols = ['#2F5D50', '#6E2E3A', '#C9AE8E', '#2D5B73', '#8A9A7B'];
-  let svg = `<svg viewBox="0 0 320 320" class="wh-svg" aria-hidden="true"><g id="whg">`;
+  let turn = ls.get('rz-wheel-rot', 0), busy = false;
+  let svg = `<svg viewBox="0 0 320 320" class="wh-svg" role="button" tabindex="0" aria-label="أدِر الدولاب"><g id="whg">`;
   segs.forEach((g, i) => { const a0 = 2 * Math.PI * i / N - Math.PI / 2, a1 = 2 * Math.PI * (i + 1) / N - Math.PI / 2, am = (a0 + a1) / 2;
     const p = a => [cx + R * Math.cos(a), cy + R * Math.sin(a)]; const [x0, y0] = p(a0), [x1, y1] = p(a1);
-    svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${R},${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${g.id === 'who' ? '#B8862E' : cols[i % cols.length]}" stroke="#F4EDE0" stroke-width="2"/>`;
-    const tx = cx + R * .62 * Math.cos(am), ty = cy + R * .62 * Math.sin(am), deg = am * 180 / Math.PI + (Math.cos(am) < 0 ? 180 : 0);
-    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${deg.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-size="${N > 10 ? 9 : 11}" font-weight="700" fill="${i % cols.length === 2 && g.id !== 'who' ? '#2E2214' : '#FFF'}">${g.t.length > 16 ? g.t.slice(0, 15) + '…' : g.t}</text>`; });
-  svg += `</g><circle cx="${cx}" cy="${cy}" r="22" fill="#F4EDE0" stroke="#2F5D50" stroke-width="3"/><path d="M${cx - 12},6 L${cx + 12},6 L${cx},30 Z" fill="#B4443A"/></svg>`;
+    const fill = g.id === 'who' ? '#B8862E' : g.go ? '#7A4E8C' : cols[i % cols.length];
+    if(N === 1) svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${fill}" stroke="#F4EDE0" stroke-width="2"/>`;
+    else svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${R},${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${fill}" stroke="#F4EDE0" stroke-width="2"/>`;
+    const rr = N <= 4 ? .58 : .64, tx = cx + R * rr * Math.cos(am), ty = cy + R * rr * Math.sin(am), ln = wLines(g.t), fs = N > 10 ? 9 : N > 7 ? 10.5 : 12;
+    const ink = fill === '#C9AE8E' ? '#2E2214' : '#FFF';
+    svg += `<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)})"><g class="wl"><text text-anchor="middle" font-size="${fs}" font-weight="700" fill="${ink}">${ln.map((t, k) => `<tspan x="0" y="${((k - (ln.length - 1) / 2) * fs * 1.15 + fs * .35).toFixed(1)}">${t}</tspan>`).join('')}</text></g></g>`; });
+  svg += `</g><circle cx="${cx}" cy="${cy}" r="30" fill="#F4EDE0" stroke="#2F5D50" stroke-width="3"/><text x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="17" font-weight="800" fill="#2F5D50">أدِر</text><path d="M${cx - 12},4 L${cx + 12},4 L${cx},28 Z" fill="#B4443A"/></svg>`;
   const box = el('div', { class:'wh', html:svg });
-  const res = el('div', { class:'rz-meta', style:'text-align:center;min-height:24px', 'aria-live':'polite' });
-  let turn = ls.get('rz-wheel-rot', 0), busy = false;
-  const spin = el('button', { type:'button', class:'rz-btn pri block', on:{ click:() => {
-    if(busy) return; busy = true; const k = Math.floor(Math.random() * N);
+  const res = el('div', { class:'rz-meta', style:'text-align:center;min-height:22px', 'aria-live':'polite' });
+  const setRot = (deg, anim) => { const g = box.querySelector('#whg'); g.style.transformOrigin = '160px 160px';
+    const tr = anim ? 'transform 3.2s cubic-bezier(.17,.67,.2,1)' : 'none';
+    g.style.transition = tr; g.style.transform = `rotate(${deg}deg)`;
+    box.querySelectorAll('.wl').forEach(w => { w.style.transition = tr; w.style.transform = `rotate(${-deg}deg)`; }); };
+  const go = () => {
+    if(busy || !N) return; busy = true; const k = Math.floor(Math.random() * N);
     const target = 360 * 5 + (360 - (k + .5) * 360 / N); turn = turn - (turn % 360) + target; ls.set('rz-wheel-rot', turn % 360);
-    const g = box.querySelector('#whg'); g.style.transition = 'transform 3.2s cubic-bezier(.17,.67,.2,1)'; g.style.transform = `rotate(${turn}deg)`;
+    setRot(turn, true);
     setTimeout(() => { busy = false; const sg = segs[k]; res.textContent = 'وقف الدولاب على: ' + sg.t;
-      setTimeout(() => { if(sg.id === 'who') start({ id:'who', kind:'wheel', title:'من أنا؟ صفات الحروف', back:'#/wheel', make:() => shuffle(traitRiddles()).slice(0, 5) });
-        else start({ id:'wh:' + sg.id, kind:'wheel', title:'الدولاب · ' + sg.t, back:'#/wheel', make:() => { const p = chapterPool(sg.id); return buildN(p.pool, p.spec, 3, 'mix'); } }); }, 900); }, 3300);
-  } } }, 'أدِر الدولاب');
+      setTimeout(() => { if(sg.go) location.href = sg.go;
+        else if(sg.id === 'who') start({ id:'who', kind:'wheel', title:'من أنا؟ صفات الحروف', back:'#/wheel', make:() => shuffle(traitRiddles()).slice(0, 5) });
+        else start({ id:'wh:' + sg.id, kind:'wheel', title:'الدولاب · ' + sg.t, back:'#/wheel', make:() => { const p = chapterPool(sg.id); return buildN(p.pool, p.spec, 3, 'mix'); } }); }, 900); }, 3300); };
+  box.addEventListener('click', go); box.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
   const lvRow = el('div', { class:'rz-wrap', role:'group', 'aria-label':'المستوى' });
-  [['', 'الكل'], ...LEVELS.map(x => [String(x.n), x.name.replace('المستوى ', '')])].forEach(([k, t]) => lvRow.append(el('button', { type:'button', class:'rz-chip', 'aria-pressed':String(k === lv), on:{ click:() => { ls.set('rz-wheel-lv', k); wheel(); } } }, t)));
-  app.append(topBar('دولاب التجويد', '../'), el('p', { class:'rz-meta', style:'margin:0' }, 'أدِر الدولاب، فيختار لك بابًا وأسئلة سريعة منه. وفيه خانة «من أنا؟» لحروف تعرفها من صفاتها.'), lvRow, box, res, spin);
-  requestAnimationFrame(() => { const g = box.querySelector('#whg'); g.style.transformOrigin = '160px 160px'; g.style.transform = `rotate(${turn % 360}deg)`; });
+  [['', 'كل ما وصلت إليه'], ...lvs.map(x => [String(x.n), x.name.replace('المستوى ', '')])].forEach(([k, t]) => lvRow.append(el('button', { type:'button', class:'rz-chip', 'aria-pressed':String(k === lv), on:{ click:() => { ls.set('rz-wheel-lv', k); wheel(); } } }, t)));
+  app.append(topBar('دولاب التجويد', '../'), el('p', { class:'rz-meta', style:'margin:0' }, 'اضغط على الدولاب ليختار لك بابًا من الأبواب التي وصلت إليها.'), lvRow, box, res);
+  requestAnimationFrame(() => setRot(turn % 360, false));
 }
 
 /* ---------- routing ---------- */
@@ -775,7 +865,7 @@ function paperHTML(cfg, title){
   const body = qs.map((q, i) => { const c = ctxText(q);
     return `<div class="pq"><p><b>${AR(i + 1)}.</b> ${esc(q.q)}</p>${c ? `<p class="v">${esc(c)}</p>` : ''}<div class="po">${q.opts.map((o, k) => `<p>${L[k]}) ${esc(o)}</p>`).join('')}</div></div>`; }).join('');
   const key = qs.map((q, i) => `<p>${AR(i + 1)}: ${L[q.opts.indexOf(q.ans)]}) ${esc(q.ans)}${q.e ? ' <small>— ' + esc(q.e) + '</small>' : ''}</p>`).join('');
-  return { qs, html:`<h1>${esc(title)}</h1><p class="meta">الاسم: ........................ &nbsp; التاريخ: ............ &nbsp; العلامة: ...... من ${AR(qs.length)}</p>${body}<h2 class="brk">مفتاح الإجابات</h2><div class="key">${key}</div>` };
+  return { qs, html:`<h1>${esc(title)}</h1><p class="meta">الاسم: ........................ &nbsp; التاريخ: ............ &nbsp; العلامة: ...... من ${AR(qs.length)}</p>${body}` };
 }
 const PAPER_CSS = 'body{font-family:"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl;font-size:13pt;line-height:1.7}h1{font-size:18pt;margin:0 0 4pt}.meta{color:#555;border-bottom:1px solid #999;padding-bottom:6pt}.pq{break-inside:avoid;margin:8pt 0}.pq p{margin:2pt 0}.v{font-family:"Amiri Quran","Amiri",serif;font-size:15pt}.po{margin:2pt 0;padding-right:18pt}.po p{margin:1pt 0}.key p{margin:2pt 0}.brk{break-before:page;page-break-before:always;font-size:15pt}';
 function paperPrint(cfg, title){
@@ -839,7 +929,7 @@ function share(){
         el('button', { type:'button', class:'rz-btn', on:{ click:copy } }, 'نسخ الرابط')),
       copied,
       el('a', { class:'rz-link', href:url.slice(url.indexOf('#')) }, 'جرّب الاختبار بنفسك'),
-      el('span', { class:'rz-meta' }, 'نسخة ورقية مع مفتاح الإجابات:'),
+      el('span', { class:'rz-meta' }, 'نسخة ورقية للطلاب (بلا إجابات):'),
       el('div', { class:'rz-seg', style:'grid-template-columns:repeat(2,minmax(0,1fr))' },
         el('button', { type:'button', class:'rz-btn', on:{ click:() => paperPrint(cfg, cfg.name || 'اختبار تجويد') } }, 'اطبع / PDF'),
         el('button', { type:'button', class:'rz-btn', on:{ click:() => paperWord(cfg, cfg.name || 'اختبار تجويد') } }, 'ملف Word')));
@@ -905,22 +995,23 @@ function mistakes(){
 function mastery(){
   app.innerHTML = '';
   app.append(topBar('خريطة إتقاني', '../'),
-    el('div', { class:'legend' }, el('span', {}, el('i', { class:'dot good' }), 'متقن (٨٠٪ فأكثر في آخر محاولاتك)'), el('span', {}, el('i', { class:'dot review' }), 'يحتاج مراجعة'), el('span', {}, el('i', { class:'dot none' }), 'لم تبدأه بعد')),
+    el('div', { class:'legend' }, el('span', {}, el('i', { class:'dot good' }), 'ممتاز (٨٠٪ فأكثر)'), el('span', {}, el('i', { class:'dot mid' }), 'نصف نصف (٥٠–٧٩٪)'), el('span', {}, el('i', { class:'dot review' }), 'يحتاج مراجعة (أقل من ٥٠٪)'), el('span', {}, el('i', { class:'dot none' }), 'لم تبدأه بعد')),
+    el('p', { class:'rz-meta', style:'margin:0;font-size:13px' }, 'النسبة من آخر إجاباتك في الدرس. الإطار المتقطّع: أجبت أقل من ٤ أسئلة، فأجب أكثر للتأكيد.'),
     el('p', { class:'rz-meta', style:'margin:0' }, 'اضغط على أي درس لتبدأ اختبارًا فيه.'));
-  let g = 0, r = 0, z = 0;
+  let g = 0, r = 0, z = 0, md = 0;
   LEVELS.forEach(L => {
     const sec = el('section', { class:'rz-card' }, el('b', {}, L.name + (L.sub ? ' · ' + L.sub : '')));
     L.ids.forEach(id => {
       sec.append(el('span', { class:'rz-meta' }, short(BANK[id].title)));
       const row = el('div', { class:'mas-row' });
       LESSONS[id].ls.forEach((n, li) => { const key = id + ':' + li; const st = masState(key);
-        if(st.s === 'good') g++; else if(st.s === 'review') r++; else z++;
-        row.append(el('a', { class:'mas ' + st.s, href:'#/lesson/' + encodeURIComponent(key) }, el('span', {}, n), st.p != null ? el('small', {}, AR(Math.round(st.p * 100)) + '٪') : '')); });
+        if(st.s === 'good') g++; else if(st.s === 'mid') md++; else if(st.s === 'review') r++; else z++;
+        row.append(el('a', { class:'mas ' + st.s + (st.few ? ' few' : ''), href:'#/lesson/' + encodeURIComponent(key) }, el('span', {}, n), st.p != null ? el('small', {}, AR(Math.round(st.p * 100)) + '٪') : '')); });
       sec.append(row);
     });
     app.append(sec);
   });
-  app.insertBefore(el('div', { class:'rz-wrap' }, el('span', { class:'rz-badge plain' }, 'متقن: ' + AR(g)), el('span', { class:'rz-badge' }, 'للمراجعة: ' + AR(r)), el('span', { class:'rz-badge plain', style:'background:var(--line);color:var(--muted)' }, 'لم يبدأ: ' + AR(z))), app.children[2]);
+  app.insertBefore(el('div', { class:'rz-wrap' }, el('span', { class:'rz-badge mb good' }, 'ممتاز: ' + AR(g)), el('span', { class:'rz-badge mb mid' }, 'نصف نصف: ' + AR(md)), el('span', { class:'rz-badge mb review' }, 'للمراجعة: ' + AR(r)), el('span', { class:'rz-badge mb none' }, 'لم يبدأ: ' + AR(z))), app.children[3]);
 }
 function lessonQuiz(key, push){
   if(!LES_NAME[key]) return home();
@@ -982,6 +1073,13 @@ function verseBox(q, onTap){
   return box;
 }
 // Each renderer draws the question and returns { ready(), check() -> {ok, sel, more?} }.
+function dgSvg(key, o){ // labelled-diagram figure: optional glowing part, optional numbered pins
+  const D = RZ_DIAG[key]; o = o || {}; const [, , W] = D.vb.split(' ').map(Number), k = W / 300;
+  let g = '';
+  if(o.glow){ g = `<g class="dg-glow"${D.clip ? ` clip-path="url(#${D.clip})"` : ''}>${D.parts[o.glow].s}</g>`; if(D.clip && /tongue|edge/.test(key)) g += ''; }
+  const pins = (o.pins || []).map(([x, y], i) => `<g class="pin" role="button" tabindex="0" transform="translate(${x} ${y})"><circle r="${15 * k}"/><text class="pn" y="${5 * k}" font-size="${15 * k}">${RZ.AR(i + 1)}</text><text class="pl" y="${-22 * k}" font-size="${14 * k}"></text></g>`).join('');
+  return el('figure', { class:'dgfig', html:`<svg viewBox="${D.vb}" role="img" aria-label="${D.title}">${D.base}${g}${pins}</svg>` });
+}
 function choiceList(opts, cls){ // single choice, selected until checked
   const box = el('div', { class:'opts' + (cls ? ' ' + cls : '') }); let cur = null;
   const bs = opts.map(o => el('button', { type:'button', class:'opt', 'aria-pressed':'false', on:{ click:() => { if(S.done) return; cur = o; bs.forEach(b => b.setAttribute('aria-pressed', String(b === bt(o)))); S.ui.update(); } } }, el('span', { class:'ot' }, o), el('span', { class:'om' })));
@@ -996,6 +1094,32 @@ const R = {
   img(q, card){
     card.append(el('div', { class:'q' }, q.q), el('figure', { class:'bookimg' }, el('img', { src:'img/' + q.f, alt:'رسم لمقطع الفم والحلق يبيّن موضع خروج حرف', loading:'lazy' })));
     return single(q, card);
+  },
+  imgpick(q, card){
+    card.append(el('div', { class:'q' }, q.q));
+    const box = el('div', { class:'imgpick' }); let cur = null;
+    const bs = q.opts.map(f => el('button', { type:'button', class:'opt ip', 'aria-pressed':'false', on:{ click:() => { if(S.done) return; cur = f; bs.forEach(x => x.setAttribute('aria-pressed', String(x.dataset.f === f))); S.ui.update(); } } },
+      el('img', { src:'img/' + f, alt:'رسمة مخرج', loading:'lazy' }), el('span', { class:'om' })));
+    bs.forEach((x, k) => x.dataset.f = q.opts[k]); box.append(...bs); card.append(box);
+    return { ready: () => cur != null, check(){ bs.forEach(x => { x.disabled = true; if(x.dataset.f === q.ans){ x.classList.add('right'); x.querySelector('.om').innerHTML = icon('check'); } else if(x.dataset.f === cur){ x.classList.add('wrong'); x.querySelector('.om').innerHTML = icon('x'); } }); return { ok: cur === q.ans, sel: cur }; } };
+  },
+  dglow(q, card){ card.append(el('div', { class:'q' }, q.q), dgSvg(q.dg, { glow:q.part })); return single(q, card); },
+  dplace(q, card){
+    card.append(el('div', { class:'q' }, q.q), el('div', { class:'rz-meta' }, 'اضغط الاسم ثم اضغط الدائرة المرقّمة التي في مكانه.'));
+    const D = RZ_DIAG[q.dg], pins = shuffle(q.parts.slice()); // pins numbered in a random order
+    const put = {}; let cur = null;
+    const fig = dgSvg(q.dg, { pins: pins.map(n => D.parts[n].p) }); card.append(fig);
+    const chips = el('div', { class:'dg-chips' }); card.append(chips);
+    const paint = () => { chips.querySelectorAll('button').forEach(b => { const n = b.dataset.n; const at = Object.keys(put).find(k => put[k] === n);
+        b.setAttribute('aria-pressed', String(cur === n)); b.querySelector('small').textContent = at != null ? ' ← ' + RZ.AR(+at + 1) : ''; });
+      fig.querySelectorAll('.pin').forEach((g, i) => { g.classList.toggle('on', put[i] != null); g.querySelector('.pl').textContent = put[i] != null ? put[i] : ''; }); S.ui.update(); };
+    shuffle(q.parts.slice()).forEach(n => chips.append(el('button', { type:'button', class:'rz-chip', 'data-n':n, on:{ click:() => { if(S.done) return; cur = cur === n ? null : n; paint(); } } }, n, el('small', {}))));
+    fig.querySelectorAll('.pin').forEach((g, i) => g.addEventListener('click', () => { if(S.done) return;
+      if(cur == null){ if(put[i] != null){ cur = put[i]; delete put[i]; } paint(); return; }
+      Object.keys(put).forEach(k => { if(put[k] === cur) delete put[k]; }); put[i] = cur; cur = null; paint(); }));
+    return { ready: () => Object.keys(put).length === pins.length, check(){ let ok = true;
+      fig.querySelectorAll('.pin').forEach((g, i) => { const good = put[i] === pins[i]; if(!good) ok = false; g.classList.add(good ? 'right' : 'wrong'); if(!good) g.querySelector('.pl').textContent = pins[i]; });
+      chips.querySelectorAll('button').forEach(b => b.disabled = true); return { ok, sel: pins.map((n, i) => put[i]).join('، ') }; } };
   },
   riddle(q, card){
     card.append(el('div', { class:'riddle-h' }, el('span', { class:'ic', html:icon('puzzle') }), 'فزورة تجويدية'), el('div', { class:'q' }, q.q));
@@ -1146,7 +1270,7 @@ function render(){
   S.ui.update(); fitAction();
   clearInterval(S.tm);
   if(S.T.lvl === '4' && S.T.kind !== 'review'){
-    const secs = ['mcq', 'tf', 'vmcq', 'fill', 'stmt', 'img', 'riddle'].includes(q.type) ? 25 : 55; let left = secs;
+    const secs = ['mcq', 'tf', 'vmcq', 'fill', 'stmt', 'img', 'riddle', 'imgpick', 'dglow'].includes(q.type) ? 25 : 55; let left = secs;
     const tbar = el('div', { class:'timer', role:'timer', 'aria-label':'الوقت المتبقي' }, el('i', {}), el('span', {}, AR(secs)));
     card.insertBefore(tbar, card.firstChild); const fill = tbar.firstChild, num = tbar.lastChild;
     S.tm = setInterval(() => { if(!S || S.done){ clearInterval(S && S.tm); return; } left -= .25; fill.style.width = (100 * left / secs) + '%'; num.textContent = AR(Math.ceil(left));
@@ -1363,10 +1487,14 @@ function runSpeed(){
 
 /* ---------- حزورة اليوم: one riddle a day, the same for everyone ---------- */
 function riddleOfDay(){
-  const list = []; Object.values(SPEC).forEach(l => l.forEach(s => { if((s.t === 'riddle' && s.d !== 1) || (s.t === 'img' && s.m === 'makh')) list.push(s); }));
-  const r = RZ.seeded(RZ.daySeed() * 31 + 7);
-  if(RZ.daySeed() % 3 === 0) return withSeed(RZ.daySeed(), () => { const t = traitRiddles(); return t[Math.floor(r() * t.length)]; });
-  return withSeed(RZ.daySeed(), () => toSpecial(list[Math.floor(r() * list.length)]));
+  const R0 = reachedIds(), day = RZ.daySeed(), r = RZ.seeded(day * 31 + 7);
+  if(R0.includes('l2c2') && day % 3 === 0) return withSeed(day, () => { const t = traitRiddles(); return t[Math.floor(r() * t.length)]; });
+  if(R0.includes('l2c1') && day % 3 !== 2){
+    const list = []; Object.values(SPEC).forEach(l => l.forEach(s => { if((s.t === 'riddle' && s.d !== 1) || (s.t === 'img' && s.m === 'makh')) list.push(s); }));
+    if(list.length) return withSeed(day, () => toSpecial(list[Math.floor(r() * list.length)]));
+  }
+  const ids = R0.filter(id => !['l2c1', 'l2c2'].includes(id)); const id = ids.length ? ids[Math.floor(r() * ids.length)] : R0[0];
+  return withSeed(day, () => { const p = chapterPool(id); return buildN(p.pool, p.spec, 1, 'mix')[0]; });
 }
 function riddle(){
   const st = ls.get('rz-riddle', {});

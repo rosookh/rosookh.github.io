@@ -101,20 +101,20 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 @keyframes fl{to{stroke-dashoffset:-28}}
 .apptop{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .apptop .back svg{width:24px;height:24px}.apptop .back{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink);text-decoration:none;font-size:22px}
-.tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:14px;flex-grow:1;max-width:420px}
-.tabs a{flex:1;text-align:center;padding:8px 6px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:15px}
+.tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:14px;flex-grow:1;max-width:520px}
+.tabs a{flex:1;text-align:center;padding:8px 4px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14px}
 .tabs a[aria-current]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 </style>
 
 </head>
 <body>
 <div class="wrap" dir="rtl">
-<nav class="apptop"><a class="back" href="../" aria-label="رجوع" data-icon="back"></a><div class="tabs"><a href="./" aria-current="page">الصوت والصورة</a><a href="../imara/">العمارة</a></div></nav>
+<nav class="apptop"><a class="back" href="../" aria-label="رجوع" data-icon="back"></a><div class="tabs"><a href="./" aria-current="page">الصوت والصورة</a><a href="../imara/">عمارة الحروف</a><a href="../sifat/">عمارة الصفات</a></div></nav>
 <header>
   <div>
     <h1>كيف يخرج الحرف؟</h1>
   </div>
-  <p>اختر حرفًا لترى اللسان ينتقل من وضع السكون إلى مخرج الحرف.</p>
+  <p>اختر حرفًا لترى اللسان ينتقل إلى مخرج الحرف.</p>
 </header>
 
 <div class="main">
@@ -228,12 +228,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
       <rect x="20" y="124" width="626" height="562" rx="14" fill="none" stroke="#2B2B2B" stroke-width="3"/>
     </svg>
     <div class="bar">
-      <div class="seg" role="group" aria-label="طريقة العرض"><button type="button" id="vBook" aria-pressed="true">الصورة</button><button type="button" id="vAnim" aria-pressed="false">رسمة متحرّكة</button></div>
-      <button type="button" class="pill" id="restBtn">وضع السكون</button>
+      <div class="seg" role="group" aria-label="طريقة العرض" hidden style="display:none"><button type="button" id="vBook" aria-pressed="true">الصورة</button><button type="button" id="vAnim" aria-pressed="false">رسمة متحرّكة</button></div>
+      <button type="button" class="pill" id="restBtn" hidden style="display:none">وضع السكون</button>
       <button type="button" class="pill" id="replay">↻ أعد الحركة</button>
       <button type="button" class="pill" id="auto" aria-pressed="false">▶ عرض تلقائي للمخارج</button>
       <button type="button" class="pill" id="partsBtn" aria-pressed="true" hidden>أجزاء الحنك</button>
-      <div class="vowels" id="vowels" hidden>
+      <div class="vowels" id="vowels" hidden data-off="1">
         <span class="region">حركة الهمزة قبل الراء:</span>
         <button type="button" class="pill v" data-v="fath" aria-pressed="true">أَرْ</button>
         <button type="button" class="pill v" data-v="damm" aria-pressed="false">أُرْ</button>
@@ -251,7 +251,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
     <div class="top"><span class="region" id="pRegion"></span><span class="num" id="pNum"></span></div>
     <div class="pname" id="pName"></div>
     <div class="pletters" id="pLetters"></div>
-    <div class="box"><b>موضع المخرج في سقف الفم والأسنان العليا (منظر من أسفل)</b>
+    <div class="box" hidden style="display:none"><b>موضع المخرج في سقف الفم والأسنان العليا (منظر من أسفل)</b>
       <svg id="arch" viewBox="0 0 240 222" style="width:100%;max-width:300px;align-self:center;background:#FBF8EF;border-radius:10px;direction:ltr" role="img" aria-label="سقف الفم والأسنان العليا من أسفل مع موضع المخرج"></svg>
       <span id="archNote" style="font-size:13px;font-weight:500;color:var(--muted)"></span></div>
     <div class="box"><b>عضوا النطق</b><span id="pOrgans"></span></div>
@@ -499,7 +499,7 @@ function spec(k){ if(k==='ر') return Object.assign({m:11},R[vowel]); return L[k
 function pick(k,opts={}){
   key=k; const s=spec(k), m=M[s.m], col=`var(${C[m.c]})`;
   document.querySelectorAll('.k').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false'));
-  $('vowels').hidden = k!=='ر'; $('lams').hidden = k!=='ل'; showBook(k,true);
+  $('vowels').hidden = true; $('lams').hidden = k!=='ل'; showBook(k,true);
   const p=$('panel'); p.style.setProperty('--c',col);
   $('pRegion').textContent=m.r; $('pNum').textContent=ar(s.m); $('pName').textContent=m.n;
   const syl=k==='ر'?{fath:'أَرْ',damm:'أُرْ',kasr:'إِرْ'}[vowel]:s.tr; $('pLetters').textContent=syl;
@@ -547,7 +547,7 @@ $('auto').addEventListener('click',()=>{
   if(tourT){stopAuto();return;}
   $('auto').setAttribute('aria-pressed','true');$('auto').textContent='■ إيقاف العرض';
   if(key==='ر'){vowel='fath';}
-  tourI=0; pick(TOUR[0]); tourT=setInterval(()=>{tourI=(tourI+1)%TOUR.length; pick(TOUR[tourI]);},2600);
+  tourI=0; pick(TOUR[0]); tourT=setInterval(()=>{tourI=(tourI+1)%TOUR.length; pick(TOUR[tourI]);},4000);
 });
 // ---------- sound ----------
 // Web Audio (no media element, so it is not subject to media-src); unlocked on the first tap

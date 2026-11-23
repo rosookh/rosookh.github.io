@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2F5D50">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../assets/rz.css">
+<script src="../assets/rz.js"></script>
+<title>اوصفني · رسوخ</title>
+</head><body data-nav="imara">
+<style>
+.wrap{max-width:620px;margin:0 auto;padding:max(14px,env(safe-area-inset-top,0px)) 14px calc(var(--nav-h) + 40px);display:flex;flex-direction:column;gap:12px}
+.bar{display:flex;gap:8px;align-items:center}.bar .grow{flex:1}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-weight:700;font-size:15px}
+.letter{align-self:center;width:120px;height:120px;border-radius:24px;background:#1F2733;color:#F5EFE3;display:flex;align-items:center;justify-content:center;font-family:'Noto Naskh Arabic',serif;font-size:78px;line-height:1}
+.stk{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:#1F2733;border-radius:14px;padding:10px}
+.stk .lab{width:100%;text-align:center;color:#E9C9A3;font-size:13px}
+.st{border:1.5px dashed rgba(245,239,227,.5);background:transparent;color:#F5EFE3;border-radius:10px;padding:6px 10px;font:inherit;font-size:15px;cursor:pointer}
+.st[aria-pressed="true"]{background:#C9AE8E;border-style:solid;border-color:#C9AE8E;color:#2E2214;font-weight:700}
+.sw{display:flex;flex-direction:column;gap:4px}
+.sw .k{font-size:12px;color:var(--muted)}
+.seg{display:flex;background:var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:none;background:transparent;border-radius:9px;min-height:42px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:#1F2733;color:#fff;font-weight:700}
+.seg button.ok{background:#2F6B45!important;color:#fff}.seg button.no{background:#6B3439!important;color:#fff}
+.st.ok{background:#2F6B45!important;color:#fff;border-color:#2F6B45}.st.no{background:#6B3439!important;color:#fff;border-color:#6B3439}.st.missed{outline:3px solid #2F6B45}
+.fb{font-size:14px;line-height:1.8;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.done{text-align:center;align-items:center}.done .big{font-size:46px}
+</style>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+  const AR = RZ.AR, $ = id => document.getElementById(id);
+  const LET = 'ءهعحغخقكجشيضلنرطدتظذثصزسفوبم'.split('');
+  const NAME = { 'ء':'الهمزة','ه':'الهاء','ع':'العين','ح':'الحاء','غ':'الغين','خ':'الخاء','ق':'القاف','ك':'الكاف','ج':'الجيم','ش':'الشين','ي':'الياء','ض':'الضاد','ل':'اللام','ن':'النون','ر':'الراء','ط':'الطاء','د':'الدال','ت':'التاء','ظ':'الظاء','ذ':'الذال','ث':'الثاء','ص':'الصاد','ز':'الزاي','س':'السين','ف':'الفاء','و':'الواو','ب':'الباء','م':'الميم' };
+  const FL = [ // the five floors of the house of traits, each with its memory line
+    { k:'jh', o:['الجهر', 'الهمس'], f:c => 'فحثه شخص سكت'.includes(c) ? 1 : 0, mem:'الهمس: «فحثّه شخص سكت»' },
+    { k:'sh', o:['الشدة', 'التوسط', 'الرخاوة'], f:c => 'ءجدقطبكت'.includes(c) ? 0 : 'لنعمر'.includes(c) ? 1 : 2, mem:'الشدة: «أجد قط بكت»، والتوسط: «لن عمر»' },
+    { k:'st', o:['الاستعلاء', 'الاستفال'], f:c => 'خصضغطقظ'.includes(c) ? 0 : 1, mem:'الاستعلاء: «خص ضغط قظ»' },
+    { k:'tb', o:['الإطباق', 'الانفتاح'], f:c => 'صضطظ'.includes(c) ? 0 : 1, mem:'الإطباق: «ص ض ط ظ»' },
+    { k:'dh', o:['الإذلاق', 'الإصمات'], f:c => 'فرمنلب'.includes(c) ? 0 : 1, mem:'الإذلاق: «فرّ من لبّ»' } ];
+  const ROOF = [['القلقلة', 'قطبجد', '«قطب جد»'], ['التفشي', 'ش', 'الشين'], ['الانحراف', 'لر', 'اللام والراء'], ['التكرير', 'ر', 'الراء'],
+    ['الغنة', 'نم', 'النون والميم'], ['الاستطالة', 'ض', 'الضاد'], ['اللين', 'وي', 'الواو والياء الساكنتان بعد فتح'], ['الصفير', 'صزس', 'ص ز س']];
+  const app = $('app'), BEST = 'rz-sifni-best', N = 5;
+  let G = null;
+  function newGame(){ const pool = LET.slice().sort(() => Math.random() - .5).slice(0, N); G = { pool, i:0, pts:0, max:0 }; round(); }
+  function round(){ G.ans = {}; G.stk = new Set(); G.checked = false; draw(); }
+  function draw(){
+    const c = G.pool[G.i]; app.innerHTML = '';
+    const top = document.createElement('div'); top.className = 'rz-top'; top.style.margin = '0 -8px';
+    top.innerHTML = '<a class="rz-icon" href="../sifat/" aria-label="رجوع" data-icon="back"></a><h1 class="rz-title" style="font-size:20px;margin:0">اوصفني</h1>';
+    app.append(top);
+    const bar = document.createElement('div'); bar.className = 'bar';
+    const best = RZ.ls.get(BEST, 0);
+    bar.innerHTML = `<span class="stat">الحرف ${AR(G.i + 1)} من ${AR(N)}</span><span class="stat">⭐ ${AR(G.pts)}</span><span class="grow"></span>${best ? `<span class="stat" style="color:var(--muted)">الرقم القياسي: ${AR(best)}</span>` : ''}`;
+    app.append(bar);
+    const p = document.createElement('p'); p.className = 'rz-meta'; p.style.margin = '0'; p.textContent = 'اقلب كل مفتاح إلى صفة الحرف، والصق من السقف ما ينطبق عليه، ثم اضغط «افحص».'; app.append(p);
+    const L = document.createElement('div'); L.className = 'letter'; L.textContent = c; L.setAttribute('aria-label', NAME[c]); app.append(L);
+    const stk = document.createElement('div'); stk.className = 'stk'; stk.innerHTML = '<div class="lab">سقف العمارة: الصفات التي ليس لها ضد (قد لا ينطبق منها شيء)</div>';
+    ROOF.forEach(([t, ls]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'st'; b.textContent = t; b.setAttribute('aria-pressed', String(G.stk.has(t)));
+      if(G.checked){ const has = ls.includes(c), on = G.stk.has(t); if(on && has) b.classList.add('ok'); else if(on && !has) b.classList.add('no'); else if(!on && has) b.classList.add('missed'); }
+      b.onclick = () => { if(G.checked) return; G.stk.has(t) ? G.stk.delete(t) : G.stk.add(t); draw(); }; stk.append(b); });
+    app.append(stk);
+    FL.slice().reverse().forEach(F => { const w = document.createElement('div'); w.className = 'sw';
+      const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group');
+      F.o.forEach((o, k) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = o; b.setAttribute('aria-pressed', String(G.ans[F.k] === k));
+        if(G.checked){ const right = F.f(c); if(k === right) b.classList.add(G.ans[F.k] === k ? 'ok' : ''); if(G.ans[F.k] === k && k !== right) b.classList.add('no'); if(k === right && G.ans[F.k] !== k) b.style.outline = '3px solid #2F6B45'; }
+        b.onclick = () => { if(G.checked) return; G.ans[F.k] = k; draw(); }; seg.append(b); });
+      w.append(seg); app.append(w); });
+    const fb = document.createElement('div'); app.append(fb);
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rz-btn pri block';
+    if(!G.checked){ const ready = FL.every(F => G.ans[F.k] != null); btn.textContent = ready ? 'افحص' : 'اقلب المفاتيح الخمسة أولًا'; btn.disabled = !ready; btn.onclick = check; }
+    else { fb.className = 'fb'; fb.innerHTML = G.msg; btn.textContent = G.i + 1 < N ? 'الحرف التالي' : 'النتيجة'; btn.onclick = () => { G.i++; G.i < N ? round() : finish(); }; }
+    app.append(btn);
+  }
+  function check(){
+    const c = G.pool[G.i]; let ok = 0; const wrong = [];
+    FL.forEach(F => { if(G.ans[F.k] === F.f(c)) ok++; else wrong.push(F.mem); });
+    const need = ROOF.filter(r => r[1].includes(c)).map(r => r[0]);
+    const roofOk = need.length === G.stk.size && need.every(t => G.stk.has(t));
+    const got = ok + (roofOk ? 2 : 0); G.pts += got; G.max += 7; G.checked = true;
+    const traits = FL.map(F => F.o[F.f(c)]).concat(need);
+    G.msg = `<b>${NAME[c]}: ${traits.join('، ')}.</b>` + (wrong.length ? '<br>تذكّر: ' + wrong.join(' · ') : '') + (roofOk ? '' : '<br>صفات السقف للحرف: ' + (need.length ? need.join('، ') : 'لا شيء')) + `<br>+${AR(got)} من ٧`;
+    try{ RZ.addXP(got >= 6 ? 2 : 1); }catch(e){}
+    draw();
+  }
+  function finish(){
+    const best = RZ.ls.get(BEST, 0), rec = G.pts > best; if(rec) RZ.ls.set(BEST, G.pts);
+    app.innerHTML = ''; const c = document.createElement('section'); c.className = 'rz-card done';
+    c.innerHTML = `<div class="big">${G.pts === G.max ? '🏅' : '🧩'}</div><b>نقاطك ${AR(G.pts)} من ${AR(G.max)}</b><span class="rz-meta">${rec ? 'رقم قياسي جديد 🎉' : 'الرقم القياسي: ' + AR(Math.max(best, G.pts))}</span>`;
+    const a = document.createElement('button'); a.type = 'button'; a.className = 'rz-btn pri block'; a.textContent = 'جولة جديدة'; a.onclick = newGame;
+    const b = document.createElement('a'); b.className = 'rz-btn block'; b.href = '../sifat/'; b.textContent = 'إلى عمارة الصفات';
+    c.append(a, b); app.append(c);
+  }
+  newGame();
+})();
+</script>
+</body></html>

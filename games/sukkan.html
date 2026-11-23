@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2F5D50">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../assets/rz.css">
+<script src="../assets/rz.js"></script>
+<title>أرجع السكان إلى بيوتهم · رسوخ</title>
+</head><body data-nav="imara">
+<style>
+.wrap{max-width:720px;margin:0 auto;padding:max(14px,env(safe-area-inset-top,0px)) 14px calc(var(--nav-h) + 150px);display:flex;flex-direction:column;gap:12px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.bar .grow{flex:1}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-weight:700;font-size:15px}
+.lvls{display:flex;gap:6px;flex-wrap:wrap}
+.bld{display:flex;flex-direction:column}
+.roof{height:46px;background:#1F2733;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.fl{border:3px solid #1F2733;border-top:none;background:#FFFDF8;display:flex;gap:8px;padding:8px}
+.fl:first-of-type{border-top:3px solid #1F2733}
+.fl.dim{opacity:.35;pointer-events:none}
+.fname{width:74px;flex-shrink:0;background:#1F2733;color:#F5EFE3;border-radius:10px;padding:6px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:2px}
+.fname small{font-size:11px;color:#E9C9A3}.fname b{font-size:15px}
+.houses{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.house{flex:1 1 130px;min-height:64px;border:2px solid #1D6B66;border-radius:10px;background:#FFFDF8;padding:6px 8px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:start;font:inherit;color:#1F2733}
+.house.est{border-style:dashed;border-color:#9A4F12;background:#FBF3E6}
+.house .hn{font-size:12px;color:#3B4250;line-height:1.45}.house .hn b{display:inline-block;min-width:20px;height:20px;border-radius:50%;background:#1D6B66;color:#fff;text-align:center;font-size:12px;line-height:20px;margin-inline-end:4px}
+.house .in{display:flex;flex-wrap:wrap;gap:4px;min-height:30px}
+.house.tgt{box-shadow:0 0 0 3px #C9AE8E}
+.tile{font-family:'Noto Naskh Arabic',serif;font-size:24px;min-width:46px;height:46px;padding:0 8px;border-radius:10px;border:2px solid #1F2733;background:#fff;color:#1F2733;display:inline-flex;align-items:center;justify-content:center;flex-direction:column;line-height:1;cursor:pointer}
+.tile small{font-family:var(--f-ui);font-size:10px;line-height:1.1;margin-top:2px}
+.tile.sel{background:#1F2733;color:#fff}
+.tile.ok{background:#2F6B45;border-color:#2F6B45;color:#fff;cursor:default;height:34px;min-width:34px;font-size:18px}
+.tile.ok small{font-size:8px}
+.tile.shake{animation:sh .4s}@keyframes sh{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.tray{position:fixed;inset-inline:0;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);padding:8px 12px;z-index:5}
+.tray .in{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
+.tiles{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.msg{font-size:14px;min-height:20px;color:var(--muted)}
+.done{text-align:center;align-items:center}
+.done .big{font-size:46px}
+</style>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+  const AR = RZ.AR, $ = id => document.getElementById(id);
+  // floor → houses → residents (bottom floor first in the data, drawn top-down like the building)
+  const F = [
+    { n:5, t:'الخيشوم', h:[{ id:17, t:'الخيشوم: من أعلى الأنف إلى الحلق', est:true, r:['غ*'] }] },
+    { n:4, t:'الشفتان', h:[{ id:15, t:'باطن الشفة السفلى مع أطراف الثنايا العليا', r:['ف'] }, { id:16, t:'الشفتان معًا', r:['و·', 'ب', 'م'] }] },
+    { n:3, t:'اللسان', h:[
+      { id:5, t:'أقصى اللسان مع ما يحاذيه من الحنك الأعلى', r:['ق'] }, { id:6, t:'أقصى اللسان أسفل قليلًا', r:['ك'] },
+      { id:7, t:'وسط اللسان مع ما يحاذيه من الحنك الأعلى', r:['ج', 'ش', 'ي·'] }, { id:8, t:'إحدى حافتي اللسان مع الأضراس العليا', r:['ض'] },
+      { id:9, t:'أدنى حافة اللسان إلى منتهى طرفه', r:['ل'] }, { id:10, t:'طرف اللسان تحت مخرج اللام قليلًا', r:['ن'] },
+      { id:11, t:'طرف اللسان مع ظهره قريبًا من مخرج النون', r:['ر'] }, { id:12, t:'طرف اللسان مع أصول الثنايا العليا', r:['ط', 'د', 'ت'] },
+      { id:13, t:'طرف اللسان مع أطراف الثنايا العليا', r:['ظ', 'ذ', 'ث'] }, { id:14, t:'طرف اللسان مع ما فوق الثنايا السفلى', r:['ص', 'س', 'ز'] }] },
+    { n:2, t:'الحلق', h:[{ id:2, t:'أقصى الحلق', r:['ء', 'ه'] }, { id:3, t:'وسط الحلق', r:['ع', 'ح'] }, { id:4, t:'أدنى الحلق', r:['غ', 'خ'] }] },
+    { n:1, t:'الجوف', h:[{ id:1, t:'الجوف: الحروف المدّية', est:true, r:['ا', 'و+', 'ي+'] }] }
+  ];
+  const TILE = r => r === 'غ*' ? ['الغنّة', ''] : r.endsWith('+') ? [r[0], 'مدّية'] : r.endsWith('·') ? [r[0], 'غير مدّية'] : r === 'ا' ? ['ا', 'مدّية'] : [r, ''];
+  const ORD = { 1:'الأول', 2:'الثاني', 3:'الثالث', 4:'الرابع', 5:'الخامس' };
+  const app = $('app'); const BEST = 'rz-sukkan-best';
+  let lvl = RZ.ls.get('rz-sukkan-lvl', 'all'), st = null, timer = null;
+  function start(){
+    const floors = lvl === 'all' ? F : F.filter(f => String(f.n) === lvl);
+    const res = []; floors.forEach(f => f.h.forEach(h => h.r.forEach(r => res.push({ r, h:h.id, f:f.t }))));
+    st = { floors, left:res.sort(() => Math.random() - .5), placed:{}, errs:0, miss:{}, sel:null, t0:Date.now() };
+    clearInterval(timer); timer = setInterval(() => { const e = $('tm'); if(e) e.textContent = '⏱ ' + fmt(Date.now() - st.t0); }, 1000);
+    draw();
+  }
+  const fmt = ms => { const s = Math.floor(ms / 1000); return AR(Math.floor(s / 60)) + ':' + AR(String(s % 60).padStart(2, '0')); };
+  function draw(){
+    app.innerHTML = '';
+    const top = document.createElement('div'); top.className = 'rz-top'; top.style.margin = '0 -8px';
+    top.innerHTML = '<a class="rz-icon" href="../imara/" aria-label="رجوع" data-icon="back"></a><h1 class="rz-title" style="font-size:20px;margin:0">أرجع السكان إلى بيوتهم</h1>';
+    app.append(top);
+    const p = document.createElement('p'); p.className = 'rz-meta'; p.style.margin = '0';
+    p.textContent = 'العمارة فارغة! اضغط حرفًا من الأسفل، ثم اضغط بيته (مخرجه) في العمارة.'; app.append(p);
+    const lv = document.createElement('div'); lv.className = 'lvls';
+    [['all', 'العمارة كاملة'], ...F.slice().reverse().map(f => [String(f.n), 'طابق ' + f.t])].forEach(([k, t]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'rz-chip'; b.textContent = t; b.setAttribute('aria-pressed', String(k === lvl)); b.onclick = () => { lvl = k; RZ.ls.set('rz-sukkan-lvl', k); start(); }; lv.append(b); });
+    app.append(lv);
+    const bar = document.createElement('div'); bar.className = 'bar';
+    const best = RZ.ls.get(BEST, {})[lvl];
+    bar.innerHTML = `<span class="stat" id="tm">⏱ ${fmt(Date.now() - st.t0)}</span><span class="stat">✗ الأخطاء: ${AR(st.errs)}</span><span class="grow"></span>` + (best ? `<span class="stat" style="color:var(--muted)">أفضل وقت: ${fmt(best.t)}</span>` : '');
+    app.append(bar);
+    const b = document.createElement('div'); b.className = 'bld'; b.innerHTML = '<div class="roof"></div>';
+    F.forEach(f => { const fl = document.createElement('div'); fl.className = 'fl' + (st.floors.includes(f) ? '' : ' dim');
+      fl.innerHTML = `<div class="fname"><small>الطابق ${ORD[f.n]}</small><b>${f.t}</b></div>`;
+      const hs = document.createElement('div'); hs.className = 'houses';
+      f.h.forEach(h => { const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'house' + (h.est ? ' est' : ''); btn.dataset.h = h.id;
+        btn.innerHTML = `<span class="hn"><b>${AR(h.id)}</b>${h.t}</span><span class="in"></span>`;
+        (st.placed[h.id] || []).forEach(r => { const [c, s] = TILE(r); btn.querySelector('.in').insertAdjacentHTML('beforeend', `<span class="tile ok">${c}${s ? `<small>${s}</small>` : ''}</span>`); });
+        btn.onclick = () => drop(h.id, btn); hs.append(btn); });
+      fl.append(hs); b.append(fl); });
+    app.append(b);
+    let tray = document.querySelector('.tray'); if(!tray){ tray = document.createElement('div'); tray.className = 'tray'; document.body.append(tray); }
+    tray.innerHTML = '<div class="in"><div class="msg" id="msg" aria-live="polite"></div><div class="tiles" id="tiles"></div></div>';
+    st.left.forEach((x, i) => { const [c, s] = TILE(x.r); const t = document.createElement('button'); t.type = 'button'; t.className = 'tile' + (st.sel === i ? ' sel' : ''); t.innerHTML = c + (s ? `<small>${s}</small>` : '');
+      t.setAttribute('aria-label', c + (s ? ' ' + s : '')); t.onclick = () => { st.sel = st.sel === i ? null : i; draw(); }; $('tiles').append(t); });
+    if(!st.left.length) finish();
+    else if(st.sel == null) $('msg').textContent = 'بقي ' + AR(st.left.length) + ' من السكان خارج العمارة.';
+    else { const x = st.left[st.sel]; $('msg').textContent = 'أين بيت هذا الحرف؟' + ((st.miss[x.r] || 0) >= 2 ? ' تلميح: في طابق ' + x.f + '.' : ''); }
+  }
+  function drop(hid, btn){
+    if(st.sel == null){ $('msg').textContent = 'اختر حرفًا من الأسفل أولًا.'; return; }
+    const x = st.left[st.sel];
+    if(x.h === hid){ (st.placed[hid] = st.placed[hid] || []).push(x.r); st.left.splice(st.sel, 1); st.sel = null; draw(); }
+    else { st.errs++; st.miss[x.r] = (st.miss[x.r] || 0) + 1; const t = $('tiles').children[st.sel]; draw(); const t2 = $('tiles').children[st.sel]; if(t2){ t2.classList.add('shake'); } }
+  }
+  function finish(){
+    clearInterval(timer); const t = Date.now() - st.t0; const all = RZ.ls.get(BEST, {}); const prev = all[lvl];
+    const rec = !prev || t < prev.t; if(rec){ all[lvl] = { t, e:st.errs }; RZ.ls.set(BEST, all); }
+    const perfect = st.errs === 0 && lvl === 'all';
+    if(perfect){ const m = RZ.ls.get('rz-sukkan-medal', 0); RZ.ls.set('rz-sukkan-medal', m + 1); }
+    try{ RZ.addXP(lvl === 'all' ? 15 : 5); }catch(e){}
+    document.querySelector('.tray').remove();
+    const c = document.createElement('section'); c.className = 'rz-card done';
+    c.innerHTML = `<div class="big">${perfect ? '🏅' : '🏠'}</div><b>${perfect ? 'وسام العمارة الكاملة بلا أخطاء!' : 'رجع كل السكان إلى بيوتهم!'}</b>
+      <span class="rz-meta">الوقت ${fmt(t)} · الأخطاء ${AR(st.errs)}${rec ? ' · رقم قياسي جديد 🎉' : ''}</span>`;
+    const again = document.createElement('button'); again.type = 'button'; again.className = 'rz-btn pri block'; again.textContent = 'العب مرة أخرى'; again.onclick = start;
+    const back = document.createElement('a'); back.className = 'rz-btn block'; back.href = '../imara/'; back.textContent = 'إلى عمارة الحروف';
+    c.append(again, back); app.insertBefore(c, app.children[2]); scrollTo(0, 0);
+  }
+  start();
+})();
+</script>
+</body></html>

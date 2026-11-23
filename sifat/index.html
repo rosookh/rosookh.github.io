@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2F5D50">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../assets/rz.css">
+<script src="../assets/rz.js"></script>
+<title>عمارة صفات الحروف · رسوخ</title>
+</head>
+<body data-nav="imara">
+<style>
+.stage{padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(var(--nav-h) + 40px) max(16px,env(safe-area-inset-left,0px))}
+.scaler{width:1080px;transform-origin:top right}
+.hint{font:14px "IBM Plex Sans Arabic",sans-serif;color:var(--muted);margin:0 0 12px}
+.mtabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:14px;flex-grow:1;max-width:520px}
+.mtabs a{flex:1;text-align:center;padding:8px 6px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14px}
+.mtabs a[aria-current]{background:var(--surface);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.H{width:1080px;box-sizing:border-box;padding:48px 48px 40px;background:#F5EFE3;color:#1F2733;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;display:flex;flex-direction:column;gap:22px}
+.H h1{margin:0;font-family:'Noto Naskh Arabic',serif;font-size:58px;line-height:1.2;font-weight:700}
+.kick{font-size:15px;font-weight:500;color:#1D6B66}.sub{font-size:17px;color:#4A5260}.sub2{font-size:14px;color:#4A5260;max-width:700px;line-height:1.6}
+.roof{background:#1F2733;clip-path:polygon(50% 0,100% 100%,0 100%);height:360px;box-sizing:border-box;padding:110px 60px 16px;justify-content:flex-end;display:flex;flex-direction:column;align-items:center;gap:10px;color:#F5EFE3}
+.roof .lab{font-size:15px;color:#E9C9A3}
+.roofrooms{display:flex;flex-direction:column;align-items:center;gap:8px}.rrow{display:flex;justify-content:center;gap:8px}
+.rr{background:rgba(245,239,227,.1);border:1.5px solid rgba(245,239,227,.35);border-radius:10px;padding:6px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:86px}
+.rr b{font-size:17px}.rr .ls{font-family:'Noto Naskh Arabic',serif;font-size:22px;letter-spacing:4px}.rr.note{border-style:dashed}
+.body{border:3px solid #1F2733;border-top:none;background:#FFFDF8;display:flex;flex-direction:column}
+.floor{display:grid;grid-template-columns:150px 1fr 150px;border-top:2px solid #1F2733;min-height:150px}
+.side{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:10px;text-align:center;background:#EFE6D6}
+.side.r{border-left:2px solid #1F2733}.side.l{border-right:2px solid #1F2733}
+.side .k{font-size:12px;color:#6A665A}.side b{font-size:18px}
+.side .num{width:30px;height:30px;border-radius:50%;background:#1F2733;color:#F5EFE3;display:flex;align-items:center;justify-content:center;font-weight:700}
+.rooms{display:flex;gap:10px;padding:12px}
+.room{flex:1;border:2px solid #1D6B66;border-radius:10px;background:#FFFDF8;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.room.op{border-style:dashed;border-color:#9A4F12;background:#FBF3E6}
+.room .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.room .t b{font-size:22px;font-family:'Noto Naskh Arabic',serif}
+.room .key{font-size:14px;color:#1D6B66;font-weight:600}.room.op .key{color:#9A4F12}
+.room .d{font-size:13px;color:#3B4250;line-height:1.5}
+.room .ls{font-family:'Noto Naskh Arabic',serif;font-size:24px;line-height:1.5;letter-spacing:6px}
+.ground{height:14px;background:#1F2733;margin:0 -10px}
+.foot{display:flex;justify-content:center;padding-top:8px;font-size:13px;color:#4A5260}
+.verse{display:flex;justify-content:center;font-family:'Noto Naskh Arabic',serif;font-size:22px}
+.c{cursor:pointer;border-radius:6px;padding:0 1px;transition:background .15s}
+.c.on{background:#C9AE8E;color:#2E2214}
+.room.hit,.rr.hit{box-shadow:0 0 0 4px #C9AE8E}
+.pick{position:sticky;top:0;z-index:3;display:none;background:var(--primary);color:var(--primary-ink);border-radius:14px;padding:10px 14px;margin:0 0 10px;font-size:15px;line-height:1.7}
+.pick.show{display:block}.pick b{font-family:'Noto Naskh Arabic',serif;font-size:22px}
+.pick button{float:left;border:none;background:none;color:inherit;font-size:20px;cursor:pointer}
+</style>
+<div class="stage"><div class="rz-top" style="margin:0 -8px 8px"><a class="rz-icon" href="../" aria-label="رجوع" data-icon="back"></a>
+<div class="mtabs"><a href="../makharij/">الصوت والصورة</a><a href="../imara/">عمارة الحروف</a><a aria-current="page" href="./">عمارة الصفات</a></div></div>
+<a class="rz-btn pri" style="min-height:42px;margin:0 0 12px;display:inline-flex" href="../games/sifni.html">🎮 العب: اوصفني</a><p class="hint">اضغط على أي حرف لترى كل صفاته في العمارة. قرّب الشاشة بإصبعين لرؤية التفاصيل.</p>
+<div class="pick" id="pick" aria-live="polite"></div>
+<div class="box" id="box"><div class="scaler" id="sc"><div class="H" id="H"></div></div></div></div>
+<script>
+const D = {"floors": [{"n": "١", "about": "النَّفَس", "where": "الأوتار الصوتية", "rooms": [{"t": "الجهر", "d": "انحباس النَّفَس عند النطق بالحرف لقوة الاعتماد عليه في المخرج", "key": "باقي الحروف", "l": ["ء", "ا", "ب", "ج", "د", "ذ", "ر", "ز", "ض", "ط", "ظ", "ع", "غ", "ق", "ل", "م", "ن", "و", "ي"]}, {"t": "الهمس", "d": "جريان النَّفَس عند النطق بالحرف لضعف الاعتماد عليه في المخرج", "key": "فحثّه شخص سكت", "l": ["ف", "ح", "ث", "ه", "ش", "خ", "ص", "س", "ك", "ت"]}]}, {"n": "٢", "about": "الصوت", "where": "المخرج", "rooms": [{"t": "الشدة", "d": "انحباس الصوت عند النطق بالحرف لكمال قوة الاعتماد على المخرج", "key": "أجد قط بكت", "l": ["ء", "ج", "د", "ق", "ط", "ب", "ك", "ت"]}, {"t": "التوسط (البينية)", "d": "اعتدال الصوت بين الانحباس والجريان", "key": "لن عمر", "l": ["ل", "ن", "ع", "م", "ر"]}, {"t": "الرخاوة", "d": "جريان الصوت عند النطق بالحرف لضعف الاعتماد على المخرج", "key": "باقي الحروف", "l": ["ا", "ث", "ح", "خ", "ذ", "ز", "س", "ش", "ص", "ض", "ظ", "غ", "ف", "ه", "و", "ي"]}]}, {"n": "٣", "about": "اتجاه الصوت", "where": "أقصى اللسان", "rooms": [{"t": "الاستعلاء", "d": "ارتفاع أقصى اللسان إلى الحنك الأعلى عند النطق بالحرف", "key": "خص ضغط قظ", "l": ["خ", "ص", "ض", "غ", "ط", "ق", "ظ"]}, {"t": "الاستفال", "d": "انخفاض أقصى اللسان عن الحنك الأعلى عند النطق بالحرف", "key": "باقي الحروف", "l": ["ء", "ا", "ب", "ت", "ث", "ج", "ح", "د", "ذ", "ر", "ز", "س", "ش", "ع", "ف", "ك", "ل", "م", "ن", "ه", "و", "ي"]}]}, {"n": "٤", "about": "انحصار الصوت", "where": "جملة اللسان", "rooms": [{"t": "الإطباق", "d": "انطباق جملة اللسان على الحنك الأعلى، فينحصر الصوت بينهما", "key": "ص ض ط ظ", "l": ["ص", "ض", "ط", "ظ"]}, {"t": "الانفتاح", "d": "تجافي اللسان عن الحنك الأعلى، فيخرج الصوت منفتحًا", "key": "باقي الحروف", "l": ["ء", "ا", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي"]}]}, {"n": "٥", "about": "علم البيان", "where": "", "rooms": [{"t": "الإذلاق", "d": "خفة الحرف وسرعة النطق به لخروجه من ذَلَق اللسان أو الشفة", "key": "فرّ من لبّ", "l": ["ف", "ر", "م", "ن", "ل", "ب"]}, {"t": "الإصمات", "d": "ثقل الحرف عند النطق به لخروجه بعيدًا عن ذَلَق اللسان والشفة", "key": "باقي الحروف", "l": ["ء", "ا", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ق", "ك", "ه", "و", "ي"]}]}], "roof": [{"t": "القلقلة", "l": ["ق", "ط", "ب", "ج", "د"], "d": "اضطراب المخرج عند النطق بالحرف ساكنًا", "key": "قطب جد"}, {"t": "التفشي", "l": ["ش"], "d": "انتشار الهواء في الفم عند النطق بالشين"}, {"t": "الانحراف", "l": ["ل", "ر"], "d": "ميل الحرف بعد خروجه من مخرجه"}, {"t": "التكرير", "l": ["ر"], "d": "ارتعاد طرف اللسان عند النطق بالراء"}, {"t": "الغنة", "l": ["ن", "م"], "d": "صوت أغنّ مركّب في جسم النون والميم مخرجه الخيشوم"}, {"t": "الاستطالة", "l": ["ض"], "d": "امتداد الصوت من أول حافة اللسان إلى آخرها"}, {"t": "اللين", "l": ["و", "ي"], "d": "الواو والياء الساكنتان المفتوح ما قبلهما"}, {"t": "الصفير", "l": ["ص", "ز", "س"], "d": "صوت زائد يشبه صفير الطائر"}], "all": ["ء", "ا", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي"]};
+const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+const ls = a => a.map(c => `<span class="c" data-c="${c}">${c}</span>`).join(' ');
+let h = `<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px"><div class="kick">بيت الصفات</div><h1>عمارة صفات الحروف</h1>
+  <div class="sub">٥ طوابق للصفات المتضادة · السقف للصفات التي لا ضدّ لها</div>
+  <div class="sub2">كل طابق صفة وضدّها، وعلى يمينه ما تتعلّق به الصفة، وعلى يساره موضعها. لكل حرف صفة واحدة من كل طابق، وقد تكون له صفات من السقف.</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;padding-bottom:6px">
+   <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:14px;border:2px solid #1D6B66;border-radius:4px;background:#FFFDF8"></span>الصفة ومجموعتها</div>
+   <div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:14px;border:2px dashed #9A4F12;border-radius:4px;background:#FBF3E6"></span>ضدّها: باقي الحروف</div></div></div>
+ <div>
+ <div class="roof"><div class="lab">السقف: صفات لا ضدّ لها</div><div class="roofrooms">${[D.roof.slice(0,4), D.roof.slice(4)].map(row => `<div class="rrow">${row.map(r => `<div class="rr${r.note ? ' note' : ''}" data-t="${r.t}"><b>${r.t}</b><span class="ls">${ls(r.l)}</span></div>`).join('')}</div>`).join('')}</div></div>
+ <div class="body">${D.floors.slice().reverse().map(f => `<div class="floor">
+   <div class="side r"><span class="num">${f.n}</span><span class="k">تتعلّق بـ</span><b>${f.about}</b></div>
+   <div class="rooms">${f.rooms.map((r, i) => `<div class="room${r.key === 'باقي الحروف' ? ' op' : ''}" data-t="${r.t}"><div class="t"><b>${r.t}</b><span class="key">${r.key}</span></div><div class="d">${r.d}</div><div class="ls">${ls(r.l)}</div></div>`).join('')}</div>
+   <div class="side l">${f.where ? `<span class="k">موضعها</span><b>${f.where}</b>` : ''}</div></div>`).join('')}</div>
+ <div class="ground"></div>
+ <div class="foot">الترتيب من الأسفل إلى الأعلى كما يتكوّن الصوت: النَّفَس، ثم الصوت، ثم اتجاهه، ثم انحصاره</div></div>
+ <div class="verse">صفاتُها جهرٌ ورِخوٌ مُستفِلْ … منفتحٌ مُصمَتةٌ والضِّدَّ قُلْ</div>`;
+document.getElementById('H').innerHTML = h;
+const NAME = {'ء':'الهمزة','ا':'الألف','ب':'الباء','ت':'التاء','ث':'الثاء','ج':'الجيم','ح':'الحاء','خ':'الخاء','د':'الدال','ذ':'الذال','ر':'الراء','ز':'الزاي','س':'السين','ش':'الشين','ص':'الصاد','ض':'الضاد','ط':'الطاء','ظ':'الظاء','ع':'العين','غ':'الغين','ف':'الفاء','ق':'القاف','ك':'الكاف','ل':'اللام','م':'الميم','ن':'النون','ه':'الهاء','و':'الواو','ي':'الياء'};
+const pick = document.getElementById('pick');
+function show(c){
+  document.querySelectorAll('.c.on,.hit').forEach(e => e.classList.remove('on', 'hit'));
+  if(!c){ pick.classList.remove('show'); return; }
+  const tr = [];
+  document.querySelectorAll(`.c[data-c="${c}"]`).forEach(e => { e.classList.add('on'); const r = e.closest('.room,.rr'); r.classList.add('hit'); tr.push(r.dataset.t); });
+  pick.innerHTML = `<button type="button" aria-label="إغلاق">×</button><b>${NAME[c]}</b>: ${tr.join('، ')}` + (c === 'و' || c === 'ي' ? '<br><small>واللين للواو والياء الساكنتين المفتوح ما قبلهما.</small>' : '');
+  pick.querySelector('button').onclick = () => show(null);
+  pick.classList.add('show');
+}
+document.getElementById('H').addEventListener('click', e => { const t = e.target.closest('.c'); if(t) show(t.dataset.c); });
+function fit(){const sc=document.getElementById('sc'),box=document.getElementById('box');const w=box.clientWidth||document.documentElement.clientWidth-32;const k=Math.min(1,w/1080);sc.style.transform='scale('+k+')';box.style.height=(sc.offsetHeight*k)+'px'}
+addEventListener('resize',fit);document.fonts&&document.fonts.ready.then(fit);fit();
+</script>
+</body></html>
