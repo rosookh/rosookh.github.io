@@ -477,21 +477,22 @@ function wLines(t){ if(t.length <= 11) return [t]; const w = t.split(' '); let a
 function wheel(){
   app.innerHTML = '';
   const R0 = reachedIds();
-  const myLv = String((LEVELS.find(x => x.ids.includes(R0[R0.length - 1])) || LEVELS[0]).n);
-  const saved = ls.get('rz-wheel-lv', null);
-  const lvs = LEVELS.filter(x => x.ids.some(id => R0.includes(id)));
-  const lv = saved === '' || lvs.some(x => String(x.n) === saved) ? saved : myLv;
-  const L = LEVELS.find(x => String(x.n) === lv) || null;
-  const ids = (L ? L.ids : ALL_IDS).filter(id => R0.includes(id));
-  const segs = ids.map(id => ({ id, t:WH_NAME[id] || short(BANK[id].title) }));
-  if(ids.includes('l2c1')) segs.push({ id:'g-imara', t:'لعبة: أرجع السكان', go:'../games/sukkan.html' });
-  if(ids.includes('l2c2')) segs.push({ id:'who', t:'من أنا؟' }, { id:'g-sifat', t:'لعبة: اوصفني', go:'../games/sifni.html' });
+  /* built automatically from what the learner has reached; past levels fold into one «مراجعة ما سبق» slot when the wheel gets crowded */
+  const curL = LEVELS.find(x => x.ids.includes(R0[R0.length - 1])) || LEVELS[0];
+  const extra = [];
+  if(R0.includes('l2c1')) extra.push({ id:'g-imara', t:'لعبة: أرجع السكان', go:'../games/sukkan.html' });
+  if(R0.includes('l2c2')) extra.push({ id:'who', t:'من أنا؟' }, { id:'g-sifat', t:'لعبة: اوصفني', go:'../games/sifni.html' });
+  const past = R0.filter(id => !curL.ids.includes(id));
+  const fold = R0.length + extra.length > 10 && past.length > 0;
+  const segs = (fold ? R0.filter(id => curL.ids.includes(id)) : R0).map(id => ({ id, t:WH_NAME[id] || short(BANK[id].title) }));
+  if(fold) segs.push({ id:'past', t:'مراجعة ما سبق', pool:past });
+  segs.push(...extra);
   const N = segs.length, R = 150, cx = 160, cy = 160, cols = ['#2F5D50', '#6E2E3A', '#C9AE8E', '#2D5B73', '#8A9A7B'];
   let turn = ls.get('rz-wheel-rot', 0), busy = false;
   let svg = `<svg viewBox="0 0 320 320" class="wh-svg" role="button" tabindex="0" aria-label="أدِر الدولاب"><g id="whg">`;
   segs.forEach((g, i) => { const a0 = 2 * Math.PI * i / N - Math.PI / 2, a1 = 2 * Math.PI * (i + 1) / N - Math.PI / 2, am = (a0 + a1) / 2;
     const p = a => [cx + R * Math.cos(a), cy + R * Math.sin(a)]; const [x0, y0] = p(a0), [x1, y1] = p(a1);
-    const fill = g.id === 'who' ? '#B8862E' : g.go ? '#7A4E8C' : cols[i % cols.length];
+    const fill = g.id === 'who' ? '#B8862E' : g.go ? '#7A4E8C' : g.id === 'past' ? '#5B4636' : cols[i % cols.length];
     if(N === 1) svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${fill}" stroke="#F4EDE0" stroke-width="2"/>`;
     else svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${R},${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${fill}" stroke="#F4EDE0" stroke-width="2"/>`;
     const rr = N <= 4 ? .58 : .64, tx = cx + R * rr * Math.cos(am), ty = cy + R * rr * Math.sin(am), ln = wLines(g.t), fs = N > 10 ? 9 : N > 7 ? 10.5 : 12;
@@ -511,11 +512,13 @@ function wheel(){
     setTimeout(() => { busy = false; const sg = segs[k]; res.textContent = 'وقف الدولاب على: ' + sg.t;
       setTimeout(() => { if(sg.go) location.href = sg.go;
         else if(sg.id === 'who') start({ id:'who', kind:'wheel', title:'من أنا؟ صفات الحروف', back:'#/wheel', make:() => shuffle(traitRiddles()).slice(0, 5) });
+        else if(sg.id === 'past'){ const id = shuffle(sg.pool)[0]; res.textContent = 'مراجعة ما سبق: ' + (WH_NAME[id] || short(BANK[id].title));
+          start({ id:'wh:' + id, kind:'wheel', title:'الدولاب · مراجعة · ' + (WH_NAME[id] || short(BANK[id].title)), back:'#/wheel', make:() => { const p = chapterPool(id); return buildN(p.pool, p.spec, 3, 'mix'); } }); }
         else start({ id:'wh:' + sg.id, kind:'wheel', title:'الدولاب · ' + sg.t, back:'#/wheel', make:() => { const p = chapterPool(sg.id); return buildN(p.pool, p.spec, 3, 'mix'); } }); }, 900); }, 3300); };
   box.addEventListener('click', go); box.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); } });
-  const lvRow = el('div', { class:'rz-wrap', role:'group', 'aria-label':'المستوى' });
-  [['', 'كل ما وصلت إليه'], ...lvs.map(x => [String(x.n), x.name.replace('المستوى ', '')])].forEach(([k, t]) => lvRow.append(el('button', { type:'button', class:'rz-chip', 'aria-pressed':String(k === lv), on:{ click:() => { ls.set('rz-wheel-lv', k); wheel(); } } }, t)));
-  app.append(topBar('دولاب التجويد', '../'), el('p', { class:'rz-meta', style:'margin:0' }, 'اضغط على الدولاب ليختار لك بابًا من الأبواب التي وصلت إليها.'), lvRow, box, res);
+  const lastT = WH_NAME[R0[R0.length - 1]] || short(BANK[R0[R0.length - 1]].title);
+  const basis = el('p', { class:'rz-meta', style:'margin:0;font-size:.85em' }, 'من الأبواب التي وصلت إليها: حتى ' + lastT + ' · ', el('a', { href:'../settings.html' }, 'غيّر من الإعدادات'));
+  app.append(topBar('دولاب التجويد', '../'), el('p', { class:'rz-meta', style:'margin:0' }, 'اضغط على الدولاب ليختار لك بابًا من الأبواب التي وصلت إليها.'), basis, box, res);
   requestAnimationFrame(() => setRot(turn % 360, false));
 }
 

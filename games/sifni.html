@@ -55,9 +55,9 @@
     const best = RZ.ls.get(BEST, 0);
     bar.innerHTML = `<span class="stat">الحرف ${AR(G.i + 1)} من ${AR(N)}</span><span class="stat">⭐ ${AR(G.pts)}</span><span class="grow"></span>${best ? `<span class="stat" style="color:var(--muted)">الرقم القياسي: ${AR(best)}</span>` : ''}`;
     app.append(bar);
-    const p = document.createElement('p'); p.className = 'rz-meta'; p.style.margin = '0'; p.textContent = 'اقلب كل مفتاح إلى صفة الحرف، والصق من السقف ما ينطبق عليه، ثم اضغط «افحص».'; app.append(p);
+    const p = document.createElement('p'); p.className = 'rz-meta'; p.style.margin = '0'; p.textContent = 'اختر صفة الحرف من كل صف، واختر من الصفات التي ليس لها ضد ما ينطبق عليه، ثم اضغط «افحص».'; app.append(p);
     const L = document.createElement('div'); L.className = 'letter'; L.textContent = c; L.setAttribute('aria-label', NAME[c]); app.append(L);
-    const stk = document.createElement('div'); stk.className = 'stk'; stk.innerHTML = '<div class="lab">سقف العمارة: الصفات التي ليس لها ضد (قد لا ينطبق منها شيء)</div>';
+    const stk = document.createElement('div'); stk.className = 'stk'; stk.innerHTML = '<div class="lab">الصفات التي ليس لها ضد (قد لا ينطبق منها شيء)</div>';
     ROOF.forEach(([t, ls]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'st'; b.textContent = t; b.setAttribute('aria-pressed', String(G.stk.has(t)));
       if(G.checked){ const has = ls.includes(c), on = G.stk.has(t); if(on && has) b.classList.add('ok'); else if(on && !has) b.classList.add('no'); else if(!on && has) b.classList.add('missed'); }
       b.onclick = () => { if(G.checked) return; G.stk.has(t) ? G.stk.delete(t) : G.stk.add(t); draw(); }; stk.append(b); });
@@ -70,7 +70,7 @@
       w.append(seg); app.append(w); });
     const fb = document.createElement('div'); app.append(fb);
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rz-btn pri block';
-    if(!G.checked){ const ready = FL.every(F => G.ans[F.k] != null); btn.textContent = ready ? 'افحص' : 'اقلب المفاتيح الخمسة أولًا'; btn.disabled = !ready; btn.onclick = check; }
+    if(!G.checked){ const ready = FL.every(F => G.ans[F.k] != null); btn.textContent = 'افحص'; btn.disabled = !ready; btn.onclick = check; }
     else { fb.className = 'fb'; fb.innerHTML = G.msg; btn.textContent = G.i + 1 < N ? 'الحرف التالي' : 'النتيجة'; btn.onclick = () => { G.i++; G.i < N ? round() : finish(); }; }
     app.append(btn);
   }
@@ -81,7 +81,7 @@
     const roofOk = need.length === G.stk.size && need.every(t => G.stk.has(t));
     const got = ok + (roofOk ? 2 : 0); G.pts += got; G.max += 7; G.checked = true;
     const traits = FL.map(F => F.o[F.f(c)]).concat(need);
-    G.msg = `<b>${NAME[c]}: ${traits.join('، ')}.</b>` + (wrong.length ? '<br>تذكّر: ' + wrong.join(' · ') : '') + (roofOk ? '' : '<br>صفات السقف للحرف: ' + (need.length ? need.join('، ') : 'لا شيء')) + `<br>+${AR(got)} من ٧`;
+    G.msg = `<b>${NAME[c]}: ${traits.join('، ')}.</b>` + (wrong.length ? '<br>تذكّر: ' + wrong.join(' · ') : '') + (roofOk ? '' : '<br>الصفات التي ليس لها ضد للحرف: ' + (need.length ? need.join('، ') : 'لا شيء')) + `<br>+${AR(got)} من ٧`;
     try{ RZ.addXP(got >= 6 ? 2 : 1); }catch(e){}
     draw();
   }
