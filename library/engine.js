@@ -53,7 +53,10 @@ if(SPEC.l2c1) SPEC.l2c1.push(...B5);
 Object.entries(SPEC).forEach(([ch, list]) => list.forEach((s, i) => { s.id = 's:' + ch + ':' + i; s.ch = ch; s.needs = specNeeds(ch, s); s.les = ch + ':' + (s.needs[0] ?? 0); }));
 /* hidden sources stay in the data (ids keep their positions) but are left out of every pool */
 const HIDDEN_SRC = new Set(['tuhfa']); const SPEC_BY_ID = {};
-Object.keys(SPEC).forEach(ch => { SPEC[ch].forEach(s => SPEC_BY_ID[s.id] = s); SPEC[ch] = SPEC[ch].filter(s => !HIDDEN_SRC.has(s.src)); });
+/* poetry: only the Jazariyya verses Fatima listed (makharij, sifat, al-maqtu' wal-mawsul, the taa's); everything else stays out */
+const POEM_OK = { jazari:['l2c1','l2c2','l3c3','l3c4'] };
+const isHidden = (s, ch) => HIDDEN_SRC.has(s.src) || (POEM_OK[s.src] && !POEM_OK[s.src].includes(ch));
+Object.keys(SPEC).forEach(ch => { SPEC[ch].forEach(s => { s._ch = ch; SPEC_BY_ID[s.id] = s; }); SPEC[ch] = SPEC[ch].filter(s => !isHidden(s, ch)); });
 const TOTAL = DATA.reduce((s, b) => s + b.questions.length, 0) + Object.values(SPEC).reduce((s, v) => s + v.length, 0);
 
 /* ---------- book images ---------- */
@@ -241,7 +244,7 @@ function nbDue(){ const now = Date.now(); return Object.entries(nbAll()).filter(
 // notebook entries saved by older versions: drop questions that were removed or hidden, refresh special questions from today's data
 (function nbClean(){ const m = nbAll(); let ch = false;
   Object.keys(m).forEach(k => { const src = m[k] && m[k].q && m[k].q.src || '';
-    if(/^m:/.test(src) || (/^s:/.test(src) && (!SPEC_BY_ID[src] || HIDDEN_SRC.has(SPEC_BY_ID[src].src))) || /تحفة الأطفال/.test(JSON.stringify(m[k].q))){ delete m[k]; ch = true; } });
+    if(/^m:/.test(src) || (/^s:/.test(src) && (!SPEC_BY_ID[src] || isHidden(SPEC_BY_ID[src], SPEC_BY_ID[src]._ch))) || /تحفة الأطفال/.test(JSON.stringify(m[k].q))){ delete m[k]; ch = true; } });
   if(ch) nbSave(m);
   try{ const r = localStorage.getItem('rz-resume'); if(r && (/تحفة الأطفال/.test(r) || /"src":"m:/.test(r))) localStorage.removeItem('rz-resume'); }catch(e){} })();
 function revive(k, e){ const fresh = /^s:/.test(e.q.src || '') && SPEC_BY_ID[e.q.src] ? toSpecial(SPEC_BY_ID[e.q.src]) : null;
@@ -702,7 +705,7 @@ function shareQ(q){
 function singleQ(id){
   const m = id.match(/^([bs]):([a-z0-9]+):(\d+)$/); let q = null;
   if(m && m[1] === 'b' && BANK[m[2]] && BANK[m[2]].questions[+m[3]]) q = toQ(BANK[m[2]].questions[+m[3]]);
-  if(m && m[1] === 's' && SPEC_BY_ID[id] && !HIDDEN_SRC.has(SPEC_BY_ID[id].src)) q = toSpecial(SPEC_BY_ID[id]);
+  if(m && m[1] === 's' && SPEC_BY_ID[id] && !isHidden(SPEC_BY_ID[id], SPEC_BY_ID[id]._ch)) q = toSpecial(SPEC_BY_ID[id]);
   if(!q){ app.innerHTML = ''; app.append(topBar('سؤال مشترك'), el('p', { class:'rz-empty' }, 'لم نجد هذا السؤال. ربما تغيّر بعد تحديث التطبيق.')); return; }
   start({ id:'single', kind:'single', title:'سؤال وصلك من صديق', les:q.les, replace:true, make:() => [q] });
 }
