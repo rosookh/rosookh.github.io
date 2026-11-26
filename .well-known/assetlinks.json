@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.rosookh",
+    "sha256_cert_fingerprints": ["9C:88:7D:3E:DE:80:7F:DE:D0:46:06:73:F6:44:AA:77:94:C4:7B:F2:2C:C2:E1:60:E6:28:AC:BA:D8:AB:1F:0E"]
+  }
+}]
