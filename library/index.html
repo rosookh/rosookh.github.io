@@ -45,6 +45,9 @@ button.vw{border-bottom:2px dotted var(--line-strong);border-radius:6px;margin:2
 .vw.right{background:var(--good-soft);color:var(--good-ink);outline:2px solid var(--good)}
 .vw.wrong{background:var(--bad-soft);color:var(--bad-ink);outline:2px solid var(--bad)}
 .vw.missed{outline:2px dashed var(--good);color:var(--good-ink)}
+.vw.optx{outline:2px dashed #3B7BBF;background:#E6F0FA;color:#1F4E7A}
+.optnote{margin-top:6px}
+.optnote .vw.optx{padding:0 6px}
 .vref{font-family:var(--f-ui);font-size:13px;color:var(--muted);white-space:nowrap}
 .opts{display:flex;flex-direction:column;gap:10px}
 .opts.tf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -135,6 +138,9 @@ button.vw{border-bottom:2px dotted var(--line-strong);border-radius:6px;margin:2
 .pnode.locked .disc{background:var(--line);color:var(--muted);box-shadow:0 4px 0 var(--line-strong)}
 .pnode.locked .pl{color:var(--muted)}
 .pnode.crown .disc{background:var(--accent);color:var(--on-accent);box-shadow:0 4px 0 #A88B68}
+.pnode.final.titled .disc{border:none;background:var(--accent);color:var(--on-accent);box-shadow:0 4px 0 #A88B68;font-size:26px}
+.pnode .ptitle{display:block;font-weight:800;font-size:17px;color:var(--primary-dark,var(--ink))}
+.pnode .psub{display:block;font-weight:400;font-size:13px;color:var(--muted)}
 .pnode.cur .disc{outline:4px solid var(--accent-soft);outline-offset:3px}
 .pnode.final .disc{background:var(--surface);border:2px dashed var(--accent);box-shadow:none;font-size:24px}
 
@@ -150,6 +156,7 @@ button.vw{border-bottom:2px dotted var(--line-strong);border-radius:6px;margin:2
 .ex-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;line-height:1.7}
 .ex-row.good,.ex-rule.good,.ex-f.good{background:var(--good-soft)}.ex-row.bad,.ex-rule.bad,.ex-f.bad{background:var(--bad-soft)}
 .ex-row .grow{flex-grow:1}.ex-tfb{display:flex;gap:6px;flex-shrink:0}.ex-tf{min-width:46px;padding:0 10px;font-size:18px}
+.ex-rep{align-self:flex-start;background:none;border:none;padding:2px 0;font:inherit;font-size:13px;color:var(--muted);text-decoration:underline;cursor:pointer}
 .ex-fix{font-size:14px;color:var(--ink);background:var(--accent-soft);border-radius:10px;padding:6px 10px;line-height:1.7}
 .ex-q{display:flex;flex-direction:column;gap:8px;line-height:1.8}.ex-opts{display:flex;flex-direction:column;gap:6px}
 .ex-opts .opt{min-height:48px;padding:8px 14px;font-weight:500}.ex-l{color:var(--muted);font-weight:700}
