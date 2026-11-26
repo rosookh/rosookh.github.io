@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../fonts/fonts.css">
 <link rel="stylesheet" href="../assets/rz.css">
 <script src="../assets/rz.js"></script>
-<title>اوصفني · رسوخ</title>
+<title>أوصفني · رسوخ</title>
 </head><body data-nav="imara">
 <style>
 .wrap{max-width:620px;margin:0 auto;padding:max(14px,env(safe-area-inset-top,0px)) 14px calc(var(--nav-h) + 40px);display:flex;flex-direction:column;gap:12px}
@@ -23,8 +23,12 @@
 .seg{display:flex;background:var(--line);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;border:none;background:transparent;border-radius:9px;min-height:42px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer}
 .seg button[aria-pressed="true"]{background:#1F2733;color:#fff;font-weight:700}
-.seg button.ok{background:#2F6B45!important;color:#fff}.seg button.no{background:#6B3439!important;color:#fff}
-.st.ok{background:#2F6B45!important;color:#fff;border-color:#2F6B45}.st.no{background:#6B3439!important;color:#fff;border-color:#6B3439}.st.missed{outline:3px solid #2F6B45}
+.seg button.ok{background:#2F6B45!important;color:#fff}.seg button.no{background:#B4443A!important;color:#fff}
+.st.ok{background:#2F6B45!important;color:#fff;border-color:#2F6B45}.st.no{background:#B4443A!important;color:#fff;border-color:#B4443A}.st.missed{outline:3px solid #4FA36B}
+.fresh .no{animation:shk .5s}.fresh .ok{animation:pop .45s}
+@keyframes shk{0%,100%{transform:none}20%{transform:translateX(-7px) rotate(-2deg)}40%{transform:translateX(7px) rotate(2deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.fresh .no,.fresh .ok{animation:none}}
 .fb{font-size:14px;line-height:1.8;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
 .done{text-align:center;align-items:center}.done .big{font-size:46px}
 </style>
@@ -49,7 +53,7 @@
   function draw(){
     const c = G.pool[G.i]; app.innerHTML = '';
     const top = document.createElement('div'); top.className = 'rz-top'; top.style.margin = '0 -8px';
-    top.innerHTML = '<a class="rz-icon" href="../sifat/" aria-label="رجوع" data-icon="back"></a><h1 class="rz-title" style="font-size:20px;margin:0">اوصفني</h1>';
+    top.innerHTML = '<a class="rz-icon" href="../sifat/" aria-label="رجوع" data-icon="back"></a><h1 class="rz-title" style="font-size:20px;margin:0">أوصفني</h1>';
     app.append(top);
     const bar = document.createElement('div'); bar.className = 'bar';
     const best = RZ.ls.get(BEST, 0);
@@ -84,6 +88,9 @@
     G.msg = `<b>${NAME[c]}: ${traits.join('، ')}.</b>` + (wrong.length ? '<br>تذكّر: ' + wrong.join(' · ') : '') + (roofOk ? '' : '<br>الصفات التي ليس لها ضد للحرف: ' + (need.length ? need.join('، ') : 'لا شيء')) + `<br>+${AR(got)} من ٧`;
     try{ RZ.addXP(got >= 6 ? 2 : 1); }catch(e){}
     draw();
+    /* wrong answers shake in red, right ones pop in green (batch 8, note 5) */
+    app.classList.add('fresh'); setTimeout(() => app.classList.remove('fresh'), 700);
+    if(got < 7) RZ.buzz(80);
   }
   function finish(){
     const best = RZ.ls.get(BEST, 0), rec = G.pts > best; if(rec) RZ.ls.set(BEST, G.pts);
@@ -92,6 +99,7 @@
     const a = document.createElement('button'); a.type = 'button'; a.className = 'rz-btn pri block'; a.textContent = 'جولة جديدة'; a.onclick = newGame;
     const b = document.createElement('a'); b.className = 'rz-btn block'; b.href = '../sifat/'; b.textContent = 'إلى عمارة الصفات';
     c.append(a, b); app.append(c);
+    try{ RZ.confetti(G.pts === G.max); }catch(e){}
   }
   newGame();
 })();

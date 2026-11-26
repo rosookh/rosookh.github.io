@@ -32,7 +32,10 @@
 .tile.sel{background:#1F2733;color:#fff}
 .tile.ok{background:#2F6B45;border-color:#2F6B45;color:#fff;cursor:default;height:34px;min-width:34px;font-size:18px}
 .tile.ok small{font-size:8px}
-.tile.shake{animation:sh .4s}@keyframes sh{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.tile.shake{animation:sh .45s}@keyframes sh{0%,100%{transform:none}20%{transform:translateX(-7px) rotate(-3deg)}40%{transform:translateX(7px) rotate(3deg)}60%{transform:translateX(-5px) rotate(-2deg)}80%{transform:translateX(5px) rotate(2deg)}}
+.tile.bad{background:#B4443A!important;border-color:#B4443A!important;color:#fff!important}
+.house.bad{animation:sh .45s;border-color:#B4443A!important;background:#F6DCD9!important;box-shadow:0 0 0 3px rgba(180,68,58,.35)}
+@media (prefers-reduced-motion:reduce){.tile.shake,.house.bad{animation:none}}
 .tray{position:fixed;inset-inline:0;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);padding:8px 12px;z-index:5}
 .tray .in{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
 .tiles{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
@@ -105,7 +108,11 @@
     if(st.sel == null){ $('msg').textContent = 'اختر حرفًا من الأسفل أولًا.'; return; }
     const x = st.left[st.sel];
     if(x.h === hid){ (st.placed[hid] = st.placed[hid] || []).push(x.r); st.left.splice(st.sel, 1); st.sel = null; draw(); }
-    else { st.errs++; st.miss[x.r] = (st.miss[x.r] || 0) + 1; const t = $('tiles').children[st.sel]; draw(); const t2 = $('tiles').children[st.sel]; if(t2){ t2.classList.add('shake'); } }
+    else { st.errs++; st.miss[x.r] = (st.miss[x.r] || 0) + 1; draw();
+      /* wrong house: the floor's house and the letter both shake and turn red for a moment */
+      const t2 = $('tiles').children[st.sel], h2 = document.querySelector('.house[data-h="' + hid + '"]');
+      [t2, h2].forEach(e => { if(e){ e.classList.add('shake', 'bad'); setTimeout(() => e.classList.remove('shake', 'bad'), 650); } });
+      RZ.buzz(80); }
   }
   function finish(){
     clearInterval(timer); const t = Date.now() - st.t0; const all = RZ.ls.get(BEST, {}); const prev = all[lvl];
@@ -120,6 +127,7 @@
     const again = document.createElement('button'); again.type = 'button'; again.className = 'rz-btn pri block'; again.textContent = 'العب مرة أخرى'; again.onclick = start;
     const back = document.createElement('a'); back.className = 'rz-btn block'; back.href = '../imara/'; back.textContent = 'إلى عمارة الحروف';
     c.append(again, back); app.insertBefore(c, app.children[2]); scrollTo(0, 0);
+    try{ RZ.confetti(perfect || st.errs === 0); }catch(e){}
   }
   start();
 })();
