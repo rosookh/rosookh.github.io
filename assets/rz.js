@@ -10,6 +10,8 @@
   const stored = ls.get(ST_KEY, {});
   // light is the default; an old "auto" that was never chosen on purpose becomes light
   if(stored.theme === 'auto' && !stored.themeSet) stored.theme = 'light';
+  // batch 8: everyone goes back to light once; after that, whatever the learner picks stays
+  if(!stored.light8){ stored.theme = 'light'; stored.light8 = 1; delete stored.themeSet; ls.set(ST_KEY, stored); }
   const st = Object.assign({ theme:'light', fs:'m', name:'', goal:'m', dua:true, notif:false, sound:true }, stored);
   function apply(){ d.setAttribute('data-theme', st.theme); d.setAttribute('data-fs', st.fs); }
   apply();
@@ -93,7 +95,7 @@
     { id:'perfect', t:'أنهِ اختبارًا بلا أي خطأ', n:1, ev:'perfect' },
     { id:'daily', t:'أتمّ تحدّي اليوم', n:1, ev:'daily' },
     { id:'speed', t:'العب جولة سريعة', n:1, ev:'speed' },
-    { id:'riddle', t:'حلّ حزورة اليوم', n:1, ev:'riddle' },
+    { id:'riddle', t:'حلّ حزيرة اليوم', n:1, ev:'riddle' },
     { id:'img', t:'أجب سؤالين على صور المخارج', n:2, ev:'img' },
     { id:'hard', t:'أجب ٥ أسئلة صعبة صحيحة', n:5, ev:'hard' },
     { id:'hifz', t:'راجع سورة من محفوظك', n:1, ev:'hifz' }
@@ -218,20 +220,25 @@
     }catch(e){}
   }
 
-  async function enableNotif(){ // returns a short message for the user
+  async function enableNotif(){ // returns a short, true message for the user
     if(!('Notification' in window) || !('serviceWorker' in navigator)) return 'جوالك أو متصفحك لا يدعم التذكير.';
     const p = await Notification.requestPermission();
     if(p !== 'granted') return 'لم تُمنح الموافقة على الإشعارات. يمكنك تفعيلها لاحقًا من إعدادات الجوال.';
+    RZ.setSettings({ notif:true });
     try{
       const reg = await navigator.serviceWorker.ready;
-      if('periodicSync' in reg){
-        const ps = await navigator.permissions.query({ name:'periodic-background-sync' }).catch(() => ({ state:'denied' }));
-        if(ps.state === 'granted') await reg.periodicSync.register('rz-daily', { minInterval: 12 * 3600 * 1000 });
-        else { RZ.setSettings({ notif:true }); return 'فُعّل التذكير. قد لا يصل في كل الأيام، لأن الجوال يحدّد وقته.'; }
-      }
-    }catch(e){}
-    RZ.setSettings({ notif:true });
-    return 'فُعّل التذكير اليومي.';
+      if(!('periodicSync' in reg)) return 'فُعّل التذكير، لكن جوالك لا يسمح للتطبيق بالعمل في الخلفية، فقد لا يصل. سيصل تذكير مضمون في تحديث قادم.';
+      // try to register whatever the permission query says; the browser decides
+      try{ await reg.periodicSync.register('rz-daily', { minInterval: 12 * 3600 * 1000 }); }catch(e){}
+      const tags = await reg.periodicSync.getTags().catch(() => []);
+      if(tags.includes('rz-daily')) return 'فُعّل التذكير اليومي. الجوال يختار وقته، فقد يتأخر أحيانًا.';
+      return 'فُعّل التذكير، لكن جوالك لم يسمح بتشغيله في الخلفية، فقد لا يصل. سيصل تذكير مضمون في تحديث قادم.';
+    }catch(e){ return 'فُعّل التذكير، لكن قد لا يصل على هذا الجوال.'; }
+  }
+  async function notifStatus(){ // the real state, for the settings page
+    if(!st.notif) return '';
+    try{ const reg = await navigator.serviceWorker.ready; if(!('periodicSync' in reg)) return 'الحالة: جوالك لا يدعم التذكير في الخلفية.';
+      const tags = await reg.periodicSync.getTags(); return tags.includes('rz-daily') ? 'الحالة: التذكير مسجّل ✓' : 'الحالة: الجوال لم يسمح بتشغيل التذكير في الخلفية.'; }catch(e){ return ''; }
   }
   async function disableNotif(){
     RZ.setSettings({ notif:false });
@@ -278,6 +285,13 @@
     share:`<svg viewBox="0 0 24 24" ${P} stroke-width="1.7"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>`,
     grid:`<svg viewBox="0 0 24 24" ${P} stroke-width="1.7"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>`,
     path:`<svg viewBox="0 0 24 24" ${P} stroke-width="1.7"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="19" r="2"/><path d="M8 5.5c6 1 8 3 8.5 4.7M16 13.8C15 16 12 18 8 18.6"/></svg>`,
+    question:`<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 1 1 3.7 2.7c-.7.3-1 .8-1 1.5v.6"/><circle cx="12" cy="17.2" r=".7" fill="currentColor"/></svg>`,
+    wheel:`<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="13" r="8"/><path d="M12 5v16M4 13h16M6.4 7.4l11.2 11.2M17.6 7.4 6.4 18.6"/><circle cx="12" cy="13" r="1.8" fill="currentColor"/><path d="M10 2.5h4L12 5z" fill="currentColor"/></svg>`,
+    duel:`<svg viewBox="0 0 24 24" ${P}><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 20c.8-3.2 3-5 5.5-5s4.2 1.3 5 3.2M11 18.2c.8-1.9 2.5-3.2 5-3.2 2.5 0 4.7 1.8 5.5 5"/></svg>`,
+    tower:`<svg viewBox="0 0 24 24" ${P}><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M11 21v-3h2v3"/></svg>`,
+    traits:`<svg viewBox="0 0 24 24" ${P}><path d="M4 7h10M4 12h16M4 17h7"/><circle cx="18" cy="7" r="2"/><circle cx="15" cy="17" r="2"/></svg>`,
+    who:`<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/><path d="M17.5 3.5a2 2 0 1 1 2.4 2c-.4.1-.6.4-.6.8"/></svg>`,
+    lock:`<svg viewBox="0 0 24 24" ${P}><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`,
     bolt:`<svg viewBox="0 0 24 24" ${P} stroke-width="1.8"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>`,
     puzzle:`<svg viewBox="0 0 24 24" ${P} stroke-width="1.7"><path d="M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z"/></svg>`,
     wave:`<svg viewBox="0 0 24 24" ${P} stroke-width="1.7"><path d="M3 12h3l2-5 4 10 2-5h7"/></svg>`,
@@ -373,9 +387,56 @@
     }).catch(() => {});
     navigator.serviceWorker.addEventListener('controllerchange', () => { if(had) updateBar(); });
   });
+  /* celebration: coloured paper that bursts and falls (batch 8, notes 4 and 5); a short cheer if sound is on */
+  let _ac = null;
+  function cheer(big){
+    if(st.sound === false) return;
+    try{ _ac = _ac || new (window.AudioContext || window.webkitAudioContext)(); if(_ac.state === 'suspended') _ac.resume(); const t = _ac.currentTime;
+      (big ? [523, 659, 784, 1047, 1319] : [587, 784, 988]).forEach((f, i) => { const o = _ac.createOscillator(), g = _ac.createGain(); o.type = 'triangle'; o.frequency.value = f;
+        g.gain.setValueAtTime(.0001, t + i * .11); g.gain.exponentialRampToValueAtTime(.14, t + i * .11 + .02); g.gain.exponentialRampToValueAtTime(.0001, t + i * .11 + .9);
+        o.connect(g).connect(_ac.destination); o.start(t + i * .11); o.stop(t + i * .11 + 1); }); }catch(e){}
+  }
+  function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+  function confetti(big){
+    cheer(big); buzz(big ? [30, 60, 30, 60, 40] : [30, 50, 30]);
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const c = document.createElement('canvas'); c.setAttribute('aria-hidden', 'true');
+    c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9998';
+    document.body.append(c); const x = c.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1);
+    const W = c.width = innerWidth * dpr, H = c.height = innerHeight * dpr;
+    const cols = ['#2F5D50', '#C9AE8E', '#B98A3E', '#6B3439', '#4E6E73', '#8A9A78', '#E9C46A', '#F4EDE0'];
+    const N = big ? 220 : 120, P = [];
+    const burst = (cx, cy, n) => { for(let i = 0; i < n; i++){ const a = -Math.PI / 2 + (Math.random() - .5) * Math.PI * .9, v = (6 + Math.random() * 9) * dpr;
+      P.push({ x:cx, y:cy, vx:Math.cos(a) * v, vy:Math.sin(a) * v, w:(5 + Math.random() * 6) * dpr, h:(8 + Math.random() * 8) * dpr, r:Math.random() * 6, vr:(Math.random() - .5) * .3, c:cols[i % cols.length], sh:Math.random() < .3 }); } };
+    burst(W * .25, H * .9, N / 2); burst(W * .75, H * .9, N / 2); if(big) setTimeout(() => burst(W * .5, H * .95, 100), 450);
+    const end = performance.now() + (big ? 3600 : 2600);
+    (function tick(now){
+      x.clearRect(0, 0, W, H);
+      P.forEach(p => { p.vy += .32 * dpr; p.vx *= .99; p.vy *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c;
+        if(p.sh){ x.beginPath(); x.arc(0, 0, p.w / 2, 0, 7); x.fill(); } else x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2)));
+        x.restore(); });
+      if(now < end) requestAnimationFrame(tick); else c.remove();
+    })(performance.now());
+  }
+  /* chapters the learner has reached: the lessons chosen in settings, else the chapters practised, else level 1 (same rule as the library) */
+  function reachedChapters(){
+    const order = (window.RZ_LESSONS || []).flatMap(L => L.ch.map(c => c.id));
+    let have = new Set((ls.get('tajweed-library-custom-v1', {}).sel || []).map(k => k.split(':')[0]));
+    if(!have.size) have = new Set(Object.keys(ls.get('rz-mastery', {})).map(k => k.split(':')[0]));
+    if(!have.size) return order.slice(0, 3);
+    let last = -1; order.forEach((id, i) => { if(have.has(id)) last = i; }); return order.slice(0, last + 1);
+  }
+  /* «شارك التطبيق»: the website link until Google Play opens the app to everyone */
+  const APP_URL = 'https://rosookh.github.io/';
+  async function shareApp(){
+    const text = 'تعلّم أحكام التجويد بطريقة ممتعة مع تطبيق «رسوخ»: دروس، واختبارات لكل باب، وحزيرة كل يوم، وتحدَّ أصدقاءك. جرّبه مجانًا:';
+    try{ if(navigator.share){ await navigator.share({ title:'رسوخ: تعلّم التجويد', text, url:APP_URL }); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+    try{ await navigator.clipboard.writeText(text + '\n' + APP_URL); toast('نُسخ رابط التطبيق، الصقه حيث تريد'); }catch(e){ toast(APP_URL, 5000); }
+  }
   window.RZ = { ls, AR, count, Q_FORMS, DAY_FORMS, PT_FORMS, today, addDays, diffDays, dateAR, seeded, daySeed, base, icon, report, EMAIL,
     mistakes, mistakesDue, streak, markDailyDone, setVacation,
     game: G, gsave, addXP, hifzData, hifzToday, hifzDone, level, XP_AT, TIERS, goal, GOALS, dayLog, answer, quizDone, tasks, taskEvent, BADGES, TITLES, checkBadges, flag,
-    pattern, toast, sheet, enableNotif, disableNotif, DUA_OPEN, DUA_CLOSE, backupData, restoreData, syncState,
+    pattern, toast, sheet, reachedChapters, shareApp, APP_URL, confetti, buzz, enableNotif, notifStatus, disableNotif, DUA_OPEN, DUA_CLOSE, backupData, restoreData, syncState,
     settings: () => Object.assign({}, st), setSettings(p){ Object.assign(st, p); ls.set(ST_KEY, st); apply(); syncState(); } };
 })();
