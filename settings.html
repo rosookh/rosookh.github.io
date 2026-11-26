@@ -88,6 +88,7 @@
 
   <section class="rz-card">
     <b>عن التطبيق</b>
+    <button type="button" class="rz-list-btn" id="shareApp"><span class="rz-ic" data-icon="share"></span><span class="grow"><b>شارك التطبيق</b><span class="rz-meta">أرسله لمن تحب عبر واتساب وغيره</span></span></button>
     <a class="rz-list-btn" href="index.html#tour"><span class="rz-ic" data-icon="path"></span><span class="grow"><b>عرض الجولة التعريفية</b><span class="rz-meta">الشاشات التي تظهر أول مرة</span></span></a>
     <button type="button" class="rz-list-btn" id="news"><span class="rz-ic" data-icon="bell"></span><span class="grow"><b>ما الجديد</b><span class="rz-meta" id="newsS"></span></span></button>
     <a class="rz-list-btn" id="mail" href="#"><span class="rz-ic" data-icon="mail"></span><span class="grow"><b>أرسل ملاحظة أو اقتراحًا</b><span class="rz-meta">يفتح بريدًا جاهزًا</span></span></a>
@@ -120,6 +121,8 @@
   seg('fs', 'fs'); seg('theme', 'theme', { themeSet:true });
   // notifications + du'a
   const nt = $('notif'); nt.checked = !!st.notif;
+  RZ.notifStatus().then(m => { if(m) $('notifMsg').textContent = m; });
+  $('shareApp').addEventListener('click', () => RZ.shareApp());
   nt.addEventListener('change', async () => { if(nt.checked){ const m = await RZ.enableNotif(); $('notifMsg').textContent = m; nt.checked = !!RZ.settings().notif; } else { await RZ.disableNotif(); $('notifMsg').textContent = 'أُوقف التذكير.'; } });
   const sn = $('snd'); sn.checked = st.sound !== false; sn.addEventListener('change', () => RZ.setSettings({ sound: sn.checked }));
   const du = $('dua'); du.checked = st.dua !== false; du.addEventListener('change', () => RZ.setSettings({ dua: du.checked }));

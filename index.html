@@ -23,14 +23,38 @@
 .dwrap #streak{margin-inline-end:50px}
 .gbar{display:flex;align-items:center;gap:10px;font-size:13px}
 .gbar .rz-bar{flex-grow:1;background:rgba(244,237,224,.25)}.gbar .rz-bar i{background:#C9AE8E}
-.short{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.short a{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink);font-size:12.5px;font-weight:600;text-align:center;line-height:1.35}
-.short .ic{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center}
-.short .ic svg{width:24px;height:24px}
-.short .done .ic{box-shadow:0 0 0 2px var(--good)}
-.short .dot{position:absolute;top:-4px;left:calc(50% - 34px);min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--bad,#B4443A);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
-.s1 .ic{background:var(--wine-soft);color:var(--wine)}.s2 .ic{background:var(--ocean-soft);color:var(--ocean)}
-.s3 .ic{background:var(--bad-soft,#F6E0DD);color:var(--bad-ink,#8A2D25)}.s4 .ic{background:var(--sage-soft);color:var(--sage)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.blk{font:inherit;text-align:start;border-radius:20px;padding:14px 12px;display:flex;flex-direction:column;gap:6px;min-height:186px;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .2s}
+.blk:active{transform:scale(.98)}
+.blk:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.blk h2{margin:0;font-size:18px;line-height:1.25}
+.blk .sm{font-size:12.5px;opacity:.85;line-height:1.5}
+.blk.study{background:var(--primary-soft);color:var(--primary)}
+.blk.chal{background:linear-gradient(160deg,var(--gold-a),var(--gold-b));color:var(--gold-ink)}
+.blk[aria-expanded=true]{border-color:currentColor}
+.blk .mini{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.blk .mini span{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600}
+.blk .mini svg{width:18px;height:18px;flex:none}
+.blk .teaser{background:var(--gold-card);border-radius:12px;padding:8px;font-size:12.5px;line-height:1.55}
+.blk .teaser b{display:block;font-size:12px;color:var(--gold-mark)}
+.blk .wh{width:52px;height:52px;align-self:flex-end;margin-top:auto;animation:whspin 9s linear infinite}
+@keyframes whspin{to{rotate:360deg}}
+.panel[hidden]{display:none}
+.rz-h.gold::before{background:var(--gold-mark)!important}
+.rz-tile .thumb{width:58px;height:46px;border-radius:12px;object-fit:cover;margin-bottom:6px;background:#fff}
+.rz-tile.c-gold{--t:#B98A3E;--t-soft:var(--gold-a);--t-ink:#fff}
+.rz-tile .dot{position:absolute;top:10px;left:10px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--bad,#B4443A);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.rz-tile.done>span:first-child{box-shadow:0 0 0 3px var(--good)}
+.rz-tile.locked{opacity:.6}
+.rz-tile.locked b::after{content:" 🔒";font-size:13px}
+.rz-grid .rz-tile{position:relative}
+.hd-tools{display:flex;align-items:center;gap:8px}
+.shr{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.shr svg{width:20px;height:20px}
+:root{--gold-a:#F7E6C4;--gold-b:#EBCB93;--gold-ink:#4A3413;--gold-card:rgba(255,255,255,.62);--gold-mark:#8A5F1F}
+:root[data-theme=dark]{--gold-a:#3a3020;--gold-b:#4a3a22;--gold-ink:#F1DDB5;--gold-card:rgba(0,0,0,.25);--gold-mark:#E3B868}
+@media (prefers-color-scheme:dark){:root[data-theme=auto]{--gold-a:#3a3020;--gold-b:#4a3a22;--gold-ink:#F1DDB5;--gold-card:rgba(0,0,0,.25);--gold-mark:#E3B868}}
+@media (prefers-reduced-motion:reduce){.blk .wh{animation:none}}
 .resume{border:2px solid var(--ocean)}
 .resume .rz-ic{background:var(--ocean-soft)!important;color:var(--ocean)!important}
 .rz-grid .rz-tile{min-height:104px}
@@ -47,7 +71,7 @@
         <span class="rz-meta">رسوخ · تعلّم التجويد</span>
       </div>
     </div>
-    <a class="rz-lvl" href="progress.html" id="lvl" aria-label="مستواك"></a>
+    <div class="hd-tools"><button type="button" class="shr" id="shareApp" aria-label="شارك التطبيق" title="شارك التطبيق"><span data-icon="share" style="display:flex"></span></button><a class="rz-lvl" href="progress.html" id="lvl" aria-label="مستواك"></a></div>
   </header>
 
   <div id="ios" class="ios" hidden><span style="flex-grow:1">ثبّت رسوخ على شاشتك: افتحه في <b>سفاري</b>، اضغط زر المشاركة <b>⬆︎</b> أسفل الشاشة، ثم <b>«إضافة إلى الشاشة الرئيسية»</b>.</span><button type="button" id="iosX" aria-label="إخفاء">×</button></div>
@@ -68,22 +92,42 @@
     <span data-icon="chev" style="width:20px;height:20px;color:var(--muted);display:flex"></span>
   </a>
 
-  <nav class="short" aria-label="اختصارات">
-    <a class="s1" href="library/#/riddle" id="riddle"><span class="ic" data-icon="puzzle"></span>حزورة اليوم</a>
-    <a class="s2" href="library/#/wheel" id="speed"><span class="ic" data-icon="bolt"></span>دولاب التجويد</a>
-    <a class="s3" href="library/#/mistakes" id="mist"><span class="ic" data-icon="mistake"></span>دفتر أخطائي</a>
-    <a class="s4" href="hifz/#review" id="hifzR"><span class="ic" data-icon="hifz"></span>مراجعة الحفظ</a>
-  </nav>
+  <div class="two" role="group" aria-label="أقسام التطبيق">
+    <button type="button" class="blk study" id="bStudy" aria-controls="pStudy" aria-expanded="true">
+      <h2>ادرس واختبر</h2><span class="sm">دروس، واختبار لكل باب، وامتحان كامل</span>
+      <span class="mini"><span><span data-icon="path"></span>مسار الدروس</span><span><span data-icon="book"></span>مكتبة الاختبارات</span><span><span data-icon="timer"></span>اختبر استعدادك</span></span>
+    </button>
+    <button type="button" class="blk chal" id="bChal" aria-controls="pChal" aria-expanded="false">
+      <h2>ميدان التحدّي</h2>
+      <span class="teaser"><b id="tzT">حزيرة اليوم</b><span id="tzS">سؤال جديد كل يوم… هل تحلّه من أول محاولة؟</span></span>
+      <svg class="wh" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#fff"/><path d="M50 50 L50.0 6.0 A44 44 0 0 1 88.1 28.0Z" fill="#2F5D50"/><path d="M50 50 L88.1 28.0 A44 44 0 0 1 88.1 72.0Z" fill="#C9AE8E"/><path d="M50 50 L88.1 72.0 A44 44 0 0 1 50.0 94.0Z" fill="#4E6E73"/><path d="M50 50 L50.0 94.0 A44 44 0 0 1 11.9 72.0Z" fill="#B98A3E"/><path d="M50 50 L11.9 72.0 A44 44 0 0 1 11.9 28.0Z" fill="#6B3439"/><path d="M50 50 L11.9 28.0 A44 44 0 0 1 50.0 6.0Z" fill="#8A9A78"/><circle cx="50" cy="50" r="9" fill="#fff" stroke="#4A3413" stroke-width="3"/></svg>
+    </button>
+  </div>
 
-  <h2 class="rz-h">الأقسام</h2>
-  <nav class="rz-grid" aria-label="أقسام التطبيق">
-    <a class="rz-tile c-green" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب</span></a>
-    <a class="rz-tile c-wine" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درسًا بعد درس</span></a>
-    <a class="rz-tile c-sand" href="library/#/exam"><span data-icon="timer"></span><b>اختبر استعدادك</b><span class="rz-meta">امتحان كامل من ١٠٠</span></a>
-    <a class="rz-tile c-ocean" href="makharij/"><span data-icon="wave"></span><b>كيف يخرج الحرف؟</b><span class="rz-meta">المخارج بالصوت والصورة</span></a>
-    <a class="rz-tile c-sage" href="hifz/"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات والتسميع</span></a>
-    <a class="rz-tile c-wine" href="library/#/share"><span data-icon="share"></span><b>للمعلّم</b><span class="rz-meta">صمّم اختبارًا وشاركه</span></a>
-  </nav>
+  <section class="panel" id="pStudy">
+    <h2 class="rz-h">ادرس واختبر</h2>
+    <nav class="rz-grid" aria-label="ادرس واختبر">
+      <a class="rz-tile c-wine" href="library/#/path"><span data-icon="path"></span><b>مسار الدروس</b><span class="rz-meta">درسًا بعد درس</span></a>
+      <a class="rz-tile c-green" href="library/"><span data-icon="book"></span><b>مكتبة الاختبارات</b><span class="rz-meta">اختبار لكل باب</span></a>
+      <a class="rz-tile c-ocean" href="makharij/"><img class="thumb" src="assets/makharij-thumb.webp" alt=""><b>كيف يخرج الحرف؟</b><span class="rz-meta">المخارج بالصوت والصورة</span></a>
+      <a class="rz-tile c-sand" href="library/#/exam"><span data-icon="timer"></span><b>اختبر استعدادك</b><span class="rz-meta">امتحان كامل من ١٠٠</span></a>
+      <a class="rz-tile c-sage" href="hifz/" id="hifzT"><span data-icon="hifz"></span><b>مساعد الحفظ</b><span class="rz-meta">المتشابهات والتسميع</span></a>
+      <a class="rz-tile c-wine" href="library/#/mistakes" id="mist"><span data-icon="mistake"></span><b>دفتر أخطائي</b><span class="rz-meta">راجع ما أخطأت فيه</span></a>
+      <a class="rz-tile c-green" href="library/#/share"><span data-icon="share"></span><b>للمعلّم</b><span class="rz-meta">صمّم اختبارًا وشاركه</span></a>
+    </nav>
+  </section>
+
+  <section class="panel" id="pChal" hidden>
+    <h2 class="rz-h gold">ميدان التحدّي</h2>
+    <nav class="rz-grid" aria-label="ميدان التحدّي">
+      <a class="rz-tile c-gold" href="library/#/riddle" id="riddle"><span data-icon="question"></span><b>حزيرة اليوم</b><span class="rz-meta">سؤال جديد كل يوم</span></a>
+      <a class="rz-tile c-green" href="library/#/wheel"><span data-icon="wheel"></span><b>دولاب التجويد</b><span class="rz-meta">أدِره واختبر نفسك</span></a>
+      <a class="rz-tile c-wine" href="library/#/duel"><span data-icon="duel"></span><b>تحدَّ صديقًا</b><span class="rz-meta">العب ثم أرسل له التحدّي</span></a>
+      <a class="rz-tile c-ocean" href="games/sukkan.html" data-need="l2c1"><span data-icon="tower"></span><b>أرجع السكان</b><span class="rz-meta">رتّب الحروف في طوابقها</span></a>
+      <a class="rz-tile c-sand" href="games/sifni.html" data-need="l2c2"><span data-icon="traits"></span><b>أوصفني</b><span class="rz-meta">صفات كل حرف</span></a>
+      <a class="rz-tile c-sage" href="library/#/who" data-need="l2c2"><span data-icon="who"></span><b>من أنا؟</b><span class="rz-meta">خمّن الحرف من صفاته</span></a>
+    </nav>
+  </section>
 
   <footer class="foot">
     <span>نص المصحف برواية حفص عن عاصم بالرسم العثماني. التطبيق وسيلة مساعدة، والمرجع في الأداء هو التلقّي من المعلم.</span>
@@ -115,14 +159,29 @@
     // resume
     const R = RZ.ls.get('rz-resume', null);
     if(R && R.qs && R.i < R.qs.length && Date.now() - R.at < 7 * 864e5){ $('resume').hidden = false; $('resumeS').textContent = (R.title || 'اختبار') + ' · ' + AR(R.i) + ' من ' + AR(R.qs.length); }
-    // shortcuts
+    // badges on the tiles
     const dot = (el, n) => { let d = el.querySelector('.dot'); if(!n){ if(d) d.remove(); return; } if(!d){ d = document.createElement('span'); d.className = 'dot'; el.append(d); } d.textContent = AR(n); };
-    const rd = RZ.ls.get('rz-riddle', {}); $('riddle').classList.toggle('done', rd.day === RZ.today());
+    const rd = RZ.ls.get('rz-riddle', {}), solved = rd.day === RZ.today();
+    $('riddle').classList.toggle('done', solved);
+    $('tzT').textContent = solved ? 'حزيرة اليوم ✓' : 'حزيرة اليوم';
+    $('tzS').textContent = solved ? (rd.ok ? 'حللتها اليوم! جرّب الدولاب أو تحدَّ صديقًا.' : 'عُد غدًا لحزيرة جديدة، أو أدِر الدولاب.') : 'سؤال جديد كل يوم… هل تحلّه من أول محاولة؟';
     dot($('mist'), RZ.mistakesDue());
     const hz = RZ.hifzToday(), left = hz.list.filter(n => !(hz.h.today.done || []).includes(n));
-    dot($('hifzR'), left.length); $('hifzR').classList.toggle('done', hz.list.length > 0 && !left.length);
+    dot($('hifzT'), left.length); $('hifzT').href = left.length ? 'hifz/#review' : 'hifz/';
+    // games that open when the learner reaches their chapter
+    const reached = RZ.reachedChapters();
+    document.querySelectorAll('[data-need]').forEach(a => { const ok = reached.includes(a.dataset.need), meta = a.querySelector('.rz-meta');
+      if(!a.dataset.m) a.dataset.m = meta.textContent;
+      a.classList.toggle('locked', !ok); meta.textContent = ok ? a.dataset.m : 'تُفتح بعد ' + (a.dataset.need === 'l2c1' ? 'باب المخارج' : 'باب الصفات'); });
   }
   paint();
+  // the two blocks: «ادرس واختبر» and «ميدان التحدّي»; remember the last one opened
+  const openP = k => { const st2 = k === 'chal'; $('bStudy').setAttribute('aria-expanded', String(!st2)); $('bChal').setAttribute('aria-expanded', String(st2)); $('pStudy').hidden = st2; $('pChal').hidden = !st2; RZ.ls.set('rz-home-panel', k); };
+  openP(RZ.ls.get('rz-home-panel', 'study'));
+  $('bStudy').addEventListener('click', () => { openP('study'); $('pStudy').scrollIntoView({ behavior:'smooth', block:'start' }); });
+  $('bChal').addEventListener('click', () => { openP('chal'); $('pChal').scrollIntoView({ behavior:'smooth', block:'start' }); });
+  document.querySelectorAll('[data-need]').forEach(a => a.addEventListener('click', e => { if(a.classList.contains('locked')){ e.preventDefault(); RZ.toast('هذه اللعبة ' + a.querySelector('.rz-meta').textContent + '. اختر الدرس الذي وصلت إليه من الإعدادات.'); } }));
+  $('shareApp').addEventListener('click', () => RZ.shareApp());
   // first run tour, or "what's new" after an update
   const ver = (window.RZ_CHANGES && RZ_CHANGES[0].v) || '';
   if(!RZ.ls.get('rz-onboarded', 0) || location.hash === '#tour'){
