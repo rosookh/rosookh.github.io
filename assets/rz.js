@@ -144,7 +144,10 @@
   const TITLES = [['l1c1','📜','عارف المقدمات'],['l1c2','🏅','فارس النون الساكنة'],['l1c3','🎵','حارس الغنة'],['l1c4','🌊','محترف المدود'],
     ['l2c1','🎯','خبير المخارج'],['l2c2','💎','سيد الصفات والقلقلة'],['l2c3','⚖️','ميزان التفخيم والترقيق'],['l2c4','🔗','ضابط الإدغام'],['l2c5','🪝','صاحب اللامات'],
     ['l3c1','🚪','مُحكِم البدء'],['l3c2','🛑','أمير الوقف'],['l3c3','✂️','حافظ المقطوع والموصول'],['l3c4','🎀','دقيق التاءات'],['l3c5','🖋️','متقن الإثبات والحذف']]
-    .map(([ch, e, t]) => ({ id:'t_' + ch, ch, e, t, ok: () => ((ls.get('tajweed-library-v1', {}).stars || {})[ch] || 0) >= 3 }));
+    .map(([ch, e, t]) => ({ id:'t_' + ch, ch, e, t, ok: () => { const L = ls.get('tajweed-library-v1', {}); if(((L.stars || {})[ch] || 0) >= 3) return true;
+      /* or every lesson of the chapter crowned (3 stars) in the lessons path */
+      const c = (typeof LESSONS !== 'undefined' && LESSONS[ch]) || (window.RZ_LESSONS || []).flatMap(l => l.ch).find(x => x.id === ch), n = c ? c.ls.length : 0, les = L.les || {};
+      return n > 0 && Array.from({ length:n }, (_, i) => les[ch + ':' + i] || 0).every(v => v >= 3); } }));
   function checkBadges(){
     const fresh = [];
     BADGES.concat(TITLES).forEach(b => { if(!G.badges['got_' + b.id] && b.ok()){ G.badges['got_' + b.id] = today(); fresh.push(b); } });
@@ -353,7 +356,23 @@
     document.querySelectorAll('[data-pattern]').forEach(e => pattern(e, { seed: +e.dataset.pattern || 11 }));
     splash(); syncState();
   });
-  if('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register(base + 'sw.js').catch(() => {}));
+  /* offline worker: check for a new version on every open; when one is installed, offer a one-tap refresh (batch 7, note 6) */
+  function updateBar(){
+    if(document.querySelector('.rz-upd')) return;
+    const b = document.createElement('div'); b.className = 'rz-upd'; b.setAttribute('role', 'status');
+    b.innerHTML = '<span>نزل تحديث جديد للتطبيق</span>';
+    const go = document.createElement('button'); go.type = 'button'; go.textContent = 'حدِّث الآن'; go.addEventListener('click', () => location.reload());
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.setAttribute('aria-label', 'لاحقًا'); x.textContent = '×'; x.addEventListener('click', () => b.remove());
+    b.append(go, x); document.body.append(b);
+  }
+  if('serviceWorker' in navigator) addEventListener('load', () => {
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register(base + 'sw.js', { updateViaCache:'none' }).then(reg => {
+      reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if(had) updateBar(); });
+  });
   window.RZ = { ls, AR, count, Q_FORMS, DAY_FORMS, PT_FORMS, today, addDays, diffDays, dateAR, seeded, daySeed, base, icon, report, EMAIL,
     mistakes, mistakesDue, streak, markDailyDone, setVacation,
     game: G, gsave, addXP, hifzData, hifzToday, hifzDone, level, XP_AT, TIERS, goal, GOALS, dayLog, answer, quizDone, tasks, taskEvent, BADGES, TITLES, checkBadges, flag,

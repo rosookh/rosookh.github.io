@@ -201,3 +201,9 @@ body.rz-quiz .rz-toast{bottom:calc(var(--act-h,120px) + 16px)}
 .rz-bdg b{font-size:13px}
 .rz-list-btn .chev{width:20px;height:20px;color:var(--muted);display:flex;flex-shrink:0}.rz-list-btn .chev svg{width:20px;height:20px}
 .rz-list-btn .rz-ic svg{width:22px;height:22px}
+
+/* «نزل تحديث جديد» bar */
+.rz-upd{position:fixed;inset-inline:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 8px;border-radius:14px;background:var(--primary,#2F5D50);color:var(--primary-ink,#fff);box-shadow:0 8px 24px rgba(0,0,0,.18);font-weight:600}
+.rz-upd span{flex:1}
+.rz-upd button{border:none;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;background:var(--surface,#fff);color:var(--primary,#2F5D50)}
+.rz-upd button.x{background:none;color:inherit;padding:4px 8px;font-size:20px}
