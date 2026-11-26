@@ -93,6 +93,17 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .k.sm{font-family:var(--body);font-size:14px}
 .k[aria-pressed="true"]{background:var(--gc);color:var(--surface)}
 .lb2{font-family:var(--body);font-size:14px;font-weight:700}
+/* letters in a narrow column beside the picture; the picture stays on screen while the text scrolls (batch 7, note 16) */
+.viewrow{position:relative;padding-left:66px}
+.viewrow .groups{position:absolute;left:0;top:0;bottom:0;width:60px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain}
+.viewrow .groups::-webkit-scrollbar{display:none}
+.viewrow .grp{padding:5px 3px;gap:4px;border-radius:10px;align-items:center}
+.viewrow .grp h3{font-size:10px;text-align:center;line-height:1.25}
+.viewrow .keys{flex-direction:column;gap:4px;align-items:center}
+.viewrow .k{min-width:46px;min-height:42px;font-size:22px;padding:2px}
+.viewrow .k.sm{font-size:10.5px;padding:2px;min-width:46px;line-height:1.2}
+@media (max-width:820px){.stage{position:sticky;top:0;z-index:5;box-shadow:0 6px 14px rgba(0,0,0,.08)}}
+
 .lbl{font-family:var(--body);font-size:13px;font-weight:600;fill:var(--muted)}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none!important}}
 .pulse{animation:pl 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
@@ -119,9 +130,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 <div class="main">
   <div class="stage">
+<div class="viewrow">
     <div class="bookview" id="bookView">
       <img id="bkA" alt="" decoding="async"><img id="bkB" alt="" decoding="async"><video id="bkV" muted playsinline preload="auto" aria-hidden="true"></video>
       <div class="bkcap"><b id="bkLab"></b><span id="bkPg"></span></div>
+    </div>
+    <div class="groups" id="groups" aria-label="الحروف"></div>
     </div>
     <svg id="svg" hidden viewBox="18 122 630 566" role="img" aria-label="مقطع جانبي للرأس يتحرك فيه اللسان والشفتان والحنك اللحمي" style="background:#FBF8EF;border-radius:12px">
       <defs>
@@ -265,7 +279,6 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   </aside>
 </div>
 
-<div class="groups" id="groups"></div>
 </div>
 
 <script>const AUDIO={}; // يُملأ عند وصول تسجيلات الشيخ</script>
@@ -499,6 +512,7 @@ function spec(k){ if(k==='ر') return Object.assign({m:11},R[vowel]); return L[k
 function pick(k,opts={}){
   key=k; const s=spec(k), m=M[s.m], col=`var(${C[m.c]})`;
   document.querySelectorAll('.k').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false'));
+  { const g=$('groups'), b=g.querySelector('.k[aria-pressed="true"]'); if(b){ const top=b.offsetTop-g.offsetTop, h=g.clientHeight; if(top<g.scrollTop||top+b.offsetHeight>g.scrollTop+h) g.scrollTo({top:Math.max(0,top-h/3),behavior:'smooth'}); } }
   $('vowels').hidden = true; $('lams').hidden = k!=='ل'; showBook(k,true);
   const p=$('panel'); p.style.setProperty('--c',col);
   $('pRegion').textContent=m.r; $('pNum').textContent=ar(s.m); $('pName').textContent=m.n;
